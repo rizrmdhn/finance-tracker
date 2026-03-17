@@ -1,5 +1,5 @@
 {
-	"name": "@finance/api",
+	"name": "@finance-tracker/api",
 	"version": "0.0.1",
 	"exports": {
 		".": "./src/index.ts",
@@ -9,6 +9,6 @@
 		"@trpc/server": "^11.13.4",
 		"drizzle-orm": "^0.45.1",
 		"zod": "catalog:",
-		"@finance/db": "workspace:*"
+		"@finance-tracker/db": "workspace:*"
 	}
 }

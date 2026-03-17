@@ -1,7 +1,7 @@
 import path from "node:path";
-import * as schema from "@finance/db";
-import { appRouter } from "@finance/api";
-import { createContext } from "@finance/api/context";
+import { appRouter } from "@finance-tracker/api";
+import { createContext } from "@finance-tracker/api/context";
+import * as schema from "@finance-tracker/db";
 import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { migrate } from "drizzle-orm/better-sqlite3/migrator";

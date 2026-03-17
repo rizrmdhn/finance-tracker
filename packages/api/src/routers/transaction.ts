@@ -1,4 +1,4 @@
-import { transactions } from "@finance/db";
+import { transactions } from "@finance-tracker/db";
 import { between, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { procedure, router } from "../trpc";

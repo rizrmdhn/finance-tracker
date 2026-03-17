@@ -25,12 +25,12 @@
 		"dev": "turbo dev",
 		"build": "turbo build",
 		"check-types": "turbo check-types",
-		"dev:native": "turbo -F @finance/native dev",
-		"dev:web": "turbo -F @finance/web dev",
-		"dev:desktop": "turbo -F @finance/desktop dev",
-		"db:studio": "turbo -F @finance/db db:studio",
-		"db:migrate": "turbo -F @finance/db db:migrate",
-		"db:generate": "turbo -F @finance/db db:generate",
+		"dev:native": "turbo -F @finance-tracker/native dev",
+		"dev:web": "turbo -F @finance-tracker/web dev",
+		"dev:desktop": "turbo -F @finance-tracker/desktop dev",
+		"db:studio": "turbo -F @finance-tracker/db db:studio",
+		"db:migrate": "turbo -F @finance-tracker/db db:migrate",
+		"db:generate": "turbo -F @finance-tracker/db db:generate",
 		"check": "biome check --write ."
 	},
 	"dependencies": {
