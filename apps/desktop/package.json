@@ -18,6 +18,16 @@
 		"files": [
 			"out/**/*"
 		],
+		"extraResources": [
+			{
+				"from": "../../packages/db/migrations",
+				"to": "migrations"
+			}
+		],
+		"asarUnpack": [
+			"**/better-sqlite3/**",
+			"**/node_modules/better-sqlite3/**"
+		],
 		"win": {
 			"target": [
 				{

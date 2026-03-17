@@ -37,12 +37,11 @@ app.whenReady().then(() => {
 
 	const db = drizzle(sqlite, { schema });
 
-	migrate(db, {
-		migrationsFolder: path.join(
-			__dirname,
-			"../../../../packages/db/migrations",
-		),
-	});
+	const migrationsFolder = isDev
+		? path.join(__dirname, "../../../../packages/db/migrations")
+		: path.join(process.resourcesPath, "migrations");
+
+	migrate(db, { migrationsFolder });
 
 	createWindow();
 
