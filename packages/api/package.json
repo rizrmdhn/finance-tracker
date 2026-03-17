@@ -1,0 +1,14 @@
+{
+	"name": "@finance/api",
+	"version": "0.0.1",
+	"exports": {
+		".": "./src/index.ts",
+		"./context": "./src/context.ts"
+	},
+	"dependencies": {
+		"@trpc/server": "^11.13.4",
+		"drizzle-orm": "^0.45.1",
+		"zod": "catalog:",
+		"@finance/db": "workspace:*"
+	}
+}

@@ -1,0 +1,21 @@
+{
+	"name": "@finance/db",
+	"version": "0.0.1",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"scripts": {
+		"db:studio": "drizzle-kit studio",
+		"db:migrate": "drizzle-kit migrate",
+		"db:generate": "drizzle-kit generate"
+	},
+	"dependencies": {
+		"drizzle-orm": "catalog:",
+		"better-sqlite3": "catalog:",
+		"@paralleldrive/cuid2": "^3.3.0"
+	},
+	"devDependencies": {
+		"drizzle-kit": "^0.31.10",
+		"@types/better-sqlite3": "catalog:"
+	}
+}
