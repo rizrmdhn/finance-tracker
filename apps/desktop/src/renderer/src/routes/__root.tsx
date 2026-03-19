@@ -81,7 +81,7 @@ function NotFoundComponent() {
 					<Button variant="outline" onClick={() => router.history.back()}>
 						Kembali
 					</Button>
-					<Button onClick={() => router.navigate({ to: "/dashboard" })}>
+					<Button onClick={() => router.navigate({ to: "/" })}>
 						Ke Dashboard
 					</Button>
 				</div>
@@ -180,7 +180,7 @@ function ErrorComponent({ error }: { error: Error }) {
 					<Button variant="outline" onClick={() => window.location.reload()}>
 						Muat Ulang
 					</Button>
-					<Button onClick={() => router.navigate({ to: "/dashboard" })}>
+					<Button onClick={() => router.navigate({ to: "/" })}>
 						Ke Dashboard
 					</Button>
 				</div>
