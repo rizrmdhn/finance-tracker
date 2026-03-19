@@ -10,6 +10,7 @@
 		"db:generate": "drizzle-kit generate"
 	},
 	"dependencies": {
+		"@finance-tracker/constants": "workspace:*",
 		"drizzle-orm": "catalog:",
 		"better-sqlite3": "catalog:",
 		"@paralleldrive/cuid2": "^3.3.0"

@@ -143,10 +143,15 @@
       "name": "@finance-tracker/config",
       "version": "0.0.0",
     },
+    "packages/constants": {
+      "name": "@finance-tracker/constants",
+      "version": "0.0.1",
+    },
     "packages/db": {
       "name": "@finance-tracker/db",
       "version": "0.0.1",
       "dependencies": {
+        "@finance-tracker/constants": "workspace:*",
         "@paralleldrive/cuid2": "^3.3.0",
         "better-sqlite3": "catalog:",
         "drizzle-orm": "catalog:",
@@ -167,6 +172,30 @@
       "devDependencies": {
         "@finance-tracker/config": "workspace:*",
         "typescript": "^5",
+      },
+    },
+    "packages/queries": {
+      "name": "@finance-tracker/queries",
+      "version": "0.0.1",
+      "dependencies": {
+        "@finance-tracker/db": "workspace:*",
+        "drizzle-orm": "catalog:",
+      },
+    },
+    "packages/schema": {
+      "name": "@finance-tracker/schema",
+      "version": "0.0.1",
+      "dependencies": {
+        "@finance-tracker/constants": "workspace:*",
+        "zod": "catalog:",
+      },
+    },
+    "packages/types": {
+      "name": "@finance-tracker/types",
+      "version": "0.0.1",
+      "dependencies": {
+        "@finance-tracker/constants": "workspace:*",
+        "@finance-tracker/db": "workspace:*",
       },
     },
     "packages/ui": {
@@ -203,6 +232,13 @@
         "@types/react-dom": "catalog:",
         "tailwindcss": "catalog:",
         "typescript": "^5.9.3",
+      },
+    },
+    "packages/utils": {
+      "name": "@finance-tracker/utils",
+      "version": "0.0.1",
+      "dependencies": {
+        "@finance-tracker/constants": "workspace:*",
       },
     },
   },
@@ -584,13 +620,23 @@
 
     "@finance-tracker/config": ["@finance-tracker/config@workspace:packages/config"],
 
+    "@finance-tracker/constants": ["@finance-tracker/constants@workspace:packages/constants"],
+
     "@finance-tracker/db": ["@finance-tracker/db@workspace:packages/db"],
 
     "@finance-tracker/desktop": ["@finance-tracker/desktop@workspace:apps/desktop"],
 
     "@finance-tracker/env": ["@finance-tracker/env@workspace:packages/env"],
 
+    "@finance-tracker/queries": ["@finance-tracker/queries@workspace:packages/queries"],
+
+    "@finance-tracker/schema": ["@finance-tracker/schema@workspace:packages/schema"],
+
+    "@finance-tracker/types": ["@finance-tracker/types@workspace:packages/types"],
+
     "@finance-tracker/ui": ["@finance-tracker/ui@workspace:packages/ui"],
+
+    "@finance-tracker/utils": ["@finance-tracker/utils@workspace:packages/utils"],
 
     "@floating-ui/core": ["@floating-ui/core@1.7.5", "", { "dependencies": { "@floating-ui/utils": "^0.2.11" } }, "sha512-1Ih4WTWyw0+lKyFMcBHGbb5U5FtuHJuujoyyr5zTaWS5EYMeT6Jb2AuDeftsCsEuchO+mM2ij5+q9crhydzLhQ=="],
 

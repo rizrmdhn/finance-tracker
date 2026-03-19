@@ -1,0 +1,11 @@
+{
+	"name": "@finance-tracker/queries",
+	"version": "0.0.1",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"dependencies": {
+		"@finance-tracker/db": "workspace:*",
+		"drizzle-orm": "catalog:"
+	}
+}

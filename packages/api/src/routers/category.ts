@@ -14,7 +14,7 @@ export const categoryRouter = router({
 				name: z.string().min(1),
 				icon: z.string().optional(),
 				color: z.string().optional(),
-				type: z.enum(["income", "expense", "both"]),
+				type: z.enum(["income", "expense", "transfer", "savings"]),
 			}),
 		)
 		.mutation(({ ctx, input }) => {

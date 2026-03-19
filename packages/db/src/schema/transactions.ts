@@ -1,12 +1,12 @@
+import { CATEGORY_TYPES, TRANSACTION_TYPES } from "@finance-tracker/constants";
 import { createId } from "@paralleldrive/cuid2";
-import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 import { integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const transactions = sqliteTable("transactions", {
 	id: text("id")
 		.primaryKey()
 		.$default(() => createId()),
-	type: text("type", { enum: ["income", "expense"] }).notNull(),
+	type: text("type", { enum: TRANSACTION_TYPES }).notNull(),
 	amount: real("amount").notNull(),
 	note: text("note"),
 	categoryId: text("category_id").references(() => categories.id),
@@ -22,11 +22,5 @@ export const categories = sqliteTable("categories", {
 	name: text("name").notNull(),
 	icon: text("icon"),
 	color: text("color"),
-	type: text("type", { enum: ["income", "expense", "both"] }).notNull(),
+	type: text("type", { enum: CATEGORY_TYPES }).notNull(),
 });
-
-export type Transaction = InferSelectModel<typeof transactions>;
-export type NewTransaction = InferInsertModel<typeof transactions>;
-
-export type Category = InferSelectModel<typeof categories>;
-export type NewCategory = InferInsertModel<typeof categories>;
