@@ -1,6 +1,6 @@
-import { createCallerFactory, createTRPCRouter } from ".";
 import { categoryRouter } from "./routers/category";
 import { transactionRouter } from "./routers/transaction";
+import { createCallerFactory, createTRPCRouter } from "./trpc";
 
 /**
  * This is the primary router for your server.

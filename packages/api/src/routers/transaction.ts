@@ -12,7 +12,7 @@ import {
 	updateTransactionSchema,
 } from "@finance-tracker/schema";
 import { tryCatchAsync } from "@finance-tracker/utils";
-import { createTRPCRouter, publicProcedure } from "..";
+import { createTRPCRouter, publicProcedure } from "../trpc";
 import { toTRPCError } from "../utils/to-trpc-error";
 
 export const transactionRouter = createTRPCRouter({

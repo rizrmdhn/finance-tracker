@@ -6,7 +6,7 @@ import {
 import { categorySchema } from "@finance-tracker/schema";
 import { tryCatchAsync } from "@finance-tracker/utils";
 import { z } from "zod";
-import { createTRPCRouter, publicProcedure } from "..";
+import { createTRPCRouter, publicProcedure } from "../trpc";
 import { toTRPCError } from "../utils/to-trpc-error";
 
 export const categoryRouter = createTRPCRouter({
