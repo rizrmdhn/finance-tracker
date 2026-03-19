@@ -27,12 +27,12 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
 						<SidebarMenuButton
 							className="data-[slot=sidebar-menu-button]:p-1.5!"
 							render={
-								<h1 className="flex flex-row items-center justify-start gap-2">
+								<div className="flex flex-row items-center justify-start gap-2">
 									<Wallet className="size-4 shrink-0" />
 									<span className="font-semibold text-base group-data-[collapsible=icon]:hidden">
 										Finance Tracker
 									</span>
-								</h1>
+								</div>
 							}
 						/>
 					</SidebarMenuItem>
