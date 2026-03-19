@@ -5,6 +5,7 @@
 		".": "./src/index.ts"
 	},
 	"scripts": {
+		"check-types": "tsc --noEmit",
 		"db:studio": "drizzle-kit studio",
 		"db:migrate": "drizzle-kit migrate",
 		"db:generate": "drizzle-kit generate"
@@ -16,7 +17,8 @@
 		"@paralleldrive/cuid2": "^3.3.0"
 	},
 	"devDependencies": {
-		"drizzle-kit": "^0.31.10",
-		"@types/better-sqlite3": "catalog:"
+		"drizzle-kit": "catalog:",
+		"@types/better-sqlite3": "catalog:",
+		"typescript": "catalog:"
 	}
 }

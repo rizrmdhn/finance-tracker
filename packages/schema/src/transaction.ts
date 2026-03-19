@@ -1,8 +1,6 @@
-import { TRANSACTION_TYPES } from "@finance-tracker/constants";
 import { z } from "zod";
 
 export const transactionSchema = z.object({
-	type: z.enum(TRANSACTION_TYPES),
 	amount: z.number().positive(),
 	note: z.string().optional(),
 	categoryId: z.string().optional(),

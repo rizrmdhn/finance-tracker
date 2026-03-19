@@ -5,13 +5,19 @@
 		".": "./src/index.ts",
 		"./context": "./src/context.ts"
 	},
+	"scripts": {
+		"check-types": "tsc --noEmit"
+	},
 	"dependencies": {
 		"@trpc/server": "^11.13.4",
-		"drizzle-orm": "^0.45.1",
+		"drizzle-orm": "catalog:",
 		"zod": "catalog:",
 		"@finance-tracker/db": "workspace:*",
 		"@finance-tracker/queries": "workspace:*",
 		"@finance-tracker/schema": "workspace:*",
 		"@finance-tracker/utils": "workspace:*"
+	},
+	"devDependencies": {
+		"typescript": "catalog:"
 	}
 }

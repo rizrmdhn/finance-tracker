@@ -13,28 +13,28 @@
   "dependencies": {
     "@finance-tracker/env": "workspace:*",
     "@finance-tracker/ui": "workspace:*",
-    "@hookform/resolvers": "^5.1.1",
-    "@tailwindcss/vite": "^4.1.18",
-    "@tanstack/react-router": "^1.141.1",
+    "@hookform/resolvers": "catalog:",
+    "@tailwindcss/vite": "catalog:",
+    "@tanstack/react-router": "catalog:",
     "dotenv": "catalog:",
     "lucide-react": "catalog:",
     "next-themes": "catalog:",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "sonner": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@finance-tracker/config": "workspace:*",
-    "@tanstack/react-router-devtools": "^1.141.1",
-    "@tanstack/router-plugin": "^1.141.1",
+    "@tanstack/react-router-devtools": "catalog:",
+    "@tanstack/router-plugin": "catalog:",
     "@types/node": "^22.13.14",
-    "@types/react": "^19.2.10",
+    "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "^4.3.4",
     "postcss": "^8.5.3",
     "tailwindcss": "catalog:",
-    "typescript": "^5",
+    "typescript": "catalog:",
     "vite": "^6.2.2"
   }
 }
