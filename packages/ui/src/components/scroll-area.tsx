@@ -1,5 +1,6 @@
 import { ScrollArea as ScrollAreaPrimitive } from "@base-ui/react/scroll-area";
 import { cn } from "@finance-tracker/ui/lib/utils";
+// @ts-ignore - No types available for this package
 import * as React from "react";
 
 function ScrollArea({
