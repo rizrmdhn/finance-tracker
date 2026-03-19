@@ -1,14 +1,14 @@
-import type * as schema from "@finance-tracker/db";
+import type { AnyDatabase } from "@finance-tracker/db";
 import { transactions } from "@finance-tracker/db";
-import type { TransactionInput, UpdateTransactionInput } from "@finance-tracker/schema";
+import type {
+	TransactionInput,
+	UpdateTransactionInput,
+} from "@finance-tracker/schema";
 import { between, desc, eq } from "drizzle-orm";
-import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import { NotFoundError } from "./errors";
 
-type Db = BetterSQLite3Database<typeof schema>;
-
 export async function getTransactions(
-	db: Db,
+	db: AnyDatabase,
 	filters?: { from?: number; to?: number },
 ) {
 	if (filters?.from && filters?.to) {
@@ -21,13 +21,16 @@ export async function getTransactions(
 	return await db.select().from(transactions).orderBy(desc(transactions.date));
 }
 
-export async function getTransactionById(db: Db, id: string) {
+export async function getTransactionById(db: AnyDatabase, id: string) {
 	return await db.query.transactions.findFirst({
 		where: eq(transactions.id, id),
 	});
 }
 
-export async function createTransaction(db: Db, input: TransactionInput) {
+export async function createTransaction(
+	db: AnyDatabase,
+	input: TransactionInput,
+) {
 	return await db
 		.insert(transactions)
 		.values({
@@ -38,7 +41,7 @@ export async function createTransaction(db: Db, input: TransactionInput) {
 }
 
 export async function updateTransaction(
-	db: Db,
+	db: AnyDatabase,
 	input: UpdateTransactionInput,
 ) {
 	const { id, tags, ...rest } = input;
@@ -56,12 +59,12 @@ export async function updateTransaction(
 		.returning();
 }
 
-export async function deleteTransaction(db: Db, id: string) {
+export async function deleteTransaction(db: AnyDatabase, id: string) {
 	return await db.delete(transactions).where(eq(transactions.id, id));
 }
 
 export async function getTransactionSummary(
-	db: Db,
+	db: AnyDatabase,
 	range: { from: number; to: number },
 ) {
 	const result = await db.query.transactions.findMany({

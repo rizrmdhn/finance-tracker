@@ -1,10 +1,9 @@
-import type * as schema from "@finance-tracker/db";
-import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
+import type { AnyDatabase } from "@finance-tracker/db";
 
 export function createContext({
 	db,
 }: {
-	db: BetterSQLite3Database<typeof schema>;
+	db: AnyDatabase;
 }) {
 	return { db };
 }

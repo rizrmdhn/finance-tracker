@@ -1,6 +1,6 @@
 import { categoryRouter } from "./routers/category";
 import { transactionRouter } from "./routers/transaction";
-import { router } from "./trpc";
+import { createCallerFactory, router } from "./trpc";
 
 export const appRouter = router({
 	transaction: transactionRouter,
@@ -8,3 +8,4 @@ export const appRouter = router({
 });
 
 export type AppRouter = typeof appRouter;
+export { createCallerFactory };

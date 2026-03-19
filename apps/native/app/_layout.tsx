@@ -1,10 +1,16 @@
 import "@/global.css";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useMigrations } from "drizzle-orm/expo-sqlite";
 import { Stack } from "expo-router";
 import { HeroUINativeProvider } from "heroui-native";
+import { ActivityIndicator, Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
-
 import { AppThemeProvider } from "@/contexts/app-theme-context";
+import { db } from "@/lib/db";
+import { migrations } from "@/lib/migrations";
+
+const queryClient = new QueryClient();
 
 export const unstable_settings = {
   initialRouteName: "(drawer)",
@@ -19,15 +25,41 @@ function StackLayout() {
   );
 }
 
+function MigratedApp() {
+  const { success, error } = useMigrations(db, migrations);
+
+  if (error) {
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+        <Text>Migration error: {error.message}</Text>
+      </View>
+    );
+  }
+
+  if (!success) {
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator />
+      </View>
+    );
+  }
+
+  return (
+    <AppThemeProvider>
+      <HeroUINativeProvider>
+        <StackLayout />
+      </HeroUINativeProvider>
+    </AppThemeProvider>
+  );
+}
+
 export default function Layout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <KeyboardProvider>
-        <AppThemeProvider>
-          <HeroUINativeProvider>
-            <StackLayout />
-          </HeroUINativeProvider>
-        </AppThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <MigratedApp />
+        </QueryClientProvider>
       </KeyboardProvider>
     </GestureHandlerRootView>
   );
