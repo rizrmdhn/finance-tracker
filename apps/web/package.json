@@ -28,7 +28,7 @@
 		"@finance-tracker/config": "workspace:*",
 		"@tanstack/react-router-devtools": "catalog:",
 		"@tanstack/router-plugin": "catalog:",
-		"@types/node": "^22.13.14",
+		"@types/node": "catalog:",
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",
 		"@vitejs/plugin-react": "^4.3.4",

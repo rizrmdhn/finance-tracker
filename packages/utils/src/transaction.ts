@@ -18,15 +18,10 @@ export function stringifyTags(tags: string[]): string {
 }
 
 export function summarizeResults(
-	items: TransactionSummaryItem[],
+	_items: TransactionSummaryItem[],
 ): TransactionSummary {
-	let income = 0;
-	let expense = 0;
-
-	for (const item of items) {
-		if (item.type === "income") income = item.total;
-		else if (item.type === "expense") expense = item.total;
-	}
+	const income = 0;
+	const expense = 0;
 
 	return { income, expense, balance: income - expense };
 }

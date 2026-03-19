@@ -8,6 +8,8 @@
 		"check-types": "tsc --noEmit"
 	},
 	"devDependencies": {
+		"@finance-tracker/config": "workspace:*",
+		"@types/node": "catalog:",
 		"typescript": "catalog:"
 	}
 }

@@ -17,6 +17,7 @@
 	},
 	"devDependencies": {
 		"@finance-tracker/config": "workspace:*",
+		"@types/node": "catalog:",
 		"typescript": "catalog:"
 	}
 }
