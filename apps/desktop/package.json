@@ -65,6 +65,7 @@
 		"next-themes": "catalog:",
 		"react": "catalog:",
 		"react-dom": "catalog:",
+		"recharts": "catalog:",
 		"sonner": "catalog:"
 	},
 	"devDependencies": {
