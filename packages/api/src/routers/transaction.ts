@@ -19,7 +19,9 @@ export const transactionRouter = router({
 	list: procedure
 		.input(transactionFiltersSchema)
 		.query(async ({ ctx, input }) => {
-			const [data, err] = await tryCatchAsync(() => getTransactions(ctx.db, input));
+			const [data, err] = await tryCatchAsync(() =>
+				getTransactions(ctx.db, input),
+			);
 			if (err) throw toTRPCError(err);
 			return data;
 		}),
@@ -27,7 +29,9 @@ export const transactionRouter = router({
 	create: procedure
 		.input(transactionSchema)
 		.mutation(async ({ ctx, input }) => {
-			const [data, err] = await tryCatchAsync(() => createTransaction(ctx.db, input));
+			const [data, err] = await tryCatchAsync(() =>
+				createTransaction(ctx.db, input),
+			);
 			if (err) throw toTRPCError(err);
 			return data;
 		}),
@@ -35,7 +39,9 @@ export const transactionRouter = router({
 	update: procedure
 		.input(updateTransactionSchema)
 		.mutation(async ({ ctx, input }) => {
-			const [data, err] = await tryCatchAsync(() => updateTransaction(ctx.db, input));
+			const [data, err] = await tryCatchAsync(() =>
+				updateTransaction(ctx.db, input),
+			);
 			if (err) throw toTRPCError(err);
 			return data;
 		}),
@@ -43,7 +49,9 @@ export const transactionRouter = router({
 	delete: procedure
 		.input(updateTransactionSchema.pick({ id: true }))
 		.mutation(async ({ ctx, input }) => {
-			const [data, err] = await tryCatchAsync(() => deleteTransaction(ctx.db, input.id));
+			const [data, err] = await tryCatchAsync(() =>
+				deleteTransaction(ctx.db, input.id),
+			);
 			if (err) throw toTRPCError(err);
 			return data;
 		}),
@@ -51,7 +59,9 @@ export const transactionRouter = router({
 	summary: procedure
 		.input(summaryFiltersSchema)
 		.query(async ({ ctx, input }) => {
-			const [data, err] = await tryCatchAsync(() => getTransactionSummary(ctx.db, input));
+			const [data, err] = await tryCatchAsync(() =>
+				getTransactionSummary(ctx.db, input),
+			);
 			if (err) throw toTRPCError(err);
 			return data;
 		}),

@@ -1,22 +1,22 @@
 {
-  "name": "@finance-tracker/env",
-  "version": "0.0.0",
-  "private": true,
-  "type": "module",
-  "exports": {
-    "./web": "./src/web.ts",
-    "./native": "./src/native.ts"
-  },
-  "scripts": {
-    "check-types": "tsc --noEmit"
-  },
-  "dependencies": {
-    "@t3-oss/env-core": "^0.13.1",
-    "dotenv": "catalog:",
-    "zod": "catalog:"
-  },
-  "devDependencies": {
-    "@finance-tracker/config": "workspace:*",
-    "typescript": "catalog:"
-  }
+	"name": "@finance-tracker/env",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"exports": {
+		"./web": "./src/web.ts",
+		"./native": "./src/native.ts"
+	},
+	"scripts": {
+		"check-types": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@t3-oss/env-core": "^0.13.1",
+		"dotenv": "catalog:",
+		"zod": "catalog:"
+	},
+	"devDependencies": {
+		"@finance-tracker/config": "workspace:*",
+		"typescript": "catalog:"
+	}
 }

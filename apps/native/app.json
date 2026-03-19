@@ -1,17 +1,17 @@
 {
-  "expo": {
-    "scheme": "finance-tracker",
-    "userInterfaceStyle": "automatic",
-    "orientation": "default",
-    "web": {
-      "bundler": "metro"
-    },
-    "name": "finance-tracker",
-    "slug": "finance-tracker",
-    "plugins": ["expo-font"],
-    "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
-    }
-  }
+	"expo": {
+		"scheme": "finance-tracker",
+		"userInterfaceStyle": "automatic",
+		"orientation": "default",
+		"web": {
+			"bundler": "metro"
+		},
+		"name": "finance-tracker",
+		"slug": "finance-tracker",
+		"plugins": ["expo-font"],
+		"experiments": {
+			"typedRoutes": true,
+			"reactCompiler": true
+		}
+	}
 }

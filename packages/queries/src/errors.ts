@@ -6,7 +6,10 @@ export class NotFoundError extends Error {
 }
 
 export class QueryError extends Error {
-	constructor(message: string, public cause?: unknown) {
+	constructor(
+		message: string,
+		public cause?: unknown,
+	) {
 		super(message);
 		this.name = "QueryError";
 	}

@@ -1,4 +1,7 @@
-import type { TransactionSummary, TransactionSummaryItem } from "@finance-tracker/types";
+import type {
+	TransactionSummary,
+	TransactionSummaryItem,
+} from "@finance-tracker/types";
 
 export function parseTags(tags: string | null): string[] {
 	if (!tags) return [];
@@ -14,7 +17,9 @@ export function stringifyTags(tags: string[]): string {
 	return JSON.stringify(tags);
 }
 
-export function summarizeResults(items: TransactionSummaryItem[]): TransactionSummary {
+export function summarizeResults(
+	items: TransactionSummaryItem[],
+): TransactionSummary {
 	let income = 0;
 	let expense = 0;
 

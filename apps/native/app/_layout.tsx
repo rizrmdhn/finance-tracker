@@ -13,54 +13,57 @@ import { db } from "@/lib/db";
 const queryClient = new QueryClient();
 
 export const unstable_settings = {
-  initialRouteName: "(drawer)",
+	initialRouteName: "(drawer)",
 };
 
 function StackLayout() {
-  return (
-    <Stack screenOptions={{}}>
-      <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
-      <Stack.Screen name="modal" options={{ title: "Modal", presentation: "modal" }} />
-    </Stack>
-  );
+	return (
+		<Stack screenOptions={{}}>
+			<Stack.Screen name="(drawer)" options={{ headerShown: false }} />
+			<Stack.Screen
+				name="modal"
+				options={{ title: "Modal", presentation: "modal" }}
+			/>
+		</Stack>
+	);
 }
 
 function MigratedApp() {
-  const { success, error } = useMigrations(db, migrations);
+	const { success, error } = useMigrations(db, migrations);
 
-  if (error) {
-    return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-        <Text>Migration error: {error.message}</Text>
-      </View>
-    );
-  }
+	if (error) {
+		return (
+			<View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+				<Text>Migration error: {error.message}</Text>
+			</View>
+		);
+	}
 
-  if (!success) {
-    return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-        <ActivityIndicator />
-      </View>
-    );
-  }
+	if (!success) {
+		return (
+			<View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+				<ActivityIndicator />
+			</View>
+		);
+	}
 
-  return (
-    <AppThemeProvider>
-      <HeroUINativeProvider>
-        <StackLayout />
-      </HeroUINativeProvider>
-    </AppThemeProvider>
-  );
+	return (
+		<AppThemeProvider>
+			<HeroUINativeProvider>
+				<StackLayout />
+			</HeroUINativeProvider>
+		</AppThemeProvider>
+	);
 }
 
 export default function Layout() {
-  return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <KeyboardProvider>
-        <QueryClientProvider client={queryClient}>
-          <MigratedApp />
-        </QueryClientProvider>
-      </KeyboardProvider>
-    </GestureHandlerRootView>
-  );
+	return (
+		<GestureHandlerRootView style={{ flex: 1 }}>
+			<KeyboardProvider>
+				<QueryClientProvider client={queryClient}>
+					<MigratedApp />
+				</QueryClientProvider>
+			</KeyboardProvider>
+		</GestureHandlerRootView>
+	);
 }

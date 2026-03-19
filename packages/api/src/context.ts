@@ -1,10 +1,6 @@
 import type { AnyDatabase } from "@finance-tracker/db";
 
-export function createContext({
-	db,
-}: {
-	db: AnyDatabase;
-}) {
+export function createContext({ db }: { db: AnyDatabase }) {
 	return { db };
 }
 
