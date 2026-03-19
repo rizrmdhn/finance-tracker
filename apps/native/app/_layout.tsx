@@ -1,14 +1,14 @@
 import "@/global.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useMigrations } from "drizzle-orm/expo-sqlite";
+import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
 import { Stack } from "expo-router";
 import { HeroUINativeProvider } from "heroui-native";
 import { ActivityIndicator, Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { AppThemeProvider } from "@/contexts/app-theme-context";
+import migrations from "@/drizzle/migrations";
 import { db } from "@/lib/db";
-import { migrations } from "@/lib/migrations";
 
 const queryClient = new QueryClient();
 

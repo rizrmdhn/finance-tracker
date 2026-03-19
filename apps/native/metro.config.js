@@ -10,4 +10,6 @@ const uniwindConfig = withUniwindConfig(wrapWithReanimatedMetroConfig(config), {
   dtsFile: "./uniwind-types.d.ts",
 });
 
+uniwindConfig.resolver.sourceExts.push("sql");
+
 module.exports = uniwindConfig;
