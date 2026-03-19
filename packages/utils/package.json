@@ -5,6 +5,8 @@
 		".": "./src/index.ts"
 	},
 	"dependencies": {
-		"@finance-tracker/constants": "workspace:*"
+		"@finance-tracker/constants": "workspace:*",
+		"@finance-tracker/types": "workspace:*",
+		"date-fns": "catalog:"
 	}
 }
