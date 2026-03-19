@@ -57,6 +57,7 @@
 		"@tanstack/react-query": "catalog:",
 		"@tanstack/react-router": "catalog:",
 		"@trpc/tanstack-react-query": "catalog:",
+		"@trpc/server": "^11.13.4",
 		"@trpc/client": "catalog:",
 		"better-sqlite3": "catalog:",
 		"drizzle-orm": "catalog:",

@@ -2,8 +2,9 @@ import type { AppRouter } from "@finance-tracker/api";
 import { QueryCache, QueryClient } from "@tanstack/react-query";
 import { createTRPCClient, loggerLink } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
-import { ipcLink } from "electron-trpc/renderer";
+import SuperJSON from "superjson";
 import { globalErrorToast } from "./toast";
+import { ipcLink, type DataTransformer } from "./ipc-link";
 
 export const queryClient = new QueryClient({
 	queryCache: new QueryCache({
@@ -20,7 +21,7 @@ export const trpcClient = createTRPCClient<AppRouter>({
 				process.env.NODE_ENV === "development" ||
 				(op.direction === "down" && op.result instanceof Error),
 		}),
-		ipcLink(),
+		ipcLink({ transformer: SuperJSON as DataTransformer }),
 	],
 });
 

@@ -26,6 +26,7 @@
         "@tanstack/react-query": "catalog:",
         "@tanstack/react-router": "catalog:",
         "@trpc/client": "catalog:",
+        "@trpc/server": "^11.13.4",
         "@trpc/tanstack-react-query": "catalog:",
         "better-sqlite3": "catalog:",
         "date-fns": "catalog:",
