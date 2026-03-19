@@ -1,29 +1,36 @@
-import { categories } from "@finance-tracker/db";
-import { eq } from "drizzle-orm";
+import {
+	createCategory,
+	deleteCategory,
+	getCategories,
+} from "@finance-tracker/queries";
+import { categorySchema } from "@finance-tracker/schema";
+import { tryCatchAsync } from "@finance-tracker/utils";
 import { z } from "zod";
+import { toTRPCError } from "../to-trpc-error";
 import { procedure, router } from "../trpc";
 
 export const categoryRouter = router({
-	list: procedure.query(({ ctx }) => {
-		return ctx.db.select().from(categories);
+	list: procedure.query(async ({ ctx }) => {
+		const [data, err] = await tryCatchAsync(() => getCategories(ctx.db));
+		if (err) throw toTRPCError(err);
+		return data;
 	}),
 
-	create: procedure
-		.input(
-			z.object({
-				name: z.string().min(1),
-				icon: z.string().optional(),
-				color: z.string().optional(),
-				type: z.enum(["income", "expense", "transfer", "savings"]),
-			}),
-		)
-		.mutation(({ ctx, input }) => {
-			return ctx.db.insert(categories).values(input).returning();
-		}),
+	create: procedure.input(categorySchema).mutation(async ({ ctx, input }) => {
+		const [data, err] = await tryCatchAsync(() =>
+			createCategory(ctx.db, input),
+		);
+		if (err) throw toTRPCError(err);
+		return data;
+	}),
 
 	delete: procedure
 		.input(z.object({ id: z.string() }))
-		.mutation(({ ctx, input }) => {
-			return ctx.db.delete(categories).where(eq(categories.id, input.id));
+		.mutation(async ({ ctx, input }) => {
+			const [data, err] = await tryCatchAsync(() =>
+				deleteCategory(ctx.db, input.id),
+			);
+			if (err) throw toTRPCError(err);
+			return data;
 		}),
 });

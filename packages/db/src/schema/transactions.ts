@@ -1,12 +1,12 @@
-import { CATEGORY_TYPES, TRANSACTION_TYPES } from "@finance-tracker/constants";
+import { CATEGORY_TYPES } from "@finance-tracker/constants";
 import { createId } from "@paralleldrive/cuid2";
+import { relations } from "drizzle-orm";
 import { integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const transactions = sqliteTable("transactions", {
 	id: text("id")
 		.primaryKey()
 		.$default(() => createId()),
-	type: text("type", { enum: TRANSACTION_TYPES }).notNull(),
 	amount: real("amount").notNull(),
 	note: text("note"),
 	categoryId: text("category_id").references(() => categories.id),
@@ -24,3 +24,10 @@ export const categories = sqliteTable("categories", {
 	color: text("color"),
 	type: text("type", { enum: CATEGORY_TYPES }).notNull(),
 });
+
+export const transactionRelations = relations(transactions, ({ one }) => ({
+	category: one(categories, {
+		fields: [transactions.categoryId],
+		references: [categories.id],
+	}),
+}));

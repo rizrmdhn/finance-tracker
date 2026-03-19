@@ -9,6 +9,9 @@
 		"@trpc/server": "^11.13.4",
 		"drizzle-orm": "^0.45.1",
 		"zod": "catalog:",
-		"@finance-tracker/db": "workspace:*"
+		"@finance-tracker/db": "workspace:*",
+		"@finance-tracker/queries": "workspace:*",
+		"@finance-tracker/schema": "workspace:*",
+		"@finance-tracker/utils": "workspace:*"
 	}
 }

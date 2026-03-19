@@ -135,6 +135,9 @@
       "version": "0.0.1",
       "dependencies": {
         "@finance-tracker/db": "workspace:*",
+        "@finance-tracker/queries": "workspace:*",
+        "@finance-tracker/schema": "workspace:*",
+        "@finance-tracker/utils": "workspace:*",
         "@trpc/server": "^11.13.4",
         "drizzle-orm": "^0.45.1",
         "zod": "catalog:",
@@ -180,6 +183,7 @@
       "version": "0.0.1",
       "dependencies": {
         "@finance-tracker/db": "workspace:*",
+        "@finance-tracker/schema": "workspace:*",
         "drizzle-orm": "catalog:",
       },
     },

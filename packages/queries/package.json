@@ -6,6 +6,7 @@
 	},
 	"dependencies": {
 		"@finance-tracker/db": "workspace:*",
+		"@finance-tracker/schema": "workspace:*",
 		"drizzle-orm": "catalog:"
 	}
 }
