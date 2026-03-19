@@ -18,6 +18,7 @@ import {
 	TabsList,
 	TabsTrigger,
 } from "@finance-tracker/ui/components/tabs";
+import { useMemo } from "react";
 import {
 	Area,
 	AreaChart,
@@ -28,32 +29,12 @@ import {
 	PieChart,
 	XAxis,
 } from "recharts";
-import { formatCurrency } from "./utils";
-
-const MONTHLY_DATA = [
-	{ month: "Okt", income: 8500000, expense: 3200000 },
-	{ month: "Nov", income: 7200000, expense: 4100000 },
-	{ month: "Des", income: 9000000, expense: 5600000 },
-	{ month: "Jan", income: 8500000, expense: 3800000 },
-	{ month: "Feb", income: 7800000, expense: 2900000 },
-	{ month: "Mar", income: 8500000, expense: 3200000 },
-];
-
-const CATEGORY_DATA = [
-	{ category: "Groceries", amount: 850000, fill: "#22c55e" },
-	{ category: "Transportasi", amount: 200000, fill: "#3b82f6" },
-	{ category: "Makan & Minum", amount: 1200000, fill: "#f59e0b" },
-	{ category: "Tagihan", amount: 950000, fill: "#ef4444" },
-];
-
-const BALANCE_DATA = [
-	{ month: "Okt", balance: 5300000 },
-	{ month: "Nov", balance: 8400000 },
-	{ month: "Des", balance: 11800000 },
-	{ month: "Jan", balance: 16500000 },
-	{ month: "Feb", balance: 21400000 },
-	{ month: "Mar", balance: 26700000 },
-];
+import {
+	type Category,
+	type Transaction,
+	formatCurrency,
+	getLast6Months,
+} from "./utils";
 
 const barChartConfig = {
 	income: { label: "Pemasukan", color: "#22c55e" },
@@ -79,7 +60,71 @@ function currencyFormatter(value: unknown, name: unknown) {
 	);
 }
 
-export function AnalyticsCard() {
+interface AnalyticsCardProps {
+	transactions: Transaction[];
+	categories: Category[];
+}
+
+export function AnalyticsCard({ transactions, categories }: AnalyticsCardProps) {
+	const categoryMap = useMemo(
+		() => new Map(categories.map((c) => [c.id, c])),
+		[categories],
+	);
+
+	const months = useMemo(() => getLast6Months(), []);
+
+	const monthlyData = useMemo(
+		() =>
+			months.map(({ label, from, to }) => {
+				const monthTxs = transactions.filter(
+					(tx) => tx.date >= from && tx.date <= to,
+				);
+				const income = monthTxs
+					.filter(
+						(tx) => categoryMap.get(tx.categoryId ?? "")?.type === "income",
+					)
+					.reduce((sum, tx) => sum + tx.amount, 0);
+				const expense = monthTxs
+					.filter(
+						(tx) => categoryMap.get(tx.categoryId ?? "")?.type === "expense",
+					)
+					.reduce((sum, tx) => sum + tx.amount, 0);
+				return { month: label, income, expense };
+			}),
+		[transactions, categoryMap, months],
+	);
+
+	const categoryData = useMemo(
+		() =>
+			categories
+				.filter((c) => c.type === "expense")
+				.map((cat) => ({
+					category: cat.name,
+					amount: transactions
+						.filter((tx) => tx.categoryId === cat.id)
+						.reduce((sum, tx) => sum + tx.amount, 0),
+					fill: cat.color ?? "#94a3b8",
+				}))
+				.filter((item) => item.amount > 0),
+		[transactions, categories],
+	);
+
+	const balanceData = useMemo(
+		() =>
+			months.map(({ label, from, to }) => {
+				const balance = transactions
+					.filter((tx) => tx.date >= from && tx.date <= to)
+					.reduce((sum, tx) => {
+						const type = categoryMap.get(tx.categoryId ?? "")?.type;
+						if (type === "income") return sum + tx.amount;
+						if (type === "expense") return sum - tx.amount;
+						return sum;
+					}, 0);
+				return { month: label, balance };
+			}),
+		[transactions, categoryMap, months],
+	);
+
 	return (
 		<Card>
 			<CardHeader>
@@ -98,7 +143,7 @@ export function AnalyticsCard() {
 							config={barChartConfig}
 							className="mt-4 aspect-auto h-62.5 w-full"
 						>
-							<BarChart data={MONTHLY_DATA}>
+							<BarChart data={monthlyData}>
 								<CartesianGrid vertical={false} />
 								<XAxis dataKey="month" tickLine={false} axisLine={false} />
 								<ChartTooltip
@@ -120,7 +165,7 @@ export function AnalyticsCard() {
 						>
 							<PieChart>
 								<Pie
-									data={CATEGORY_DATA}
+									data={categoryData}
 									dataKey="amount"
 									nameKey="category"
 									innerRadius={70}
@@ -146,7 +191,7 @@ export function AnalyticsCard() {
 							config={balanceChartConfig}
 							className="mt-4 aspect-auto h-62.5 w-full"
 						>
-							<AreaChart data={BALANCE_DATA}>
+							<AreaChart data={balanceData}>
 								<CartesianGrid vertical={false} />
 								<XAxis dataKey="month" tickLine={false} axisLine={false} />
 								<ChartTooltip

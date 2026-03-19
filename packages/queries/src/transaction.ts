@@ -12,13 +12,16 @@ export async function getTransactions(
 	filters?: { from?: number; to?: number },
 ) {
 	if (filters?.from && filters?.to) {
-		return await db
-			.select()
-			.from(transactions)
-			.where(between(transactions.date, filters.from, filters.to))
-			.orderBy(desc(transactions.date));
+		const result = await db.query.transactions.findMany({
+			where: between(transactions.date, filters.from, filters.to),
+			orderBy: desc(transactions.date),
+		});
+		return result;
 	}
-	return await db.select().from(transactions).orderBy(desc(transactions.date));
+
+	return await db.query.transactions.findMany({
+		orderBy: desc(transactions.date),
+	});
 }
 
 export async function getTransactionById(db: AnyDatabase, id: string) {

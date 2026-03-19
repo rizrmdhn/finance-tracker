@@ -48,7 +48,7 @@
 		"desktop:pack": "turbo -F @finance-tracker/desktop package",
 		"db:studio": "turbo -F @finance-tracker/db db:studio",
 		"db:migrate": "turbo -F @finance-tracker/db db:migrate",
-		"db:generate": "turbo -F @finance-tracker/db db:generate",
+		"db:generate": "turbo -F @finance-tracker/db db:generate && turbo -F @finance-tracker/native db:generate",
 		"check": "biome check --write ."
 	},
 	"dependencies": {

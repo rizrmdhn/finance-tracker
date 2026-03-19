@@ -1,19 +1,23 @@
 import { Button } from "@finance-tracker/ui/components/button";
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { TrendingDown, TrendingUp, Wallet } from "lucide-react";
 import { globalSuccessToast } from "../../lib/toast";
+import { trpc } from "../../lib/trpc";
 import { AnalyticsCard } from "./-components/analytics-card";
 import { RecentTransactions } from "./-components/recent-transactions";
 import { SummaryCard } from "./-components/summary-card";
+import {
+	getCurrentMonthRange,
+	getSixMonthsRange,
+} from "./-components/utils";
 
 export const Route = createFileRoute("/")({
 	component: HomeComponent,
 });
 
-const SUMMARY = {
-	income: 8500000,
-	expense: 3200000,
-};
+const { from: currentFrom, to: currentTo } = getCurrentMonthRange();
+const { from: sixMonthsFrom } = getSixMonthsRange();
 
 function HomeComponent() {
 	const monthLabel = new Intl.DateTimeFormat("id-ID", {
@@ -21,8 +25,26 @@ function HomeComponent() {
 		year: "numeric",
 	}).format(new Date());
 
-	const { income, expense } = SUMMARY;
-	const balance = income - expense;
+	const { data: summary } = useQuery({
+		queryKey: ["transaction", "summary", { from: currentFrom, to: currentTo }],
+		queryFn: () =>
+			trpc.transaction.summary.query({ from: currentFrom, to: currentTo }),
+	});
+
+	const { data: transactions = [] } = useQuery({
+		queryKey: ["transaction", "list", { from: sixMonthsFrom, to: currentTo }],
+		queryFn: () =>
+			trpc.transaction.list.query({ from: sixMonthsFrom, to: currentTo }),
+	});
+
+	const { data: categories = [] } = useQuery({
+		queryKey: ["category", "list"],
+		queryFn: () => trpc.category.list.query(),
+	});
+
+	const income = summary?.income ?? 0;
+	const expense = summary?.expense ?? 0;
+	const balance = summary?.balance ?? 0;
 
 	return (
 		<div className="flex flex-col gap-6 p-6">
@@ -52,9 +74,9 @@ function HomeComponent() {
 				/>
 			</div>
 
-			<AnalyticsCard />
+			<AnalyticsCard transactions={transactions} categories={categories} />
 
-			<RecentTransactions />
+			<RecentTransactions transactions={transactions} categories={categories} />
 
 			<Button
 				variant="outline"
