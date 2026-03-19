@@ -7,10 +7,7 @@ import { trpc } from "../../lib/trpc";
 import { AnalyticsCard } from "./-components/analytics-card";
 import { RecentTransactions } from "./-components/recent-transactions";
 import { SummaryCard } from "./-components/summary-card";
-import {
-	getCurrentMonthRange,
-	getSixMonthsRange,
-} from "./-components/utils";
+import { getCurrentMonthRange, getSixMonthsRange } from "./-components/utils";
 
 export const Route = createFileRoute("/")({
 	component: HomeComponent,
@@ -25,22 +22,15 @@ function HomeComponent() {
 		year: "numeric",
 	}).format(new Date());
 
-	const { data: summary } = useQuery({
-		queryKey: ["transaction", "summary", { from: currentFrom, to: currentTo }],
-		queryFn: () =>
-			trpc.transaction.summary.query({ from: currentFrom, to: currentTo }),
-	});
+	const { data: summary } = useQuery(
+		trpc.transaction.summary.queryOptions({ from: currentFrom, to: currentTo }),
+	);
 
-	const { data: transactions = [] } = useQuery({
-		queryKey: ["transaction", "list", { from: sixMonthsFrom, to: currentTo }],
-		queryFn: () =>
-			trpc.transaction.list.query({ from: sixMonthsFrom, to: currentTo }),
-	});
+	const { data: transactions = [] } = useQuery(
+		trpc.transaction.list.queryOptions({ from: sixMonthsFrom, to: currentTo }),
+	);
 
-	const { data: categories = [] } = useQuery({
-		queryKey: ["category", "list"],
-		queryFn: () => trpc.category.list.query(),
-	});
+	const { data: categories = [] } = useQuery(trpc.category.list.queryOptions());
 
 	const income = summary?.income ?? 0;
 	const expense = summary?.expense ?? 0;

@@ -12,11 +12,11 @@ import {
 	updateTransactionSchema,
 } from "@finance-tracker/schema";
 import { tryCatchAsync } from "@finance-tracker/utils";
-import { toTRPCError } from "../to-trpc-error";
-import { procedure, router } from "../trpc";
+import { createTRPCRouter, publicProcedure } from "..";
+import { toTRPCError } from "../utils/to-trpc-error";
 
-export const transactionRouter = router({
-	list: procedure
+export const transactionRouter = createTRPCRouter({
+	list: publicProcedure
 		.input(transactionFiltersSchema)
 		.query(async ({ ctx, input }) => {
 			const [data, err] = await tryCatchAsync(() =>
@@ -26,7 +26,7 @@ export const transactionRouter = router({
 			return data;
 		}),
 
-	create: procedure
+	create: publicProcedure
 		.input(transactionSchema)
 		.mutation(async ({ ctx, input }) => {
 			const [data, err] = await tryCatchAsync(() =>
@@ -36,7 +36,7 @@ export const transactionRouter = router({
 			return data;
 		}),
 
-	update: procedure
+	update: publicProcedure
 		.input(updateTransactionSchema)
 		.mutation(async ({ ctx, input }) => {
 			const [data, err] = await tryCatchAsync(() =>
@@ -46,7 +46,7 @@ export const transactionRouter = router({
 			return data;
 		}),
 
-	delete: procedure
+	delete: publicProcedure
 		.input(updateTransactionSchema.pick({ id: true }))
 		.mutation(async ({ ctx, input }) => {
 			const [data, err] = await tryCatchAsync(() =>
@@ -56,7 +56,7 @@ export const transactionRouter = router({
 			return data;
 		}),
 
-	summary: procedure
+	summary: publicProcedure
 		.input(summaryFiltersSchema)
 		.query(async ({ ctx, input }) => {
 			const [data, err] = await tryCatchAsync(() =>

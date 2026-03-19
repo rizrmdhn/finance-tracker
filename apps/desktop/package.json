@@ -56,6 +56,7 @@
 		"@finance-tracker/ui": "workspace:*",
 		"@tanstack/react-query": "catalog:",
 		"@tanstack/react-router": "catalog:",
+		"@trpc/tanstack-react-query": "catalog:",
 		"@trpc/client": "catalog:",
 		"better-sqlite3": "catalog:",
 		"drizzle-orm": "catalog:",
@@ -66,7 +67,8 @@
 		"react": "catalog:",
 		"react-dom": "catalog:",
 		"recharts": "catalog:",
-		"sonner": "catalog:"
+		"sonner": "catalog:",
+		"superjson": "catalog:"
 	},
 	"devDependencies": {
 		"@electron/rebuild": "^3.7.2",

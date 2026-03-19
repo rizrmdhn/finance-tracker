@@ -15,7 +15,8 @@
 		"@finance-tracker/db": "workspace:*",
 		"@finance-tracker/queries": "workspace:*",
 		"@finance-tracker/schema": "workspace:*",
-		"@finance-tracker/utils": "workspace:*"
+		"@finance-tracker/utils": "workspace:*",
+		"superjson": "catalog:"
 	},
 	"devDependencies": {
 		"@finance-tracker/config": "workspace:*",

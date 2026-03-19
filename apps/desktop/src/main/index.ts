@@ -1,6 +1,5 @@
 import path from "node:path";
-import { appRouter } from "@finance-tracker/api";
-import { createContext } from "@finance-tracker/api/context";
+import { appRouter, createTRPCContext } from "@finance-tracker/api";
 import * as schema from "@finance-tracker/db";
 import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
@@ -48,7 +47,7 @@ app.whenReady().then(() => {
 	createIPCHandler({
 		router: appRouter,
 		windows: [win],
-		createContext: async () => createContext({ db }),
+		createContext: async () => await createTRPCContext({ db }),
 	});
 });
 
