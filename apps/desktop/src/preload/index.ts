@@ -1,4 +1,4 @@
 import { contextBridge } from "electron";
-import { exposeElectronTRPC } from "electron-trpc/main";
+import { exposeElectronTRPC } from "trpc-electron/main";
 
 contextBridge.exposeInMainWorld("electronTRPC", exposeElectronTRPC());

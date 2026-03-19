@@ -5,7 +5,7 @@ import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 import { app, BrowserWindow } from "electron";
-import { createIPCHandler } from "electron-trpc/main";
+import { createIPCHandler } from "trpc-electron/main";
 
 const isDev = process.env.NODE_ENV_ELECTRON_VITE === "development";
 
