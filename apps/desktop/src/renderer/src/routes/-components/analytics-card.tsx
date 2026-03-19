@@ -31,9 +31,9 @@ import {
 } from "recharts";
 import {
 	type Category,
-	type Transaction,
 	formatCurrency,
 	getLast6Months,
+	type Transaction,
 } from "./utils";
 
 const barChartConfig = {
@@ -65,7 +65,10 @@ interface AnalyticsCardProps {
 	categories: Category[];
 }
 
-export function AnalyticsCard({ transactions, categories }: AnalyticsCardProps) {
+export function AnalyticsCard({
+	transactions,
+	categories,
+}: AnalyticsCardProps) {
 	const categoryMap = useMemo(
 		() => new Map(categories.map((c) => [c.id, c])),
 		[categories],

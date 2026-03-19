@@ -8,9 +8,9 @@ import { ArrowDownLeft, ArrowUpRight, Minus } from "lucide-react";
 import { useMemo } from "react";
 import {
 	type Category,
-	type Transaction,
 	formatCurrency,
 	formatDate,
+	type Transaction,
 } from "./utils";
 
 interface RecentTransactionsProps {
@@ -71,11 +71,7 @@ export function RecentTransactions({
 										isIncome ? "text-green-600" : "text-red-500"
 									}`}
 								>
-									{isIncome ? (
-										"+"
-									) : (
-										<Minus className="inline size-3" />
-									)}
+									{isIncome ? "+" : <Minus className="inline size-3" />}
 									{formatCurrency(tx.amount)}
 								</span>
 							</div>
