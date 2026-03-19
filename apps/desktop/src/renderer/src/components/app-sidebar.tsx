@@ -8,8 +8,8 @@ import {
 	SidebarMenuButton,
 	SidebarMenuItem,
 } from "@finance-tracker/ui/components/sidebar";
-import { useRouterState } from "@tanstack/react-router";
-import { Home, Link, Tag, Wallet } from "lucide-react";
+import { Link, useRouterState } from "@tanstack/react-router";
+import { Home, Tag, Wallet } from "lucide-react";
 
 const navItems = [
 	{ to: "/", label: "Beranda", icon: Home },
