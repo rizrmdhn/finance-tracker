@@ -48,12 +48,7 @@ function RootComponent() {
 	return (
 		<>
 			<HeadContent />
-			<ThemeProvider
-				attribute="class"
-				defaultTheme="light"
-				disableTransitionOnChange
-				storageKey="vite-ui-theme"
-			>
+			<ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
 				<SidebarProvider
 					style={
 						{
