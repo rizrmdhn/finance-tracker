@@ -18,8 +18,8 @@ import { Toaster } from "sonner";
 import { AppSidebar } from "@/components/app-sidebar";
 import { NotFoundComponent } from "@/components/not-found";
 import { ThemeProvider } from "@/components/theme-provider";
-import { pageHead } from "../../lib/page-head";
-import type { trpc } from "../../lib/trpc";
+import { pageHead } from "../lib/page-head";
+import type { trpc } from "../lib/trpc";
 
 export interface RouterAppContext {
 	trpc: typeof trpc;

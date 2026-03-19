@@ -1,7 +1,7 @@
 import { Button } from "@finance-tracker/ui/components/button";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { trpc } from "../../lib/trpc";
+import { trpc } from "../lib/trpc";
 
 export const Route = createFileRoute("/categories")({
 	component: CategoriesComponent,
