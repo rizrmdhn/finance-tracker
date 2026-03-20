@@ -1,6 +1,6 @@
 {
 	"name": "@finance-tracker/desktop",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"main": "out/main/index.js",
 	"scripts": {
 		"dev": "electron-vite dev",
@@ -30,7 +30,14 @@
 			"**/node_modules/better-sqlite3/**"
 		],
 		"win": {
-			"target": [{ "target": "nsis", "arch": ["x64"] }],
+			"target": [
+				{
+					"target": "nsis",
+					"arch": [
+						"x64"
+					]
+				}
+			],
 			"icon": "src/resources/icon.ico"
 		},
 		"nsis": {
@@ -38,11 +45,26 @@
 			"allowToChangeInstallationDirectory": true
 		},
 		"mac": {
-			"target": [{ "target": "dmg", "arch": ["x64", "arm64"] }],
+			"target": [
+				{
+					"target": "dmg",
+					"arch": [
+						"x64",
+						"arm64"
+					]
+				}
+			],
 			"icon": "src/resources/icon.icns"
 		},
 		"linux": {
-			"target": [{ "target": "AppImage", "arch": ["x64"] }],
+			"target": [
+				{
+					"target": "AppImage",
+					"arch": [
+						"x64"
+					]
+				}
+			],
 			"icon": "src/resources/icon.png"
 		},
 		"npmRebuild": true,
