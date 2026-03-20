@@ -4,12 +4,31 @@ import * as schema from "@finance-tracker/db";
 import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { migrate } from "drizzle-orm/better-sqlite3/migrator";
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, ipcMain } from "electron";
+import { autoUpdater } from "electron-updater";
 import { createIPCHandler } from "trpc-electron/main";
 
 const isDev = process.env.NODE_ENV_ELECTRON_VITE === "development";
 
 let win: BrowserWindow;
+
+function setupAutoUpdater() {
+	if (isDev) return;
+
+	autoUpdater.checkForUpdatesAndNotify();
+
+	autoUpdater.on("update-available", () => {
+		win.webContents.send("update-available");
+	});
+
+	autoUpdater.on("update-downloaded", () => {
+		win.webContents.send("update-downloaded");
+	});
+
+	ipcMain.on("install-update", () => {
+		autoUpdater.quitAndInstall();
+	});
+}
 
 function createWindow() {
 	win = new BrowserWindow({
@@ -46,6 +65,7 @@ app.whenReady().then(() => {
 	migrate(db, { migrationsFolder });
 
 	createWindow();
+	setupAutoUpdater();
 
 	createIPCHandler({
 		router: appRouter,

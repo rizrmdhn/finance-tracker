@@ -1,18 +1,23 @@
 {
 	"name": "@finance-tracker/desktop",
-	"version": "0.0.2",
+	"version": "0.0.3",
 	"main": "out/main/index.js",
 	"scripts": {
 		"dev": "electron-vite dev",
 		"build": "electron-vite build",
 		"rebuild": "electron-rebuild -f -w better-sqlite3",
-		"package": "bun run build && electron-builder",
+		"package": "bun run build && electron-builder --publish always",
 		"package:dir": "bun run build && electron-builder --win --dir",
 		"check-types": "tsc --noEmit"
 	},
 	"build": {
 		"appId": "com.finance-tracker.desktop",
 		"productName": "Finance Tracker",
+		"publish": {
+			"provider": "github",
+			"owner": "rizrmdhn",
+			"repo": "finance-tracker"
+		},
 		"directories": {
 			"output": "dist"
 		},
@@ -79,6 +84,7 @@
 		"@finance-tracker/schema": "workspace:*",
 		"better-sqlite3": "catalog:",
 		"drizzle-orm": "catalog:",
+		"electron-updater": "^6.8.3",
 		"trpc-electron": "^0.1.2"
 	},
 	"devDependencies": {
