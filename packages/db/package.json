@@ -19,6 +19,7 @@
 	"devDependencies": {
 		"drizzle-kit": "catalog:",
 		"@types/better-sqlite3": "catalog:",
+		"@types/node": "catalog:",
 		"typescript": "catalog:"
 	}
 }

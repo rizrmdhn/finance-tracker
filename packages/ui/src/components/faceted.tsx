@@ -67,11 +67,11 @@ function Faceted<Multiple extends boolean = false>(
   const open = isControlled ? openProp : uncontrolledOpen;
 
   const onOpenChange = React.useCallback(
-    (newOpen: boolean) => {
+    (newOpen: boolean, eventDetails?: any) => {
       if (!isControlled) {
         setUncontrolledOpen(newOpen);
       }
-      onOpenChangeProp?.(newOpen);
+      onOpenChangeProp?.(newOpen, eventDetails);
     },
     [isControlled, onOpenChangeProp],
   );

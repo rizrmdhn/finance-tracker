@@ -65,7 +65,6 @@ export function EmptyState({
                   <Button
                     key={index}
                     variant={action.variant || "default"}
-                    asChild
                   >
                     <a href={action.href}>{action.label}</a>
                   </Button>
@@ -87,7 +86,6 @@ export function EmptyState({
       {learnMoreHref && (
         <Button
           variant="link"
-          asChild
           className="text-muted-foreground"
           size="sm"
         >
