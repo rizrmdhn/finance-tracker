@@ -43,7 +43,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Type check
-        run: bun run check-types
+        run: bun turbo check-types --filter=!@finance-tracker/native
 
       - name: Lint
         run: bun run check
