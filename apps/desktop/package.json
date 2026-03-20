@@ -6,7 +6,7 @@
 		"dev": "electron-vite dev",
 		"build": "electron-vite build",
 		"rebuild": "electron-rebuild -f -w better-sqlite3",
-		"package": "bun run build && electron-builder --win",
+		"package": "bun run build && electron-builder",
 		"package:dir": "bun run build && electron-builder --win --dir",
 		"check-types": "tsc --noEmit"
 	},
@@ -30,19 +30,20 @@
 			"**/node_modules/better-sqlite3/**"
 		],
 		"win": {
-			"target": [
-				{
-					"target": "nsis",
-					"arch": [
-						"x64"
-					]
-				}
-			],
+			"target": [{ "target": "nsis", "arch": ["x64"] }],
 			"icon": "src/resources/icon.ico"
 		},
 		"nsis": {
 			"oneClick": false,
 			"allowToChangeInstallationDirectory": true
+		},
+		"mac": {
+			"target": [{ "target": "dmg", "arch": ["x64", "arm64"] }],
+			"icon": "src/resources/icon.icns"
+		},
+		"linux": {
+			"target": [{ "target": "AppImage", "arch": ["x64"] }],
+			"icon": "src/resources/icon.png"
 		},
 		"npmRebuild": true,
 		"nativeRebuilder": "sequential",

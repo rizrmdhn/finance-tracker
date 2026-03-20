@@ -9,9 +9,11 @@ permissions:
   contents: write
 
 jobs:
-  release:
-    name: Build & Release Desktop
-    runs-on: windows-latest
+  prepare:
+    name: Prepare Release
+    runs-on: ubuntu-latest
+    outputs:
+      is_prerelease: ${{ steps.prerelease.outputs.is_prerelease }}
 
     steps:
       - name: Checkout
@@ -19,15 +21,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup bun
-        uses: oven-sh/setup-bun@v2
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
       - name: Generate changelog
         uses: orhun/git-cliff-action@v4
-        id: changelog
         with:
           args: --latest --strip header
         env:
@@ -44,14 +39,73 @@ jobs:
             echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Upload release notes
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: RELEASE_NOTES.md
+
+  build:
+    name: Build (${{ matrix.os }})
+    needs: prepare
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            args: --win
+            artifact: "apps/desktop/dist/**/*.exe"
+          - os: macos-latest
+            args: --mac
+            artifact: "apps/desktop/dist/**/*.dmg"
+          - os: ubuntu-latest
+            args: --linux
+            artifact: "apps/desktop/dist/**/*.AppImage"
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
       - name: Build & package desktop
-        run: bun desktop:pack
+        run: bunx electron-vite build && bunx electron-builder ${{ matrix.args }}
+        working-directory: apps/desktop
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ matrix.os }}
+          path: ${{ matrix.artifact }}
+
+  release:
+    name: Create GitHub Release
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download release notes
+        uses: actions/download-artifact@v4
+        with:
+          name: release-notes
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: desktop-*
+          merge-multiple: true
+          path: artifacts
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           body_path: RELEASE_NOTES.md
-          prerelease: ${{ steps.prerelease.outputs.is_prerelease == 'true' }}
-          files: |
-            apps/desktop/dist/**/*.exe
-            apps/desktop/dist/**/*.yml
+          prerelease: ${{ needs.prepare.outputs.is_prerelease == 'true' }}
+          files: artifacts/**/*
