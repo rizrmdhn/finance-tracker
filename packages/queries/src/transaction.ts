@@ -1,11 +1,13 @@
 import type { AnyDatabase } from "@finance-tracker/db";
 import { transactions } from "@finance-tracker/db";
 import type {
+	PaginatedTransactionsInput,
 	TransactionInput,
 	UpdateTransactionInput,
 } from "@finance-tracker/schema";
 import { between, desc, eq } from "drizzle-orm";
 import { NotFoundError } from "./errors";
+import { getOffsetPaginated } from "./utils/get-offset-paginated";
 
 export async function getTransactions(
 	db: AnyDatabase,
@@ -27,6 +29,18 @@ export async function getTransactions(
 export async function getTransactionById(db: AnyDatabase, id: string) {
 	return await db.query.transactions.findFirst({
 		where: eq(transactions.id, id),
+	});
+}
+
+export async function getOffsetPaginatedTransactions(
+	db: AnyDatabase,
+	input: PaginatedTransactionsInput,
+) {
+	return await getOffsetPaginated({
+		db,
+		table: transactions,
+		input,
+		conditions: [],
 	});
 }
 

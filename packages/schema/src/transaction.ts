@@ -1,4 +1,14 @@
+import type { transactions } from "@finance-tracker/db";
 import { z } from "zod";
+import { createPaginationSchema } from "./pagination";
+
+const SORTABLE_FIELDS = [
+	"amount",
+	"date",
+] as const satisfies readonly (keyof typeof transactions.$inferSelect)[];
+
+export const paginatedTransactionsSchema =
+	createPaginationSchema(SORTABLE_FIELDS);
 
 export const transactionSchema = z.object({
 	amount: z.number().positive(),
@@ -24,6 +34,9 @@ export const summaryFiltersSchema = z.object({
 	to: z.number(),
 });
 
+export type PaginatedTransactionsInput = z.infer<
+	typeof paginatedTransactionsSchema
+>;
 export type TransactionInput = z.infer<typeof transactionSchema>;
 export type UpdateTransactionInput = z.infer<typeof updateTransactionSchema>;
 export type TransactionFilters = z.infer<typeof transactionFiltersSchema>;

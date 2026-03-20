@@ -4,7 +4,11 @@ import { and, asc, count, desc, type SQL, type Table } from "drizzle-orm";
 interface OffsetPaginatedInput {
 	page: number;
 	limit: number;
-	sort: { id: string; desc: boolean };
+	sort: { id: string; desc: boolean }[];
+	filters: unknown[];
+	joinOperator: "and" | "or";
+	showDeleted: boolean;
+	createdAt: number[];
 }
 
 interface GetOffsetPaginatedOptions<T extends Table> {
@@ -23,9 +27,10 @@ export async function getOffsetPaginated<T extends Table>({
 }: GetOffsetPaginatedOptions<T>) {
 	const where = and(...conditions);
 
-	const sortCol = (table as Record<string, unknown>)[input.sort.id] as SQL;
+	const primarySort = input.sort[0];
+	const sortCol = (table as Record<string, unknown>)[primarySort?.id ?? ""] as SQL;
 
-	const orderBy = input.sort.desc ? desc(sortCol) : asc(sortCol);
+	const orderBy = primarySort?.desc ? desc(sortCol) : asc(sortCol);
 
 	const offset = (input.page - 1) * input.limit;
 

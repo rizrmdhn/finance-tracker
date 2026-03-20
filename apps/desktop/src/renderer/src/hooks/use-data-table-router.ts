@@ -27,7 +27,7 @@ const DEBOUNCE_MS = 500;
 
 interface SearchParams {
 	page: number;
-	perPage: number;
+	limit: number;
 	sort: { id: string; desc: boolean }[];
 	filters?: {
 		id: string;
@@ -87,9 +87,9 @@ export function useDataTableRouter<TData, TSearch extends SearchParams>(
 	const pagination: PaginationState = React.useMemo(
 		() => ({
 			pageIndex: search.page - 1,
-			pageSize: search.perPage,
+			pageSize: search.limit,
 		}),
-		[search.page, search.perPage],
+		[search.page, search.limit],
 	);
 
 	const onPaginationChange = React.useCallback(
@@ -102,7 +102,7 @@ export function useDataTableRouter<TData, TSearch extends SearchParams>(
 				search: (prev) => ({
 					...prev,
 					page: newPagination.pageIndex + 1,
-					perPage: newPagination.pageSize,
+					limit: newPagination.pageSize,
 				}),
 			});
 		},

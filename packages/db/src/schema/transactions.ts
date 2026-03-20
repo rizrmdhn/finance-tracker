@@ -23,6 +23,7 @@ export const transactions = sqliteTable("transactions", {
 	tags: text("tags"),
 	date: integer("date").notNull(),
 	createdAt: integer("created_at").$default(() => Date.now()),
+	updatedAt: integer("updated_at").$onUpdate(() => Date.now()),
 });
 
 export const categories = sqliteTable("categories", {
@@ -33,6 +34,8 @@ export const categories = sqliteTable("categories", {
 	icon: text("icon", { enum: ICON_NAMES }).notNull(),
 	color: text("color", { enum: COLOR_VALUES }).notNull(),
 	type: text("type", { enum: CATEGORY_TYPES }).notNull(),
+	createdAt: integer("created_at").$default(() => Date.now()),
+	updatedAt: integer("updated_at").$onUpdate(() => Date.now()),
 });
 
 export const transactionRelations = relations(transactions, ({ one }) => ({

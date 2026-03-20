@@ -8,6 +8,7 @@
 		"check-types": "tsc --noEmit"
 	},
 	"dependencies": {
+		"@finance-tracker/db": "workspace:*",
 		"@finance-tracker/constants": "workspace:*",
 		"zod": "catalog:"
 	},

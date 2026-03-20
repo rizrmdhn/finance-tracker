@@ -1,11 +1,13 @@
 import {
 	createTransaction,
 	deleteTransaction,
+	getOffsetPaginatedTransactions,
 	getTransactionSummary,
 	getTransactions,
 	updateTransaction,
 } from "@finance-tracker/queries";
 import {
+	paginatedTransactionsSchema,
 	summaryFiltersSchema,
 	transactionFiltersSchema,
 	transactionSchema,
@@ -21,6 +23,16 @@ export const transactionRouter = createTRPCRouter({
 		.query(async ({ ctx, input }) => {
 			const [data, err] = await tryCatchAsync(() =>
 				getTransactions(ctx.db, input),
+			);
+			if (err) throw toTRPCError(err);
+			return data;
+		}),
+
+	paginated: publicProcedure
+		.input(paginatedTransactionsSchema)
+		.query(async ({ ctx, input }) => {
+			const [data, err] = await tryCatchAsync(() =>
+				getOffsetPaginatedTransactions(ctx.db, input),
 			);
 			if (err) throw toTRPCError(err);
 			return data;

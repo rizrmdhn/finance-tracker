@@ -34,11 +34,28 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Slot } from "@radix-ui/react-slot";
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import { useComposedRefs } from "../lib/compose-refs";
+import { composeRefs, useComposedRefs } from "../lib/compose-refs";
 import { cn } from "../lib/utils";
+
+type SlotProps = React.HTMLAttributes<HTMLElement> & {
+  children?: React.ReactNode;
+};
+
+const Slot = React.forwardRef<HTMLElement, SlotProps>(
+  ({ children, ...slotProps }, ref) => {
+    if (!React.isValidElement(children)) return null;
+    const childProps = children.props as Record<string, unknown>;
+    return React.cloneElement(children, {
+      ...slotProps,
+      ...childProps,
+      ref: composeRefs(ref, (children as React.ReactElement & { ref?: React.Ref<HTMLElement> }).ref),
+      className: cn(slotProps.className, childProps.className as string | undefined),
+      style: { ...(slotProps.style ?? {}), ...(childProps.style as React.CSSProperties | undefined) },
+    } as Record<string, unknown>);
+  },
+);
 
 const orientationConfig = {
   vertical: {
