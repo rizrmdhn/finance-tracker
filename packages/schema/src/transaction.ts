@@ -5,6 +5,8 @@ import { createPaginationSchema } from "./pagination";
 const SORTABLE_FIELDS = [
 	"amount",
 	"date",
+	"createdAt",
+	"updatedAt",
 ] as const satisfies readonly (keyof typeof transactions.$inferSelect)[];
 
 export const paginatedTransactionsSchema =
