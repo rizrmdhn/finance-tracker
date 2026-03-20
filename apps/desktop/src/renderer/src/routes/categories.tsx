@@ -1,3 +1,4 @@
+import type { Category } from "@finance-tracker/types";
 import { Button } from "@finance-tracker/ui/components/button";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
@@ -6,6 +7,7 @@ import { useState } from "react";
 import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { ICON_MAP } from "@/components/icon-picker";
 import useModalState from "@/hooks/use-modal-state";
+import { pageHead } from "@/lib/page-head";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
 import CreateCategoryDialog from "./-components/create-category-dialog";
@@ -13,15 +15,12 @@ import EditCategoryDialog from "./-components/edit-category-dialog";
 
 export const Route = createFileRoute("/categories")({
 	component: CategoriesComponent,
+	head: () =>
+		pageHead(
+			"Kategori",
+			"Kelola kategori keuangan Anda untuk mengorganisir transaksi dengan lebih baik. Tambah, edit, atau hapus kategori sesuai kebutuhan untuk menjaga catatan keuangan Anda tetap rapi dan terstruktur.",
+		),
 });
-
-type Category = {
-	id: string;
-	name: string;
-	icon: string | null;
-	color: string | null;
-	type: "income" | "expense" | "transfer" | "savings";
-};
 
 function CategoriesComponent() {
 	const { state, openModal, closeModal } = useModalState({

@@ -30,16 +30,12 @@ import {
 	PieChart,
 	XAxis,
 } from "recharts";
-import { formatCurrency, getLast6Months } from "./utils";
+import { formatCurrency, getMonthsInRange } from "./utils";
 
 const barChartConfig = {
 	income: { label: "Pemasukan", color: "#22c55e" },
 	expense: { label: "Pengeluaran", color: "#ef4444" },
 	savings: { label: "Tabungan", color: "#a855f7" },
-} satisfies ChartConfig;
-
-const categoryChartConfig = {
-	amount: { label: "Jumlah" },
 } satisfies ChartConfig;
 
 const balanceChartConfig = {
@@ -60,18 +56,22 @@ function currencyFormatter(value: unknown, name: unknown) {
 interface AnalyticsCardProps {
 	transactions: Transaction[];
 	categories: Category[];
+	from: number;
+	to: number;
 }
 
 export function AnalyticsCard({
 	transactions,
 	categories,
+	from,
+	to,
 }: AnalyticsCardProps) {
 	const categoryMap = useMemo(
 		() => new Map(categories.map((c) => [c.id, c])),
 		[categories],
 	);
 
-	const months = useMemo(() => getLast6Months(), []);
+	const months = useMemo(() => getMonthsInRange(from, to), [from, to]);
 
 	const monthlyData = useMemo(
 		() =>
@@ -114,6 +114,14 @@ export function AnalyticsCard({
 		[transactions, categories],
 	);
 
+	const categoryChartConfig = useMemo(() => {
+		const config: ChartConfig = { amount: { label: "Jumlah" } };
+		for (const item of categoryData) {
+			config[item.category] = { label: item.category, color: item.fill };
+		}
+		return config;
+	}, [categoryData]);
+
 	const balanceData = useMemo(
 		() =>
 			months.map(({ label, from, to }) => {
@@ -122,7 +130,8 @@ export function AnalyticsCard({
 					.reduce((sum, tx) => {
 						const type = categoryMap.get(tx.categoryId ?? "")?.type;
 						if (type === "income") return sum + tx.amount;
-						if (type === "expense" || type === "savings") return sum - tx.amount;
+						if (type === "expense" || type === "savings")
+							return sum - tx.amount;
 						return sum;
 					}, 0);
 				return { month: label, balance };
@@ -138,9 +147,9 @@ export function AnalyticsCard({
 			<CardContent>
 				<Tabs defaultValue="monthly">
 					<TabsList>
-						<TabsTrigger value="monthly">Bulanan</TabsTrigger>
-						<TabsTrigger value="category">Kategori</TabsTrigger>
-						<TabsTrigger value="balance">Saldo</TabsTrigger>
+						<TabsTrigger value="monthly">Pendapatan & Pengeluaran</TabsTrigger>
+						<TabsTrigger value="category">Distribusi Kategori</TabsTrigger>
+						<TabsTrigger value="balance">Riwayat Saldo</TabsTrigger>
 					</TabsList>
 
 					<TabsContent value="monthly">

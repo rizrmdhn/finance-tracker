@@ -1,4 +1,4 @@
-import { endOfMonth, startOfMonth, subMonths } from "date-fns";
+import { addMonths, endOfMonth, startOfMonth, subMonths } from "date-fns";
 
 export function formatCurrency(amount: number) {
 	return new Intl.NumberFormat("id-ID", {
@@ -41,4 +41,19 @@ export function getLast6Months() {
 			to: endOfMonth(date).getTime(),
 		};
 	});
+}
+
+export function getMonthsInRange(from: number, to: number) {
+	let current = startOfMonth(new Date(from));
+	const end = startOfMonth(new Date(to));
+	const result = [];
+	while (current <= end) {
+		result.push({
+			label: new Intl.DateTimeFormat("id-ID", { month: "short" }).format(current),
+			from: startOfMonth(current).getTime(),
+			to: endOfMonth(current).getTime(),
+		});
+		current = addMonths(current, 1);
+	}
+	return result;
 }

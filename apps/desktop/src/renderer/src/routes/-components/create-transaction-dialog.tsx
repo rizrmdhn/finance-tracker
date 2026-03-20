@@ -27,11 +27,14 @@ import { DatePicker } from "@/components/date-picker";
 import { TagsInput } from "@/components/tags-input";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
+import { getCurrentMonthRange } from "./utils";
 
 interface CreateTransactionDialogProps {
 	open: boolean;
 	setIsOpen: (open: boolean) => void;
 }
+
+const { from: currentFrom, to: currentTo } = getCurrentMonthRange();
 
 export default function CreateTransactionDialog({
 	open,
@@ -46,6 +49,12 @@ export default function CreateTransactionDialog({
 			onSuccess: async () => {
 				await queryClient.invalidateQueries(
 					trpc.transaction.list.queryOptions(),
+				);
+				await queryClient.invalidateQueries(
+					trpc.transaction.summary.queryOptions({
+						from: currentFrom,
+						to: currentTo,
+					}),
 				);
 				globalSuccessToast("Transaction created successfully");
 				form.reset();

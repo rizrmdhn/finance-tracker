@@ -14,40 +14,40 @@ import {
 	TrendingUp,
 	Wallet,
 } from "lucide-react";
+import { useState } from "react";
 import useModalState from "@/hooks/use-modal-state";
 import { trpc } from "../lib/trpc";
 import { AnalyticsCard } from "./-components/analytics-card";
 import CreateTransactionDialog from "./-components/create-transaction-dialog";
+import { DateRangePicker } from "./-components/date-range-picker";
 import { RecentTransactions } from "./-components/recent-transactions";
 import { SummaryCard } from "./-components/summary-card";
-import { getCurrentMonthRange, getSixMonthsRange } from "./-components/utils";
+import { getSixMonthsRange } from "./-components/utils";
 
 export const Route = createFileRoute("/")({
 	component: HomeComponent,
 });
-
-const { from: currentFrom, to: currentTo } = getCurrentMonthRange();
-const { from: sixMonthsFrom } = getSixMonthsRange();
 
 function HomeComponent() {
 	const { state, openModal, closeModal } = useModalState({
 		transaction: false,
 	});
 
-	const monthLabel = new Intl.DateTimeFormat("id-ID", {
-		month: "long",
-		year: "numeric",
-	}).format(new Date());
+	const defaultRange = getSixMonthsRange();
+	const [dateRange, setDateRange] = useState(defaultRange);
 
 	const { data: summary, isPending: isSummaryPending } = useQuery(
-		trpc.transaction.summary.queryOptions({ from: currentFrom, to: currentTo }),
+		trpc.transaction.summary.queryOptions({
+			from: dateRange.from,
+			to: dateRange.to,
+		}),
 	);
 
 	const { data: transactions = [], isPending: isTransactionsPending } =
 		useQuery(
 			trpc.transaction.list.queryOptions({
-				from: sixMonthsFrom,
-				to: currentTo,
+				from: dateRange.from,
+				to: dateRange.to,
 			}),
 		);
 
@@ -62,13 +62,17 @@ function HomeComponent() {
 	return (
 		<div className="flex flex-col gap-6 p-6">
 			<div className="flex items-center justify-between">
-				<div>
-					<h1 className="font-semibold text-xl">Finance Tracker</h1>
-					<p className="text-muted-foreground text-sm">{monthLabel}</p>
+				<h1 className="font-semibold text-xl">Finance Tracker</h1>
+				<div className="flex items-center gap-2">
+					<DateRangePicker
+						from={dateRange.from}
+						to={dateRange.to}
+						onChange={(from, to) => setDateRange({ from, to })}
+					/>
+					<Button onClick={() => openModal("transaction")}>
+						Tambah Transaksi
+					</Button>
 				</div>
-				<Button onClick={() => openModal("transaction")}>
-					Tambah Transaksi
-				</Button>
 			</div>
 
 			<div className="grid grid-cols-5 gap-4">
@@ -125,7 +129,12 @@ function HomeComponent() {
 			{isTransactionsPending ? (
 				<Skeleton className="h-64 w-full rounded-xl" />
 			) : (
-				<AnalyticsCard transactions={transactions} categories={categories} />
+				<AnalyticsCard
+					transactions={transactions}
+					categories={categories}
+					from={dateRange.from}
+					to={dateRange.to}
+				/>
 			)}
 
 			{isTransactionsPending ? (
