@@ -18,6 +18,7 @@ import { Toaster } from "sonner";
 import { AppSidebar } from "@/components/app-sidebar";
 import { NotFoundComponent } from "@/components/not-found";
 import { ThemeProvider } from "@/components/theme-provider";
+import { UpdateNotifier } from "@/components/update-notifier";
 import { pageHead } from "../lib/page-head";
 import type { trpc } from "../lib/trpc";
 
@@ -69,6 +70,7 @@ function RootComponent() {
 							</div>
 						</header>
 						<Outlet />
+						<UpdateNotifier />
 					</SidebarInset>
 				</SidebarProvider>
 				<Toaster position="top-right" richColors />
