@@ -19,6 +19,7 @@ function createWindow() {
 			preload: path.join(__dirname, "../preload/index.js"),
 			sandbox: false,
 		},
+		autoHideMenuBar: !isDev,
 	});
 
 	if (isDev && process.env.ELECTRON_RENDERER_URL) {
