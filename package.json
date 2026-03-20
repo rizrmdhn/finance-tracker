@@ -44,6 +44,7 @@
 	"scripts": {
 		"dev": "turbo dev",
 		"build": "turbo build",
+		"lint": "biome check .",
 		"check-types": "turbo check-types",
 		"dev:native": "turbo -F @finance-tracker/native dev",
 		"dev:web": "turbo -F @finance-tracker/web dev",
