@@ -1,20 +1,27 @@
 {
-	"version": "7",
-	"dialect": "sqlite",
-	"entries": [
-		{
-			"idx": 0,
-			"version": "6",
-			"when": 1773756681821,
-			"tag": "0000_clumsy_vin_gonzales",
-			"breakpoints": true
-		},
-		{
-			"idx": 1,
-			"version": "6",
-			"when": 1773921947699,
-			"tag": "0001_colossal_supernaut",
-			"breakpoints": true
-		}
-	]
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1773756681821,
+      "tag": "0000_clumsy_vin_gonzales",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1773921947699,
+      "tag": "0001_colossal_supernaut",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1773967385344,
+      "tag": "0002_round_expediter",
+      "breakpoints": true
+    }
+  ]
 }

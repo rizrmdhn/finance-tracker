@@ -1,7 +1,17 @@
-import { CATEGORY_TYPES } from "@finance-tracker/constants";
+import {
+	CATEGORY_COLORS,
+	CATEGORY_ICONS,
+	CATEGORY_TYPES,
+} from "@finance-tracker/constants";
 import { createId } from "@paralleldrive/cuid2";
 import { relations } from "drizzle-orm";
 import { integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
+
+const ICON_NAMES = CATEGORY_ICONS.map((i) => i.name) as [string, ...string[]];
+const COLOR_VALUES = CATEGORY_COLORS.map((c) => c.value) as [
+	string,
+	...string[],
+];
 
 export const transactions = sqliteTable("transactions", {
 	id: text("id")
@@ -20,8 +30,8 @@ export const categories = sqliteTable("categories", {
 		.primaryKey()
 		.$default(() => createId()),
 	name: text("name").notNull(),
-	icon: text("icon"),
-	color: text("color"),
+	icon: text("icon", { enum: ICON_NAMES }).notNull(),
+	color: text("color", { enum: COLOR_VALUES }).notNull(),
 	type: text("type", { enum: CATEGORY_TYPES }).notNull(),
 });
 
