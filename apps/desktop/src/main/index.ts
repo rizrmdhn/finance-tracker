@@ -15,7 +15,7 @@ function createWindow() {
 	win = new BrowserWindow({
 		width: 1200,
 		height: 800,
-		icon: path.join(__dirname, "../../resources/icon.png"),
+		icon: path.join(__dirname, "../../src/resources/icon.ico"),
 		webPreferences: {
 			preload: path.join(__dirname, "../preload/index.js"),
 			sandbox: false,

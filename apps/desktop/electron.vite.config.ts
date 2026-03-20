@@ -22,6 +22,7 @@ export default defineConfig({
 		build: {
 			outDir: "out/renderer",
 		},
+		publicDir: resolve("src/resources"),
 		resolve: {
 			alias: {
 				"@": resolve("src/renderer/src"),
