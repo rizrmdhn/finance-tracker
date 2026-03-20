@@ -1,10 +1,23 @@
 import { Button } from "@finance-tracker/ui/components/button";
+import {
+	Card,
+	CardContent,
+	CardHeader,
+} from "@finance-tracker/ui/components/card";
+import { Skeleton } from "@finance-tracker/ui/components/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { TrendingDown, TrendingUp, Wallet } from "lucide-react";
-import { globalSuccessToast } from "../lib/toast";
+import {
+	ArrowLeftRight,
+	PiggyBank,
+	TrendingDown,
+	TrendingUp,
+	Wallet,
+} from "lucide-react";
+import useModalState from "@/hooks/use-modal-state";
 import { trpc } from "../lib/trpc";
 import { AnalyticsCard } from "./-components/analytics-card";
+import CreateTransactionDialog from "./-components/create-transaction-dialog";
 import { RecentTransactions } from "./-components/recent-transactions";
 import { SummaryCard } from "./-components/summary-card";
 import { getCurrentMonthRange, getSixMonthsRange } from "./-components/utils";
@@ -17,24 +30,34 @@ const { from: currentFrom, to: currentTo } = getCurrentMonthRange();
 const { from: sixMonthsFrom } = getSixMonthsRange();
 
 function HomeComponent() {
+	const { state, openModal, closeModal } = useModalState({
+		transaction: false,
+	});
+
 	const monthLabel = new Intl.DateTimeFormat("id-ID", {
 		month: "long",
 		year: "numeric",
 	}).format(new Date());
 
-	const { data: summary } = useQuery(
+	const { data: summary, isPending: isSummaryPending } = useQuery(
 		trpc.transaction.summary.queryOptions({ from: currentFrom, to: currentTo }),
 	);
 
-	const { data: transactions = [] } = useQuery(
-		trpc.transaction.list.queryOptions({ from: sixMonthsFrom, to: currentTo }),
-	);
+	const { data: transactions = [], isPending: isTransactionsPending } =
+		useQuery(
+			trpc.transaction.list.queryOptions({
+				from: sixMonthsFrom,
+				to: currentTo,
+			}),
+		);
 
 	const { data: categories = [] } = useQuery(trpc.category.list.queryOptions());
 
 	const income = summary?.income ?? 0;
 	const expense = summary?.expense ?? 0;
 	const balance = summary?.balance ?? 0;
+	const transfer = summary?.transfer ?? 0;
+	const savings = summary?.savings ?? 0;
 
 	return (
 		<div className="flex flex-col gap-6 p-6">
@@ -43,41 +66,83 @@ function HomeComponent() {
 					<h1 className="font-semibold text-xl">Finance Tracker</h1>
 					<p className="text-muted-foreground text-sm">{monthLabel}</p>
 				</div>
-				<Button>Tambah Transaksi</Button>
+				<Button onClick={() => openModal("transaction")}>
+					Tambah Transaksi
+				</Button>
 			</div>
 
-			<div className="grid grid-cols-3 gap-4">
-				<SummaryCard
-					title="Saldo"
-					value={balance}
-					icon={<Wallet className="size-4 text-muted-foreground" />}
-					highlight={balance >= 0 ? "positive" : "negative"}
-				/>
-				<SummaryCard
-					title="Pemasukan"
-					value={income}
-					icon={<TrendingUp className="size-4 text-muted-foreground" />}
-					highlight="positive"
-				/>
-				<SummaryCard
-					title="Pengeluaran"
-					value={expense}
-					icon={<TrendingDown className="size-4 text-muted-foreground" />}
-					highlight="negative"
-				/>
+			<div className="grid grid-cols-5 gap-4">
+				{isSummaryPending ? (
+					Array.from({ length: 5 }).map((_, i) => (
+						<Card key={i}>
+							<CardHeader>
+								<div className="flex items-center justify-between">
+									<Skeleton className="h-4 w-20" />
+									<Skeleton className="size-4 rounded-full" />
+								</div>
+							</CardHeader>
+							<CardContent>
+								<Skeleton className="h-8 w-32" />
+							</CardContent>
+						</Card>
+					))
+				) : (
+					<>
+						<SummaryCard
+							title="Saldo"
+							value={balance}
+							icon={<Wallet className="size-4 text-muted-foreground" />}
+							highlight={balance >= 0 ? "positive" : "negative"}
+						/>
+						<SummaryCard
+							title="Pemasukan"
+							value={income}
+							icon={<TrendingUp className="size-4 text-muted-foreground" />}
+							highlight="positive"
+						/>
+						<SummaryCard
+							title="Pengeluaran"
+							value={expense}
+							icon={<TrendingDown className="size-4 text-muted-foreground" />}
+							highlight="negative"
+						/>
+						<SummaryCard
+							title="Transfer"
+							value={transfer}
+							icon={<ArrowLeftRight className="size-4 text-muted-foreground" />}
+							highlight="neutral"
+						/>
+						<SummaryCard
+							title="Tabungan"
+							value={savings}
+							icon={<PiggyBank className="size-4 text-muted-foreground" />}
+							highlight="neutral"
+						/>
+					</>
+				)}
 			</div>
 
-			<AnalyticsCard transactions={transactions} categories={categories} />
+			{isTransactionsPending ? (
+				<Skeleton className="h-64 w-full rounded-xl" />
+			) : (
+				<AnalyticsCard transactions={transactions} categories={categories} />
+			)}
 
-			<RecentTransactions transactions={transactions} categories={categories} />
+			{isTransactionsPending ? (
+				<Skeleton className="h-48 w-full rounded-xl" />
+			) : (
+				<RecentTransactions
+					transactions={transactions}
+					categories={categories}
+				/>
+			)}
 
-			<Button
-				variant="outline"
-				className="self-start"
-				onClick={() => globalSuccessToast("Fitur ini belum tersedia")}
-			>
-				Lihat Semua Transaksi
-			</Button>
+			<CreateTransactionDialog
+				open={state.transaction}
+				setIsOpen={(open) =>
+					open ? openModal("transaction") : closeModal("transaction")
+				}
+			/>
 		</div>
 	);
 }

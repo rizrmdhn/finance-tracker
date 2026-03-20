@@ -81,16 +81,28 @@ export async function getTransactionSummary(
 	const summary = {
 		income: 0,
 		expense: 0,
+		transfer: 0,
+		savings: 0,
 		balance: 0,
 	};
 
 	result.forEach((item) => {
-		if (item.category?.type === "income") {
-			summary.income += item.amount;
-			summary.balance += item.amount;
-		} else if (item.category?.type === "expense") {
-			summary.expense += item.amount;
-			summary.balance -= item.amount;
+		switch (item.category?.type) {
+			case "income":
+				summary.income += item.amount;
+				summary.balance += item.amount;
+				break;
+			case "expense":
+				summary.expense += item.amount;
+				summary.balance -= item.amount;
+				break;
+			case "savings":
+				summary.savings += item.amount;
+				summary.balance -= item.amount;
+				break;
+			case "transfer":
+				summary.transfer += item.amount;
+				break;
 		}
 	});
 

@@ -42,21 +42,3 @@ export function getLast6Months() {
 		};
 	});
 }
-
-export type Transaction = {
-	id: string;
-	amount: number;
-	note: string | null;
-	categoryId: string | null;
-	tags: string | null;
-	date: number;
-	createdAt: number | null;
-};
-
-export type Category = {
-	id: string;
-	name: string;
-	icon: string | null;
-	color: string | null;
-	type: string;
-};

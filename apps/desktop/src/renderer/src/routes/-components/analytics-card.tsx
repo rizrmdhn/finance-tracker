@@ -1,3 +1,4 @@
+import type { Category, Transaction } from "@finance-tracker/types";
 import {
 	Card,
 	CardContent,
@@ -29,16 +30,12 @@ import {
 	PieChart,
 	XAxis,
 } from "recharts";
-import {
-	type Category,
-	formatCurrency,
-	getLast6Months,
-	type Transaction,
-} from "./utils";
+import { formatCurrency, getLast6Months } from "./utils";
 
 const barChartConfig = {
 	income: { label: "Pemasukan", color: "#22c55e" },
 	expense: { label: "Pengeluaran", color: "#ef4444" },
+	savings: { label: "Tabungan", color: "#a855f7" },
 } satisfies ChartConfig;
 
 const categoryChartConfig = {
@@ -92,7 +89,12 @@ export function AnalyticsCard({
 						(tx) => categoryMap.get(tx.categoryId ?? "")?.type === "expense",
 					)
 					.reduce((sum, tx) => sum + tx.amount, 0);
-				return { month: label, income, expense };
+				const savings = monthTxs
+					.filter(
+						(tx) => categoryMap.get(tx.categoryId ?? "")?.type === "savings",
+					)
+					.reduce((sum, tx) => sum + tx.amount, 0);
+				return { month: label, income, expense, savings };
 			}),
 		[transactions, categoryMap, months],
 	);
@@ -100,7 +102,7 @@ export function AnalyticsCard({
 	const categoryData = useMemo(
 		() =>
 			categories
-				.filter((c) => c.type === "expense")
+				.filter((c) => c.type === "expense" || c.type === "savings")
 				.map((cat) => ({
 					category: cat.name,
 					amount: transactions
@@ -120,7 +122,7 @@ export function AnalyticsCard({
 					.reduce((sum, tx) => {
 						const type = categoryMap.get(tx.categoryId ?? "")?.type;
 						if (type === "income") return sum + tx.amount;
-						if (type === "expense") return sum - tx.amount;
+						if (type === "expense" || type === "savings") return sum - tx.amount;
 						return sum;
 					}, 0);
 				return { month: label, balance };
@@ -157,6 +159,7 @@ export function AnalyticsCard({
 								<ChartLegend content={<ChartLegendContent />} />
 								<Bar dataKey="income" fill="var(--color-income)" radius={4} />
 								<Bar dataKey="expense" fill="var(--color-expense)" radius={4} />
+								<Bar dataKey="savings" fill="var(--color-savings)" radius={4} />
 							</BarChart>
 						</ChartContainer>
 					</TabsContent>
