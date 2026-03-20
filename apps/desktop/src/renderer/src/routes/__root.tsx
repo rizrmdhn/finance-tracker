@@ -59,7 +59,7 @@ function RootComponent() {
 					}
 				>
 					<AppSidebar />
-					<SidebarInset>
+					<SidebarInset className="overflow-hidden contain-inline-size">
 						<header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
 							<div className="flex w-full items-center gap-1">
 								<SidebarTrigger className="-ml-1" />
@@ -69,7 +69,9 @@ function RootComponent() {
 								/>
 							</div>
 						</header>
-						<Outlet />
+						<div className="overflow-y-auto p-4">
+							<Outlet />
+						</div>
 						<UpdateNotifier />
 					</SidebarInset>
 				</SidebarProvider>

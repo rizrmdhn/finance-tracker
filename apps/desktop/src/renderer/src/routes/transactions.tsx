@@ -48,6 +48,13 @@ function TransactionsComponent() {
 		placeholderData: keepPreviousData,
 	});
 
+	const { data: accounts = [] } = useQuery(trpc.account.list.queryOptions());
+
+	const accountsMap = useMemo(
+		() => new Map(accounts.map((a) => [a.id, a.name])),
+		[accounts],
+	);
+
 	const handleEdit = useCallback(
 		(tx: Transaction) => {
 			setSelectedTransaction(tx);
@@ -62,8 +69,9 @@ function TransactionsComponent() {
 				currentPage: params.page,
 				perPage: params.limit,
 				onEdit: handleEdit,
+				accountsMap,
 			}),
-		[params.page, params.limit, handleEdit],
+		[params.page, params.limit, handleEdit, accountsMap],
 	);
 
 	const { table } = useDataTableRouter({
@@ -81,7 +89,7 @@ function TransactionsComponent() {
 	});
 
 	return (
-		<div className="flex flex-col p-4">
+		<div className="flex flex-col">
 			<div className="mb-4 flex items-center justify-end gap-4">
 				<Button onClick={() => openModal("create")}>
 					<PlusCircle className="size-4" />

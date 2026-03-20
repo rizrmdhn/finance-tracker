@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "3fbf8e30-6f9f-43c6-871a-45f93ffdba44",
-  "prevId": "30058d1c-7613-4569-bd88-c8ac09bb4002",
+  "id": "12fa37db-7770-4de2-930c-8e7af8980d95",
+  "prevId": "e2a246ef-47e7-4a4f-bbaa-29d3ed090390",
   "tables": {
     "accounts": {
       "name": "accounts",
@@ -222,13 +222,6 @@
           "notNull": true,
           "autoincrement": false
         },
-        "to_account_id": {
-          "name": "to_account_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
         "tags": {
           "name": "tags",
           "type": "text",
@@ -308,19 +301,6 @@
           "tableTo": "accounts",
           "columnsFrom": [
             "account_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "transactions_to_account_id_accounts_id_fk": {
-          "name": "transactions_to_account_id_accounts_id_fk",
-          "tableFrom": "transactions",
-          "tableTo": "accounts",
-          "columnsFrom": [
-            "to_account_id"
           ],
           "columnsTo": [
             "id"

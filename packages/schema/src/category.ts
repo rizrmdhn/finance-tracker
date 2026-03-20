@@ -1,15 +1,9 @@
 import {
-	CATEGORY_COLORS,
-	CATEGORY_ICONS,
 	CATEGORY_TYPES,
+	COLOR_VALUES,
+	ICON_NAMES,
 } from "@finance-tracker/constants";
 import { z } from "zod";
-
-const ICON_NAMES = CATEGORY_ICONS.map((i) => i.name) as [string, ...string[]];
-const COLOR_VALUES = CATEGORY_COLORS.map((c) => c.value) as [
-	string,
-	...string[],
-];
 
 export const categorySchema = z.object({
 	name: z.string().min(1),

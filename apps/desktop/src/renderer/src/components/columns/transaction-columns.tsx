@@ -1,5 +1,6 @@
 import type { Transaction } from "@finance-tracker/types";
 import type { ColumnDef } from "@tanstack/react-table";
+import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import {
 	createActionColumn,
 	createDateColumn,
@@ -16,12 +17,14 @@ interface TransactionsColumnsProps {
 	currentPage: number;
 	perPage: number;
 	onEdit: (row: Transaction) => void;
+	accountsMap: Map<string, string>;
 }
 
 export default function getTransactionsColumns({
 	currentPage,
 	perPage,
 	onEdit,
+	accountsMap,
 }: TransactionsColumnsProps): ColumnDef<Transaction>[] {
 	const ActionCell = createCrudActionCell<
 		Transaction,
@@ -35,12 +38,27 @@ export default function getTransactionsColumns({
 		onEdit,
 	});
 
+	const accountColumn: ColumnDef<Transaction> = {
+		id: "accountId",
+		accessorKey: "accountId",
+		header: ({ column }) => (
+			<DataTableColumnHeader column={column} title="Akun" label="Akun" />
+		),
+		cell: ({ row }) => (
+			<div className="w-32 truncate">
+				{accountsMap.get(row.getValue("accountId")) ?? "-"}
+			</div>
+		),
+		meta: { label: "Akun" },
+	};
+
 	return [
 		createNumberColumn<Transaction>(currentPage, perPage),
 		createPriceColumn<Transaction>("amount", "Jumlah", {
 			width: "w-32",
 			enableFilter: true,
 		}),
+		accountColumn,
 		createTextColumn<Transaction>("note", "Catatan", {
 			width: "w-24",
 		}),

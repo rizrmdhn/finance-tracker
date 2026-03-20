@@ -5,29 +5,15 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1773756681821,
-      "tag": "0000_clumsy_vin_gonzales",
+      "when": 1774010246140,
+      "tag": "0000_fat_wendell_rand",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "6",
-      "when": 1773921947699,
-      "tag": "0001_colossal_supernaut",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1773967385344,
-      "tag": "0002_round_expediter",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "6",
-      "when": 1773976234868,
-      "tag": "0003_plain_firebird",
+      "when": 1774012595075,
+      "tag": "0001_loud_darwin",
       "breakpoints": true
     }
   ]

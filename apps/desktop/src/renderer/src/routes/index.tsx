@@ -15,6 +15,7 @@ import {
 	Wallet,
 } from "lucide-react";
 import { useState } from "react";
+import { AccountCombobox } from "@/components/account-combobox";
 import useModalState from "@/hooks/use-modal-state";
 import { trpc } from "../lib/trpc";
 import { AnalyticsCard } from "./-components/analytics-card";
@@ -35,9 +36,15 @@ function HomeComponent() {
 
 	const defaultRange = getSixMonthsRange();
 	const [dateRange, setDateRange] = useState(defaultRange);
+	const [selectedAccountId, setSelectedAccountId] = useState<
+		string | undefined
+	>(undefined);
+
+	const { data: accounts = [] } = useQuery(trpc.account.list.queryOptions());
 
 	const { data: summary, isPending: isSummaryPending } = useQuery(
 		trpc.transaction.summary.queryOptions({
+			accountId: selectedAccountId,
 			from: dateRange.from,
 			to: dateRange.to,
 		}),
@@ -46,6 +53,7 @@ function HomeComponent() {
 	const { data: transactions = [], isPending: isTransactionsPending } =
 		useQuery(
 			trpc.transaction.list.queryOptions({
+				accountId: selectedAccountId,
 				from: dateRange.from,
 				to: dateRange.to,
 			}),
@@ -64,6 +72,12 @@ function HomeComponent() {
 			<div className="flex items-center justify-between">
 				<h1 className="font-semibold text-xl">Finance Tracker</h1>
 				<div className="flex items-center gap-2">
+					<AccountCombobox
+						value={selectedAccountId}
+						onChange={setSelectedAccountId}
+						accounts={accounts}
+						placeholder="All accounts"
+					/>
 					<DateRangePicker
 						from={dateRange.from}
 						to={dateRange.to}

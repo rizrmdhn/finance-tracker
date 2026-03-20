@@ -1,5 +1,5 @@
 import type { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
-import type * as schema from "./schema/transactions";
+import type * as schema from "./schema";
 
 export type AnyDatabase = BaseSQLiteDatabase<
 	"sync" | "async",

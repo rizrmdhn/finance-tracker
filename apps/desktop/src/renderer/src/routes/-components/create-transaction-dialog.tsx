@@ -21,6 +21,7 @@ import { Textarea } from "@finance-tracker/ui/components/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
+import { AccountCombobox } from "@/components/account-combobox";
 import { CategoryCombobox } from "@/components/category-combobox";
 import { CurrencyInput } from "@/components/currency-input";
 import { DatePicker } from "@/components/date-picker";
@@ -46,12 +47,13 @@ export default function CreateTransactionDialog({
 
 	const createTransactionMutation = useMutation(
 		trpc.transaction.create.mutationOptions({
-			onSuccess: async () => {
+			onSuccess: async (data) => {
 				await queryClient.invalidateQueries(
 					trpc.transaction.list.queryOptions(),
 				);
 				await queryClient.invalidateQueries(
 					trpc.transaction.summary.queryOptions({
+						accountId: data.accountId,
 						from: currentFrom,
 						to: currentTo,
 					}),
@@ -70,7 +72,12 @@ export default function CreateTransactionDialog({
 		createTransactionMutation.mutate(data);
 	};
 
+	const { data: accounts = [] } = useQuery(trpc.account.list.queryOptions());
 	const { data: categories = [] } = useQuery(trpc.category.list.queryOptions());
+
+	const watchedCategoryId = form.watch("categoryId");
+	const selectedCategory = categories.find((c) => c.id === watchedCategoryId);
+	const isTransfer = selectedCategory?.type === "transfer";
 
 	return (
 		<Dialog open={open} onOpenChange={setIsOpen}>
@@ -83,6 +90,24 @@ export default function CreateTransactionDialog({
 					className="flex flex-col gap-4"
 				>
 					<FieldGroup>
+						<Controller
+							control={form.control}
+							name="accountId"
+							render={({ field, fieldState }) => (
+								<Field data-invalid={fieldState.invalid}>
+									<FieldLabel>Account</FieldLabel>
+									<AccountCombobox
+										value={field.value}
+										onChange={field.onChange}
+										accounts={accounts}
+									/>
+									{fieldState.invalid && (
+										<FieldError errors={[fieldState.error]} />
+									)}
+								</Field>
+							)}
+						/>
+
 						<Controller
 							control={form.control}
 							name="categoryId"
@@ -100,6 +125,26 @@ export default function CreateTransactionDialog({
 								</Field>
 							)}
 						/>
+
+						{isTransfer && (
+							<Controller
+								control={form.control}
+								name="toAccountId"
+								render={({ field, fieldState }) => (
+									<Field data-invalid={fieldState.invalid}>
+										<FieldLabel>To Account</FieldLabel>
+										<AccountCombobox
+											value={field.value}
+											onChange={field.onChange}
+											accounts={accounts}
+										/>
+										{fieldState.invalid && (
+											<FieldError errors={[fieldState.error]} />
+										)}
+									</Field>
+								)}
+							/>
+						)}
 
 						<div className="grid grid-cols-2 gap-3">
 							<Controller

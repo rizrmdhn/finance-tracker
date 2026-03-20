@@ -1,2 +1,2 @@
-export * from "./schema/transactions";
+export * from "./schema";
 export type * from "./types";

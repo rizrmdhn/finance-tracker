@@ -1,4 +1,4 @@
-import type { Category } from "@finance-tracker/types";
+import type { Account } from "@finance-tracker/types";
 import {
 	Combobox,
 	ComboboxContent,
@@ -14,40 +14,40 @@ import {
 import { useEffect, useState } from "react";
 import { ICON_MAP } from "@/components/icon-picker";
 
-interface CategoryComboboxProps {
+interface AccountComboboxProps {
 	value?: string;
 	onChange: (value: string | undefined) => void;
-	categories: Category[];
+	accounts: Account[];
 	placeholder?: string;
 }
 
-export function CategoryCombobox({
+export function AccountCombobox({
 	value,
 	onChange,
-	categories,
-	placeholder = "Search category...",
-}: CategoryComboboxProps) {
+	accounts,
+	placeholder = "Search Account...",
+}: AccountComboboxProps) {
 	const [inputValue, setInputValue] = useState(
-		() => categories.find((c) => c.id === value)?.name ?? "",
+		() => accounts.find((c) => c.id === value)?.name ?? "",
 	);
 
 	useEffect(() => {
-		setInputValue(categories.find((c) => c.id === value)?.name ?? "");
-	}, [value, categories]);
+		setInputValue(accounts.find((c) => c.id === value)?.name ?? "");
+	}, [value, accounts]);
 
 	const filtered = inputValue.trim()
-		? categories.filter((c) =>
+		? accounts.filter((c) =>
 				c.name.toLowerCase().includes(inputValue.toLowerCase()),
 			)
-		: categories;
+		: accounts;
 
 	return (
 		<Combobox
-			items={categories}
+			items={accounts}
 			value={value ?? null}
 			onValueChange={(val) => {
 				onChange(val ?? undefined);
-				setInputValue(categories.find((c) => c.id === val)?.name ?? "");
+				setInputValue(accounts.find((c) => c.id === val)?.name ?? "");
 			}}
 			filter={() => true}
 		>
@@ -61,7 +61,7 @@ export function CategoryCombobox({
 			>
 				{value &&
 					(() => {
-						const cat = categories.find((c) => c.id === value);
+						const cat = accounts.find((c) => c.id === value);
 						const Icon = cat?.icon ? ICON_MAP[cat.icon] : null;
 						return (
 							<InputGroupAddon align="inline-start">
@@ -83,28 +83,28 @@ export function CategoryCombobox({
 					})()}
 			</ComboboxInput>
 			<ComboboxContent>
-				<ComboboxEmpty>No categories found</ComboboxEmpty>
+				<ComboboxEmpty>No accounts found</ComboboxEmpty>
 				<ComboboxList>
-					{filtered.map((category) => {
-						const Icon = category.icon ? ICON_MAP[category.icon] : null;
+					{filtered.map((Account) => {
+						const Icon = Account.icon ? ICON_MAP[Account.icon] : null;
 						return (
-							<ComboboxItem key={category.id} value={category.id}>
+							<ComboboxItem key={Account.id} value={Account.id}>
 								{Icon ? (
 									<Icon
 										className="size-3.5 shrink-0"
-										style={{ color: category.color ?? "#94a3b8" }}
+										style={{ color: Account.color ?? "#94a3b8" }}
 									/>
 								) : (
 									<span
 										className="size-2.5 shrink-0 rounded-full"
 										style={{
-											backgroundColor: category.color ?? "#94a3b8",
+											backgroundColor: Account.color ?? "#94a3b8",
 										}}
 									/>
 								)}
-								<span>{category.name}</span>
+								<span>{Account.name}</span>
 								<span className="ml-auto text-muted-foreground capitalize">
-									{category.type}
+									{Account.type}
 								</span>
 							</ComboboxItem>
 						);

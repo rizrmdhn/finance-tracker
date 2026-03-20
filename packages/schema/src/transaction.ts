@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createPaginationSchema } from "./pagination";
 
 const SORTABLE_FIELDS = [
+	"accountId",
 	"amount",
 	"date",
 	"createdAt",
@@ -15,7 +16,9 @@ export const paginatedTransactionsSchema =
 export const transactionSchema = z.object({
 	amount: z.number().positive(),
 	note: z.string().optional(),
-	categoryId: z.string().optional(),
+	categoryId: z.string(),
+	accountId: z.string(),
+	toAccountId: z.string().optional(),
 	tags: z.array(z.string()).optional(),
 	date: z.number(),
 });
@@ -28,10 +31,12 @@ export const transactionFiltersSchema = z
 	.object({
 		from: z.number().optional(),
 		to: z.number().optional(),
+		accountId: z.string().optional(),
 	})
 	.optional();
 
 export const summaryFiltersSchema = z.object({
+	accountId: z.string().optional(),
 	from: z.number(),
 	to: z.number(),
 });
