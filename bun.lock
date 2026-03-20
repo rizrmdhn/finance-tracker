@@ -221,6 +221,8 @@
       "dependencies": {
         "@finance-tracker/db": "workspace:*",
         "@finance-tracker/schema": "workspace:*",
+        "@finance-tracker/types": "workspace:*",
+        "@finance-tracker/utils": "workspace:*",
         "drizzle-orm": "catalog:",
       },
       "devDependencies": {
@@ -306,6 +308,7 @@
         "@finance-tracker/types": "workspace:*",
         "@tanstack/react-table": "catalog:",
         "date-fns": "catalog:",
+        "drizzle-orm": "catalog:",
       },
       "devDependencies": {
         "@finance-tracker/config": "workspace:*",
