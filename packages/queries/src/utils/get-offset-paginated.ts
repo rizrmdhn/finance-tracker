@@ -40,6 +40,12 @@ export async function getOffsetPaginated<T extends Table>({
 }: GetOffsetPaginatedOptions<T>) {
 	const offset = (input.page - 1) * input.limit;
 	const advancedTable = input.filters && input.filters.length > 0;
+	const createdAtColumn = (table as Record<string, unknown>).createdAt as
+		| SQL
+		| undefined;
+	const deletedAtColumn = (table as Record<string, unknown>).deletedAt as
+		| SQL
+		| undefined;
 
 	const where = advancedTable
 		? filterColumns({
@@ -49,11 +55,11 @@ export async function getOffsetPaginated<T extends Table>({
 			})
 		: and(
 				...(conditions ?? []),
-				input.createdAt.length > 0
+				input.createdAt.length > 0 && createdAtColumn
 					? and(
 							input.createdAt[0]
 								? gte(
-										(table as Record<string, unknown>).createdAt as SQL,
+										createdAtColumn,
 										(() => {
 											const date = new Date(input.createdAt[0]);
 											date.setHours(0, 0, 0, 0);
@@ -63,7 +69,7 @@ export async function getOffsetPaginated<T extends Table>({
 								: undefined,
 							input.createdAt[1]
 								? lte(
-										(table as Record<string, unknown>).createdAt as SQL,
+										createdAtColumn,
 										(() => {
 											const date = new Date(input.createdAt[1]);
 											date.setHours(23, 59, 59, 999);
@@ -73,9 +79,11 @@ export async function getOffsetPaginated<T extends Table>({
 								: undefined,
 						)
 					: undefined,
-				input.showDeleted
-					? isNotNull((table as Record<string, unknown>).deletedAt as SQL)
-					: isNull((table as Record<string, unknown>).deletedAt as SQL),
+				deletedAtColumn
+					? input.showDeleted
+						? isNotNull(deletedAtColumn)
+						: isNull(deletedAtColumn)
+					: undefined,
 			);
 
 	const orderBy =

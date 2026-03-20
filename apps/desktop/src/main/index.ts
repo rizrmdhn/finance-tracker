@@ -55,8 +55,15 @@ app.whenReady().then(() => {
 	const dbPath = path.join(app.getPath("userData"), "finance.db");
 	const sqlite = new Database(dbPath);
 	sqlite.pragma("journal_mode = WAL");
+	if (isDev) {
+		const originalPrepare = sqlite.prepare.bind(sqlite);
+		sqlite.prepare = ((query: string) => {
+			console.log("[sqlite]", query);
+			return originalPrepare(query);
+		}) as typeof sqlite.prepare;
+	}
 
-	const db = drizzle(sqlite, { schema });
+	const db = drizzle(sqlite, { schema, logger: isDev });
 
 	const migrationsFolder = isDev
 		? path.join(__dirname, "../../../../packages/db/migrations")
