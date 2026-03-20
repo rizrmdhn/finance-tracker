@@ -14,6 +14,7 @@ import { useDataTableRouter } from "@/hooks/use-data-table-router";
 import useModalState from "@/hooks/use-modal-state";
 import { pageHead } from "@/lib/page-head";
 import { trpc } from "@/lib/trpc";
+import CreateTransactionDialog from "./-components/create-transaction-dialog";
 import EditTransactionDialog from "./-components/edit-transaction-dialog";
 
 export const Route = createFileRoute("/transactions")({
@@ -33,7 +34,6 @@ function TransactionsComponent() {
 	const { state, openModal, closeModal } = useModalState({
 		create: false,
 		edit: false,
-		delete: false,
 	});
 
 	const [selectedTransaction, setSelectedTransaction] =
@@ -100,6 +100,12 @@ function TransactionsComponent() {
 					<DataTableSortList table={table} />
 				</DataTableToolbar>
 			</DataTable>
+			<CreateTransactionDialog
+				open={state.create}
+				setIsOpen={(open) =>
+					open ? openModal("create") : closeModal("create")
+				}
+			/>
 			<EditTransactionDialog
 				open={state.edit}
 				setIsOpen={(open) => (open ? openModal("edit") : closeModal("edit"))}
