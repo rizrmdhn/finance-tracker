@@ -51,6 +51,11 @@ function createWindow() {
 	}
 }
 
+app.setName("Finance Tracker");
+if (process.platform === "win32") {
+	app.setAppUserModelId("Finance Tracker");
+}
+
 app.whenReady().then(() => {
 	const dbPath = path.join(app.getPath("userData"), "finance.db");
 	const sqlite = new Database(dbPath);
