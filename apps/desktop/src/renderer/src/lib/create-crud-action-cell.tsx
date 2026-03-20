@@ -40,6 +40,8 @@ interface CrudActionCellConfig<T, TParams> {
 	useSearchParams: () => TParams;
 	/** Show detail action button */
 	showDetail?: boolean;
+	/** Open an edit dialog instead of navigating to an edit route */
+	onEdit?: (row: T) => void;
 	/** Action on hover for edit button */
 	onHoverEdit?: (id: string) => void;
 	/** Action on hover for detail button */
@@ -61,6 +63,7 @@ export function createCrudActionCell<T extends { id: string }, TParams>(
 		getQueryOptions,
 		useSearchParams,
 		showDetail = false,
+		onEdit,
 		onHoverEdit,
 		onHoverDetail,
 		customActions: getCustomActions,
@@ -103,7 +106,11 @@ export function createCrudActionCell<T extends { id: string }, TParams>(
 				dialogTitle={`Hapus data ${resourceName}`}
 				dialogDescription={`Apakah anda yakin ingin menghapus data ${resourceName} ini? Data yang sudah dihapus tidak dapat dikembalikan.`}
 				btnClassName="bg-red-600 text-white hover:bg-red-500"
-				onEditAction={`${nestedPathRoute ?? ""}${row.original.id}/edit`}
+				onEditAction={
+				onEdit
+					? () => onEdit(row.original)
+					: `${nestedPathRoute ?? ""}${row.original.id}/edit`
+			}
 				onHoverEdit={() => onHoverEdit?.(row.original.id)}
 				showEdit={true}
 				showDelete={hasCrudActions}

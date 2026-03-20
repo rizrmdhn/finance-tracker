@@ -109,7 +109,7 @@ export default function DataTableActionCell({
 						<a
 							href={action.action}
 							aria-label={action.text}
-							className={cn("flex flex-row", action.className)}
+							className={cn("flex items-center gap-2", action.className)}
 						>
 							{action.icon}
 							{action.text}
@@ -124,10 +124,8 @@ export default function DataTableActionCell({
 				onClick={() => typeof action.action === "function" && action.action()}
 				className={action.className}
 			>
-				<div className="flex flex-row items-center">
-					{action.icon}
-					{action.text}
-				</div>
+				{action.icon}
+				{action.text}
 			</DropdownMenuItem>
 		);
 	};
@@ -148,7 +146,7 @@ export default function DataTableActionCell({
 									<button
 										type="button"
 										aria-label={detailText}
-										className="flex flex-row"
+										className="flex items-center gap-2"
 										onMouseEnter={() => onHoverDetail?.()}
 										onClick={() => navigate({ to: onDetailAction })}
 									>
@@ -162,10 +160,8 @@ export default function DataTableActionCell({
 								onClick={() => onDetailAction()}
 								onMouseEnter={() => onHoverDetail?.()}
 							>
-								<div className="flex flex-row items-center">
-									{detailIcon}
-									{detailText}
-								</div>
+								{detailIcon}
+								{detailText}
 							</DropdownMenuItem>
 						))}
 
@@ -178,7 +174,7 @@ export default function DataTableActionCell({
 									<button
 										type="button"
 										aria-label={editText}
-										className="flex flex-row"
+										className="flex items-center gap-2"
 										onMouseEnter={() => onHoverEdit?.()}
 										onClick={() => navigate({ to: onEditAction })}
 									>
@@ -192,7 +188,7 @@ export default function DataTableActionCell({
 								onClick={() => onEditAction()}
 								onMouseEnter={() => onHoverEdit?.()}
 							>
-								<div className="flex flex-row items-center">
+								<div className="flex items-center gap-2">
 									{editIcon}
 									{editText}
 								</div>
@@ -202,10 +198,8 @@ export default function DataTableActionCell({
 					{/* Print Action */}
 					{showPrint && onPrintAction && (
 						<DropdownMenuItem onClick={onPrintAction}>
-							<div className="flex flex-row items-center">
-								{printIcon}
-								{printText}
-							</div>
+							{printIcon}
+							{printText}
 						</DropdownMenuItem>
 					)}
 
@@ -221,7 +215,7 @@ export default function DataTableActionCell({
 								focus:bg-destructive
 								onClick={() => setIsOpen(true)}
 								render={
-									<div className="flex flex-row items-center gap-2">
+									<div className="flex items-center gap-2">
 										{deleteIcon}
 										{deleteText}
 									</div>

@@ -4,7 +4,7 @@ import { Button } from "@finance-tracker/ui/components/button";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { PlusCircle } from "lucide-react";
-import { useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import getTransactionsColumns from "@/components/columns/transaction-columns";
 import { DataTable } from "@/components/data-table/data-table";
 import { DataTableFilterMenu } from "@/components/data-table/data-table-filter-menu";
@@ -14,6 +14,7 @@ import { useDataTableRouter } from "@/hooks/use-data-table-router";
 import useModalState from "@/hooks/use-modal-state";
 import { pageHead } from "@/lib/page-head";
 import { trpc } from "@/lib/trpc";
+import EditTransactionDialog from "./-components/edit-transaction-dialog";
 
 export const Route = createFileRoute("/transactions")({
 	validateSearch: paginatedTransactionsSchema,
@@ -35,6 +36,9 @@ function TransactionsComponent() {
 		delete: false,
 	});
 
+	const [selectedTransaction, setSelectedTransaction] =
+		useState<Transaction | null>(null);
+
 	const {
 		data: transactions,
 		isLoading,
@@ -44,13 +48,22 @@ function TransactionsComponent() {
 		placeholderData: keepPreviousData,
 	});
 
+	const handleEdit = useCallback(
+		(tx: Transaction) => {
+			setSelectedTransaction(tx);
+			openModal("edit");
+		},
+		[openModal],
+	);
+
 	const columns = useMemo(
 		() =>
 			getTransactionsColumns({
 				currentPage: params.page,
 				perPage: params.limit,
+				onEdit: handleEdit,
 			}),
-		[params.page, params.limit],
+		[params.page, params.limit, handleEdit],
 	);
 
 	const { table } = useDataTableRouter({
@@ -67,13 +80,9 @@ function TransactionsComponent() {
 		getRowId: (row) => row.id,
 	});
 
-	function _handleEdit(_tx: Transaction) {
-		openModal("edit");
-	}
-
 	return (
 		<div className="flex flex-col p-4">
-			<div className="mb-4 flex items-center justify-between gap-4">
+			<div className="mb-4 flex items-center justify-end gap-4">
 				<Button onClick={() => openModal("create")}>
 					<PlusCircle className="size-4" />
 					Tambah Transaksi
@@ -91,6 +100,11 @@ function TransactionsComponent() {
 					<DataTableSortList table={table} />
 				</DataTableToolbar>
 			</DataTable>
+			<EditTransactionDialog
+				open={state.edit}
+				setIsOpen={(open) => (open ? openModal("edit") : closeModal("edit"))}
+				transaction={selectedTransaction}
+			/>
 		</div>
 	);
 }

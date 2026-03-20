@@ -348,6 +348,120 @@ export function createDateColumn<T extends RowData>(
 	};
 }
 
+interface TagsColumnOptions {
+	/** Width class */
+	width?: string;
+	/** Max tags to show before collapsing */
+	maxVisible?: number;
+}
+
+/**
+ * Creates a tags column that renders an array of strings as badges
+ */
+export function createTagsColumn<T extends RowData>(
+	id: Extract<NestedKeyOf<T>, string>,
+	label: string,
+	options: TagsColumnOptions = {},
+): ColumnDef<T> {
+	const { width = "w-48", maxVisible = 3 } = options;
+
+	return {
+		id,
+		accessorKey: id,
+		header: ({ column }) => (
+			<DataTableColumnHeader column={column} title={label} label={label} />
+		),
+		cell: ({ row }) => {
+			const raw = row.getValue(id);
+			const tags: string[] = Array.isArray(raw)
+				? raw
+				: typeof raw === "string" && raw
+					? (JSON.parse(raw) as string[])
+					: [];
+			if (!tags.length) return <div className={width}>-</div>;
+			const visible = tags.slice(0, maxVisible);
+			const overflow = tags.length - maxVisible;
+			return (
+				<div className={cn(width, "flex flex-wrap gap-1")}>
+					{visible.map((tag) => (
+						<Badge key={tag} variant="secondary">
+							{tag}
+						</Badge>
+					))}
+					{overflow > 0 && (
+						<Badge variant="outline">+{overflow}</Badge>
+					)}
+				</div>
+			);
+		},
+		meta: { label },
+	};
+}
+
+interface CurrencyColumnOptions {
+	/** Width class */
+	width?: string;
+	/** BCP 47 locale (e.g. "en-US", "id-ID") */
+	locale?: string;
+	/** ISO 4217 currency code (e.g. "USD", "IDR") */
+	currency?: string;
+	/** Maximum fraction digits */
+	maximumFractionDigits?: number;
+	/** Enable column filtering */
+	enableFilter?: boolean;
+	/** Filter variant */
+	variant?: FilterVariant;
+	/** Icon for the filter */
+	icon?: LucideIcon;
+}
+
+/**
+ * Creates a currency column with configurable locale and currency
+ */
+export function createCurrencyColumn<T extends RowData>(
+	id: Extract<NestedKeyOf<T>, string>,
+	label: string,
+	options: CurrencyColumnOptions = {},
+): ColumnDef<T> {
+	const {
+		width = "w-48",
+		locale = "id-ID",
+		currency = "IDR",
+		maximumFractionDigits = 0,
+		enableFilter = false,
+		variant = "range",
+		icon = Text,
+	} = options;
+
+	const formatter = new Intl.NumberFormat(locale, {
+		style: "currency",
+		currency,
+		maximumFractionDigits,
+	});
+
+	const meta: ColumnMeta<T, unknown> = enableFilter
+		? { label, variant, icon, placeholder: label }
+		: { label };
+
+	return {
+		id,
+		accessorKey: id,
+		header: ({ column }) => (
+			<DataTableColumnHeader column={column} title={label} label={label} />
+		),
+		cell: ({ row }) => {
+			const formatted = formatter.format(Number(row.getValue(id)));
+			return (
+				<div className={`${width} truncate`} title={formatted}>
+					{formatted}
+				</div>
+			);
+		},
+		meta,
+		enableColumnFilter: enableFilter,
+	};
+}
+
 /**
  * Creates an action column (header only, cell must be provided)
  */
