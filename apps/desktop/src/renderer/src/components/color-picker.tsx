@@ -1,4 +1,4 @@
-import { CATEGORY_COLORS } from "@finance-tracker/constants";
+import { SUPPORTED_COLORS } from "@finance-tracker/constants";
 import { Button } from "@finance-tracker/ui/components/button";
 import {
 	Popover,
@@ -40,7 +40,7 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
 			</PopoverTrigger>
 			<PopoverContent className="w-auto gap-2 p-2" align="start">
 				<div className="grid grid-cols-5 gap-1">
-					{CATEGORY_COLORS.map(({ label, value: color }) => (
+					{SUPPORTED_COLORS.map(({ label, value: color }) => (
 						<button
 							key={color}
 							type="button"

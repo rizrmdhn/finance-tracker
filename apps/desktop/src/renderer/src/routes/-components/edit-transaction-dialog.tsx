@@ -2,6 +2,7 @@ import {
 	type UpdateTransactionInput,
 	updateTransactionSchema,
 } from "@finance-tracker/schema";
+import type { Transaction } from "@finance-tracker/types";
 import { Button } from "@finance-tracker/ui/components/button";
 import {
 	Dialog,
@@ -22,21 +23,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { AccountCombobox } from "@/components/account-combobox";
 import { CategoryCombobox } from "@/components/category-combobox";
 import { CurrencyInput } from "@/components/currency-input";
 import { DatePicker } from "@/components/date-picker";
 import { TagsInput } from "@/components/tags-input";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
-
-type Transaction = {
-	id: string;
-	amount: number;
-	note: string | null;
-	categoryId: string | null;
-	tags: string | null;
-	date: number;
-};
 
 interface EditTransactionDialogProps {
 	open: boolean;
@@ -61,6 +54,8 @@ export default function EditTransactionDialog({
 				amount: transaction.amount,
 				note: transaction.note ?? undefined,
 				categoryId: transaction.categoryId ?? undefined,
+				accountId: transaction.accountId,
+				toAccountId: transaction.toAccountId ?? undefined,
 				tags: transaction.tags
 					? (JSON.parse(transaction.tags) as string[])
 					: undefined,
@@ -84,7 +79,12 @@ export default function EditTransactionDialog({
 		}),
 	);
 
+	const { data: accounts = [] } = useQuery(trpc.account.list.queryOptions());
 	const { data: categories = [] } = useQuery(trpc.category.list.queryOptions());
+
+	const watchedCategoryId = form.watch("categoryId");
+	const selectedCategory = categories.find((c) => c.id === watchedCategoryId);
+	const isTransfer = selectedCategory?.type === "transfer";
 
 	function onSubmit(data: UpdateTransactionInput) {
 		updateMutation.mutate(data);
@@ -103,6 +103,24 @@ export default function EditTransactionDialog({
 					<FieldGroup>
 						<Controller
 							control={form.control}
+							name="accountId"
+							render={({ field, fieldState }) => (
+								<Field data-invalid={fieldState.invalid}>
+									<FieldLabel>Account</FieldLabel>
+									<AccountCombobox
+										value={field.value}
+										onChange={field.onChange}
+										accounts={accounts}
+									/>
+									{fieldState.invalid && (
+										<FieldError errors={[fieldState.error]} />
+									)}
+								</Field>
+							)}
+						/>
+
+						<Controller
+							control={form.control}
 							name="categoryId"
 							render={({ field, fieldState }) => (
 								<Field data-invalid={fieldState.invalid}>
@@ -118,6 +136,26 @@ export default function EditTransactionDialog({
 								</Field>
 							)}
 						/>
+
+						{isTransfer && (
+							<Controller
+								control={form.control}
+								name="toAccountId"
+								render={({ field, fieldState }) => (
+									<Field data-invalid={fieldState.invalid}>
+										<FieldLabel>To Account</FieldLabel>
+										<AccountCombobox
+											value={field.value}
+											onChange={field.onChange}
+											accounts={accounts}
+										/>
+										{fieldState.invalid && (
+											<FieldError errors={[fieldState.error]} />
+										)}
+									</Field>
+								)}
+							/>
+						)}
 
 						<div className="grid grid-cols-2 gap-3">
 							<Controller
@@ -184,7 +222,7 @@ export default function EditTransactionDialog({
 					<DialogFooter showCloseButton>
 						<Button type="submit" disabled={updateMutation.isPending}>
 							{updateMutation.isPending && <Spinner />}
-							Save
+							Save Changes
 						</Button>
 					</DialogFooter>
 				</form>

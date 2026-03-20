@@ -1,12 +1,9 @@
 import {
-	CATEGORY_TYPE_LABELS,
-	CATEGORY_TYPES,
+	ACCOUNT_TYPE_LABELS,
+	ACCOUNT_TYPES,
+	SUPPORTED_CURRENCIES,
 } from "@finance-tracker/constants";
-import {
-	type CategoryUpdateInput,
-	categoryUpdateSchema,
-} from "@finance-tracker/schema";
-import type { Category } from "@finance-tracker/types";
+import { type AccountInput, accountSchema } from "@finance-tracker/schema";
 import { Button } from "@finance-tracker/ui/components/button";
 import {
 	Dialog,
@@ -32,76 +29,75 @@ import {
 import { Spinner } from "@finance-tracker/ui/components/spinner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { ColorPicker } from "@/components/color-picker";
+import { CurrencyInput } from "@/components/currency-input";
+import { IconPicker } from "@/components/icon-picker";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
-import { ColorPicker } from "../../components/color-picker";
-import { IconPicker } from "../../components/icon-picker";
 
-interface EditCategoryDialogProps {
+interface CreateAccountDialogProps {
 	open: boolean;
 	setIsOpen: (open: boolean) => void;
-	category: Category | null;
 }
 
-export default function EditCategoryDialog({
+export default function CreateAccountDialog({
 	open,
 	setIsOpen,
-	category,
-}: EditCategoryDialogProps) {
-	const form = useForm<CategoryUpdateInput>({
-		resolver: zodResolver(categoryUpdateSchema),
-		defaultValues: {
-			id: "",
-			name: "",
-			type: "expense",
-			icon: undefined,
-			color: undefined,
-		},
+}: CreateAccountDialogProps) {
+	const form = useForm<AccountInput>({
+		resolver: zodResolver(accountSchema),
 	});
 
-	useEffect(() => {
-		if (category) {
-			form.reset({
-				id: category.id,
-				name: category.name,
-				type: category.type as CategoryUpdateInput["type"],
-				icon: (category.icon ?? undefined) as CategoryUpdateInput["icon"],
-				color: (category.color ?? undefined) as CategoryUpdateInput["color"],
-			});
-		}
-	}, [category, form]);
-
-	const updateCategoryMutation = useMutation(
-		trpc.category.update.mutationOptions({
+	const createAccountMutation = useMutation(
+		trpc.account.create.mutationOptions({
 			onSuccess: async () => {
-				await queryClient.invalidateQueries(trpc.category.list.queryOptions());
-				globalSuccessToast("Category updated successfully");
+				await Promise.all([
+					queryClient.invalidateQueries(trpc.account.list.queryOptions()),
+					queryClient.invalidateQueries(
+						trpc.account.listWithBalance.queryOptions(),
+					),
+				]);
+				globalSuccessToast("Account created successfully");
+				form.reset();
 				setIsOpen(false);
 			},
 			onError: (error) => {
-				globalErrorToast(`Failed to update category: ${error.message}`);
+				globalErrorToast(`Failed to create account: ${error.message}`);
 			},
 		}),
 	);
 
-	function onSubmit(data: CategoryUpdateInput) {
-		if (!category) return;
-		updateCategoryMutation.mutate(data);
+	function onSubmit(data: AccountInput) {
+		createAccountMutation.mutate(data);
 	}
 
 	return (
 		<Dialog open={open} onOpenChange={setIsOpen}>
 			<DialogContent>
 				<DialogHeader>
-					<DialogTitle>Edit Category</DialogTitle>
+					<DialogTitle>Create Account</DialogTitle>
 				</DialogHeader>
 				<form
 					onSubmit={form.handleSubmit(onSubmit)}
 					className="flex flex-col gap-4"
 				>
 					<FieldGroup>
+						{/* Name */}
+						<Controller
+							control={form.control}
+							name="name"
+							render={({ field, fieldState }) => (
+								<Field data-invalid={fieldState.invalid}>
+									<FieldLabel>Name</FieldLabel>
+									<Input placeholder="e.g. Checking Account" {...field} />
+									{fieldState.invalid && (
+										<FieldError errors={[fieldState.error]} />
+									)}
+								</Field>
+							)}
+						/>
+
 						{/* Icon + Color — side by side */}
 						<div className="grid grid-cols-2 gap-3">
 							<Controller
@@ -136,21 +132,6 @@ export default function EditCategoryDialog({
 							/>
 						</div>
 
-						{/* Name */}
-						<Controller
-							control={form.control}
-							name="name"
-							render={({ field, fieldState }) => (
-								<Field data-invalid={fieldState.invalid}>
-									<FieldLabel>Name</FieldLabel>
-									<Input placeholder="e.g. Groceries" {...field} />
-									{fieldState.invalid && (
-										<FieldError errors={[fieldState.error]} />
-									)}
-								</Field>
-							)}
-						/>
-
 						{/* Type */}
 						<Controller
 							control={form.control}
@@ -158,14 +139,63 @@ export default function EditCategoryDialog({
 							render={({ field, fieldState }) => (
 								<Field data-invalid={fieldState.invalid}>
 									<FieldLabel>Type</FieldLabel>
-									<Select value={field.value} onValueChange={field.onChange}>
+									<Select
+										onValueChange={field.onChange}
+										defaultValue={field.value}
+									>
 										<SelectTrigger className="w-full">
 											<SelectValue placeholder="Select category type" />
 										</SelectTrigger>
 										<SelectContent>
-											{CATEGORY_TYPES.map((type) => (
+											{ACCOUNT_TYPES.map((type) => (
 												<SelectItem key={type} value={type}>
-													{CATEGORY_TYPE_LABELS[type]}
+													{ACCOUNT_TYPE_LABELS[type]}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+									{fieldState.invalid && (
+										<FieldError errors={[fieldState.error]} />
+									)}
+								</Field>
+							)}
+						/>
+
+						<Controller
+							control={form.control}
+							name="initialBalance"
+							render={({ field, fieldState }) => (
+								<Field data-invalid={fieldState.invalid}>
+									<FieldLabel>Initial Balance</FieldLabel>
+									<CurrencyInput
+										value={field.value}
+										onChange={field.onChange}
+										currency={form.watch("currency") || undefined}
+									/>
+									{fieldState.invalid && (
+										<FieldError errors={[fieldState.error]} />
+									)}
+								</Field>
+							)}
+						/>
+
+						<Controller
+							control={form.control}
+							name="currency"
+							render={({ field, fieldState }) => (
+								<Field data-invalid={fieldState.invalid}>
+									<FieldLabel>Currency</FieldLabel>
+									<Select
+										onValueChange={field.onChange}
+										defaultValue={field.value}
+									>
+										<SelectTrigger className="w-full">
+											<SelectValue placeholder="Select currency" />
+										</SelectTrigger>
+										<SelectContent>
+											{SUPPORTED_CURRENCIES.map((currency) => (
+												<SelectItem key={currency} value={currency}>
+													{currency}
 												</SelectItem>
 											))}
 										</SelectContent>
@@ -179,9 +209,9 @@ export default function EditCategoryDialog({
 					</FieldGroup>
 
 					<DialogFooter showCloseButton>
-						<Button type="submit" disabled={updateCategoryMutation.isPending}>
-							{updateCategoryMutation.isPending && <Spinner />}
-							Save Changes
+						<Button type="submit" disabled={createAccountMutation.isPending}>
+							{createAccountMutation.isPending && <Spinner />}
+							Create
 						</Button>
 					</DialogFooter>
 				</form>

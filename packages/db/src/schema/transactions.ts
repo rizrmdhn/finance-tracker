@@ -1,46 +1,53 @@
-import {
-	CATEGORY_COLORS,
-	CATEGORY_ICONS,
-	CATEGORY_TYPES,
-} from "@finance-tracker/constants";
 import { createId } from "@paralleldrive/cuid2";
 import { relations } from "drizzle-orm";
-import { integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import {
+	index,
+	integer,
+	real,
+	sqliteTable,
+	text,
+} from "drizzle-orm/sqlite-core";
+import { timestamp } from "../utils";
+import { accounts } from "./accounts";
+import { categories } from "./categories";
 
-const ICON_NAMES = CATEGORY_ICONS.map((i) => i.name) as [string, ...string[]];
-const COLOR_VALUES = CATEGORY_COLORS.map((c) => c.value) as [
-	string,
-	...string[],
-];
-
-export const transactions = sqliteTable("transactions", {
-	id: text("id")
-		.primaryKey()
-		.$default(() => createId()),
-	amount: real("amount").notNull(),
-	note: text("note"),
-	categoryId: text("category_id").references(() => categories.id),
-	tags: text("tags"),
-	date: integer("date").notNull(),
-	createdAt: integer("created_at").$default(() => Date.now()),
-	updatedAt: integer("updated_at").$onUpdate(() => Date.now()),
-});
-
-export const categories = sqliteTable("categories", {
-	id: text("id")
-		.primaryKey()
-		.$default(() => createId()),
-	name: text("name").notNull(),
-	icon: text("icon", { enum: ICON_NAMES }).notNull(),
-	color: text("color", { enum: COLOR_VALUES }).notNull(),
-	type: text("type", { enum: CATEGORY_TYPES }).notNull(),
-	createdAt: integer("created_at").$default(() => Date.now()),
-	updatedAt: integer("updated_at").$onUpdate(() => Date.now()),
-});
+export const transactions = sqliteTable(
+	"transactions",
+	{
+		id: text("id")
+			.primaryKey()
+			.$default(() => createId()),
+		amount: real("amount").notNull(),
+		note: text("note"),
+		categoryId: text("category_id")
+			.references(() => categories.id)
+			.notNull(),
+		accountId: text("account_id")
+			.references(() => accounts.id)
+			.notNull(),
+		toAccountId: text("to_account_id").references(() => accounts.id),
+		tags: text("tags"),
+		date: integer("date").notNull(),
+		...timestamp,
+	},
+	(table) => [
+		index("idx_transactions_category_id").on(table.categoryId),
+		index("idx_transactions_account_id").on(table.accountId),
+		index("idx_transactions_date").on(table.date),
+	],
+);
 
 export const transactionRelations = relations(transactions, ({ one }) => ({
 	category: one(categories, {
 		fields: [transactions.categoryId],
 		references: [categories.id],
+	}),
+	account: one(accounts, {
+		fields: [transactions.accountId],
+		references: [accounts.id],
+	}),
+	toAccount: one(accounts, {
+		fields: [transactions.toAccountId],
+		references: [accounts.id],
 	}),
 }));

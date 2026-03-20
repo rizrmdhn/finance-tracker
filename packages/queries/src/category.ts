@@ -18,7 +18,13 @@ export async function getCategoryById(db: AnyDatabase, id: string) {
 }
 
 export async function createCategory(db: AnyDatabase, input: CategoryInput) {
-	return await db.insert(categories).values(input).returning();
+	const [result] = await db.insert(categories).values(input).returning();
+
+	if (!result) {
+		throw new Error("Failed to create category");
+	}
+
+	return result;
 }
 
 export async function updateCategory(
@@ -31,11 +37,17 @@ export async function updateCategory(
 		throw new NotFoundError("Category", input.id);
 	}
 
-	return await db
+	const [result] = await db
 		.update(categories)
 		.set(input)
 		.where(eq(categories.id, input.id))
 		.returning();
+
+	if (!result) {
+		throw new Error("Failed to update category");
+	}
+
+	return result;
 }
 
 export async function deleteCategory(db: AnyDatabase, id: string) {
@@ -45,5 +57,14 @@ export async function deleteCategory(db: AnyDatabase, id: string) {
 		throw new NotFoundError("Category", id);
 	}
 
-	return await db.delete(categories).where(eq(categories.id, id));
+	const [result] = await db
+		.delete(categories)
+		.where(eq(categories.id, id))
+		.returning();
+
+	if (!result) {
+		throw new Error("Failed to delete category");
+	}
+
+	return result;
 }

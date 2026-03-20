@@ -1,4 +1,4 @@
-import { CATEGORY_ICONS } from "@finance-tracker/constants";
+import { SUPPORTED_ICONS } from "@finance-tracker/constants";
 import { Button } from "@finance-tracker/ui/components/button";
 import { Input } from "@finance-tracker/ui/components/input";
 import {
@@ -142,12 +142,12 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
 	const SelectedIcon = value ? ICON_MAP[value] : null;
 
 	const filtered = search
-		? CATEGORY_ICONS.filter(
+		? SUPPORTED_ICONS.filter(
 				(i) =>
 					i.label.toLowerCase().includes(search.toLowerCase()) ||
 					i.name.toLowerCase().includes(search.toLowerCase()),
 			)
-		: CATEGORY_ICONS;
+		: SUPPORTED_ICONS;
 
 	return (
 		<Popover open={open} onOpenChange={setOpen}>

@@ -21,6 +21,7 @@ import { useTheme } from "@/components/theme-provider";
 
 const navItems = [
 	{ to: "/", label: "Beranda", icon: Home },
+	{ to: "/accounts", label: "Akun", icon: Wallet },
 	{ to: "/transactions", label: "Transaksi", icon: ArrowLeftRight },
 	{ to: "/categories", label: "Kategori", icon: Tag },
 ] as const;
