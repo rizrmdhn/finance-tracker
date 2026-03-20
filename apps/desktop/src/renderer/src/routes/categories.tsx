@@ -2,9 +2,9 @@ import { Button } from "@finance-tracker/ui/components/button";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import useModalState from "@/hooks/use-modal-state";
+import { ICON_MAP } from "../components/icon-picker";
 import { trpc } from "../lib/trpc";
 import CreateCategoryDialog from "./-components/create-category-dialog";
-import { ICON_MAP } from "./-components/icon-picker";
 
 export const Route = createFileRoute("/categories")({
 	component: CategoriesComponent,

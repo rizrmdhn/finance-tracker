@@ -31,8 +31,8 @@ import { useMutation } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
-import { ColorPicker } from "./color-picker";
-import { IconPicker } from "./icon-picker";
+import { ColorPicker } from "../../components/color-picker";
+import { IconPicker } from "../../components/icon-picker";
 
 interface CreateCategoryDialogProps {
 	open: boolean;
