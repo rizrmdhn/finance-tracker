@@ -8,7 +8,7 @@ export default defineConfig({
 	main: {
 		build: {
 			externalizeDeps: {
-				exclude: ["@finance-tracker/api", "@finance-tracker/db"],
+				exclude: ["@finance-tracker/api", "@finance-tracker/db", "@finance-tracker/schema"],
 			},
 		},
 	},

@@ -52,7 +52,6 @@
 	},
 	"dependencies": {
 		"@finance-tracker/api": "workspace:*",
-		"@finance-tracker/constants": "workspace:*",
 		"@finance-tracker/db": "workspace:*",
 		"@finance-tracker/schema": "workspace:*",
 		"@finance-tracker/ui": "workspace:*",
@@ -75,6 +74,8 @@
 		"trpc-electron": "^0.1.2"
 	},
 	"devDependencies": {
+		"@finance-tracker/constants": "workspace:*",
+		"@finance-tracker/types": "workspace:*",
 		"@electron/rebuild": "^3.7.2",
 		"@tailwindcss/vite": "catalog:",
 		"@tanstack/react-query-devtools": "^5.91.3",

@@ -2,8 +2,9 @@ import {
 	createCategory,
 	deleteCategory,
 	getCategories,
+	updateCategory,
 } from "@finance-tracker/queries";
-import { categorySchema } from "@finance-tracker/schema";
+import { categorySchema, categoryUpdateSchema } from "@finance-tracker/schema";
 import { tryCatchAsync } from "@finance-tracker/utils";
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
@@ -21,6 +22,16 @@ export const categoryRouter = createTRPCRouter({
 		.mutation(async ({ ctx, input }) => {
 			const [data, err] = await tryCatchAsync(() =>
 				createCategory(ctx.db, input),
+			);
+			if (err) throw toTRPCError(err);
+			return data;
+		}),
+
+	update: publicProcedure
+		.input(categoryUpdateSchema)
+		.mutation(async ({ ctx, input }) => {
+			const [data, err] = await tryCatchAsync(() =>
+				updateCategory(ctx.db, input),
 			);
 			if (err) throw toTRPCError(err);
 			return data;
