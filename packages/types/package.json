@@ -9,7 +9,8 @@
 	},
 	"dependencies": {
 		"@finance-tracker/constants": "workspace:*",
-		"@finance-tracker/db": "workspace:*"
+		"@finance-tracker/db": "workspace:*",
+		"@tanstack/react-table": "catalog:"
 	},
 	"devDependencies": {
 		"@finance-tracker/config": "workspace:*",

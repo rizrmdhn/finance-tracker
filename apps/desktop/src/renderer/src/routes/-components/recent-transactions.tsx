@@ -5,6 +5,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@finance-tracker/ui/components/card";
+import { Link } from "@tanstack/react-router";
 import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Minus, PiggyBank } from "lucide-react";
 import { useMemo } from "react";
 import { formatCurrency, formatDate } from "./utils";
@@ -54,8 +55,14 @@ export function RecentTransactions({
 
 	return (
 		<Card>
-			<CardHeader>
+			<CardHeader className="flex flex-row items-center justify-between">
 				<CardTitle>Transaksi Terbaru</CardTitle>
+				<Link
+					to="/transactions"
+					className="text-muted-foreground text-xs hover:text-foreground"
+				>
+					Lihat Semua
+				</Link>
 			</CardHeader>
 			<CardContent className="p-0">
 				<div className="flex flex-col gap-px">

@@ -16,11 +16,12 @@ import {
 	SidebarMenuItem,
 } from "@finance-tracker/ui/components/sidebar";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Moon, Sun, Tag, Wallet } from "lucide-react";
+import { ArrowLeftRight, Home, Moon, Sun, Tag, Wallet } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
 
 const navItems = [
 	{ to: "/", label: "Beranda", icon: Home },
+	{ to: "/transactions", label: "Transaksi", icon: ArrowLeftRight },
 	{ to: "/categories", label: "Kategori", icon: Tag },
 ] as const;
 

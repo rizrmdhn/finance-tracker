@@ -10,7 +10,8 @@
 	"dependencies": {
 		"@finance-tracker/constants": "workspace:*",
 		"@finance-tracker/types": "workspace:*",
-		"date-fns": "catalog:"
+		"date-fns": "catalog:",
+		"@tanstack/react-table": "catalog:"
 	},
 	"devDependencies": {
 		"@finance-tracker/config": "workspace:*",
