@@ -1,10 +1,31 @@
 import type { AnyDatabase } from "@finance-tracker/db";
-import { and, asc, desc, gt, lt, type SQL, type Table } from "drizzle-orm";
+import type {
+	ExtendedColumnFilter,
+	JoinOperator,
+} from "@finance-tracker/types";
+import { filterColumns, tryCatchAsync } from "@finance-tracker/utils";
+import {
+	and,
+	asc,
+	desc,
+	gt,
+	gte,
+	isNotNull,
+	isNull,
+	lt,
+	lte,
+	type SQL,
+	type Table,
+} from "drizzle-orm";
 
 interface CursorPaginatedInput {
 	cursor?: string;
 	limit: number;
 	sort: { id: string; desc: boolean };
+	filters: unknown[];
+	joinOperator: JoinOperator;
+	showDeleted: boolean;
+	createdAt: number[];
 }
 
 interface GetCursorPaginatedOptions<T extends Table> {
@@ -24,26 +45,83 @@ export async function getCursorPaginated<T extends Table>({
 	cursorColumn = "id",
 	conditions = [],
 }: GetCursorPaginatedOptions<T>) {
-	const col = (table as Record<string, unknown>)[cursorColumn] as SQL;
+	const advancedTable = input.filters && input.filters.length > 0;
 
+	// Build cursor condition
 	const cursorCondition = input.cursor
 		? input.sort.desc
-			? lt(col, input.cursor)
-			: gt(col, input.cursor)
+			? lt(
+					(table as Record<string, unknown>)[cursorColumn] as SQL,
+					input.cursor,
+				)
+			: gt(
+					(table as Record<string, unknown>)[cursorColumn] as SQL,
+					input.cursor,
+				)
 		: undefined;
 
-	const where = and(cursorCondition, ...conditions);
+	const where = advancedTable
+		? and(
+				cursorCondition,
+				filterColumns({
+					table,
+					filters: input.filters as ExtendedColumnFilter<T>[],
+					joinOperator: input.joinOperator ?? "and",
+				}),
+			)
+		: and(
+				cursorCondition,
+				...(conditions ?? []),
+				input.createdAt.length > 0
+					? and(
+							input.createdAt[0]
+								? gte(
+										(table as Record<string, unknown>).createdAt as SQL,
+										(() => {
+											const date = new Date(input.createdAt[0]);
+											date.setHours(0, 0, 0, 0);
+											return date.toISOString();
+										})(),
+									)
+								: undefined,
+							input.createdAt[1]
+								? lte(
+										(table as Record<string, unknown>).createdAt as SQL,
+										(() => {
+											const date = new Date(input.createdAt[1]);
+											date.setHours(23, 59, 59, 999);
+											return date.toISOString();
+										})(),
+									)
+								: undefined,
+						)
+					: undefined,
+				input.showDeleted
+					? isNotNull((table as Record<string, unknown>).deletedAt as SQL)
+					: isNull((table as Record<string, unknown>).deletedAt as SQL),
+			);
 
-	const sortCol = (table as Record<string, unknown>)[input.sort.id] as SQL;
+	// Add compound cursor for non-id sorts
+	const orderBy = [
+		input.sort.desc
+			? desc((table as Record<string, unknown>)[input.sort.id] as SQL)
+			: asc((table as Record<string, unknown>)[input.sort.id] as SQL),
+		// Secondary sort for stability
+		asc((table as Record<string, unknown>)[cursorColumn] as SQL),
+	];
 
-	const orderBy = [input.sort.desc ? desc(sortCol) : asc(sortCol), asc(col)];
+	const [result, err] = await tryCatchAsync(() =>
+		db
+			.select()
+			.from(table)
+			.limit(input.limit + 1)
+			.where(where)
+			.orderBy(...orderBy),
+	);
 
-	const data = await db
-		.select()
-		.from(table)
-		.limit(input.limit + 1)
-		.where(where)
-		.orderBy(...orderBy);
+	if (err) throw err;
+
+	const data = result;
 
 	const hasMore = data.length > input.limit;
 	const items = hasMore ? data.slice(0, input.limit) : data;
