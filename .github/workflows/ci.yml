@@ -46,7 +46,7 @@ jobs:
         run: bun turbo check-types --filter=!@finance-tracker/native
 
       - name: Lint
-        run: bun run check --filter=!@finance-tracker/native
+        run: bun run check
 
       - name: Build
         run: bun run build
