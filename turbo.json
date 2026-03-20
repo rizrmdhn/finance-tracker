@@ -20,6 +20,19 @@
 		},
 		"check": {
 			"cache": false
+		},
+		"package": {
+			"dependsOn": ["build"],
+			"outputs": ["dist/**"],
+			"cache": false
+		},
+		"desktop:pack": {
+			"dependsOn": ["desktop:build"],
+			"outputs": ["dist/**"]
+		},
+		"desktop:build": {
+			"dependsOn": ["^build"],
+			"outputs": ["dist/**"]
 		}
 	}
 }

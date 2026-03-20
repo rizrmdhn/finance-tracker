@@ -38,7 +38,7 @@
 					]
 				}
 			],
-			"icon": "resources/icon.ico"
+			"icon": "src/resources/icon.ico"
 		},
 		"nsis": {
 			"oneClick": false,
