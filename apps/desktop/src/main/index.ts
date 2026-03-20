@@ -26,6 +26,7 @@ function createWindow() {
 		win.loadURL(process.env.ELECTRON_RENDERER_URL);
 		win.webContents.openDevTools();
 	} else {
+		win.removeMenu();
 		win.loadFile(path.join(__dirname, "../renderer/index.html"));
 	}
 }
