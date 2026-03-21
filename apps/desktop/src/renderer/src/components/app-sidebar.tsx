@@ -11,16 +11,18 @@ import {
 } from "@finance-tracker/ui/components/sidebar";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { ArrowLeftRight, Home, Settings, Tag, Wallet } from "lucide-react";
-
-const navItems = [
-	{ to: "/", label: "Beranda", icon: Home },
-	{ to: "/accounts", label: "Akun", icon: Wallet },
-	{ to: "/transactions", label: "Transaksi", icon: ArrowLeftRight },
-	{ to: "/categories", label: "Kategori", icon: Tag },
-] as const;
+import { useTranslation } from "react-i18next";
 
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
 	const { location } = useRouterState();
+	const { t } = useTranslation();
+
+	const navItems = [
+		{ to: "/", label: t("sidebar.dashboard"), icon: Home },
+		{ to: "/accounts", label: t("sidebar.accounts"), icon: Wallet },
+		{ to: "/transactions", label: t("sidebar.transactions"), icon: ArrowLeftRight },
+		{ to: "/categories", label: t("sidebar.categories"), icon: Tag },
+	] as const;
 
 	return (
 		<Sidebar collapsible="icon" {...props}>
@@ -67,10 +69,10 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
 						<SidebarMenuButton
 							render={<Link to="/settings" />}
 							isActive={location.pathname === "/settings"}
-							tooltip="Pengaturan"
+							tooltip={t("sidebar.settings")}
 						>
 							<Settings />
-							<span>Pengaturan</span>
+							<span>{t("sidebar.settings")}</span>
 						</SidebarMenuButton>
 					</SidebarMenuItem>
 				</SidebarMenu>

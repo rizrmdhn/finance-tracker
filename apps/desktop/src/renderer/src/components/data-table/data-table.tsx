@@ -15,6 +15,7 @@ import { flexRender, type Table as TanstackTable } from "@tanstack/react-table";
 import type { TRPCClientErrorLike } from "@trpc/client";
 import { AlertCircle } from "lucide-react";
 import type * as React from "react";
+import { useTranslation } from "react-i18next";
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
 
 interface DataTableProps<TData> extends React.ComponentProps<"div"> {
@@ -33,10 +34,14 @@ export function DataTable<TData>({
 	className,
 	isLoading = false,
 	error = null,
-	emptyMessage = "Tidak ada data ditemukan.",
-	emptyDescription = "Coba sesuaikan filter atau kata kunci pencarian Anda.",
+	emptyMessage,
+	emptyDescription,
 	...props
 }: DataTableProps<TData>) {
+	const { t } = useTranslation();
+	const resolvedEmptyMessage = emptyMessage ?? t("errors.noData");
+	const resolvedEmptyDescription = emptyDescription ?? t("errors.noData");
+
 	const columnCount = table.getAllColumns().length;
 
 	return (
@@ -85,7 +90,7 @@ export function DataTable<TData>({
 								<TableCell colSpan={columnCount} className="h-64">
 									<EmptyState
 										icon={<AlertCircle />}
-										title={error.data?.code || "Terjadi Kesalahan"}
+										title={error.data?.code || t("errors.somethingWentWrong")}
 										description={error.message}
 									/>
 								</TableCell>
@@ -116,8 +121,8 @@ export function DataTable<TData>({
 								<TableCell colSpan={columnCount} className="h-64">
 									<EmptyState
 										icon={<AlertCircle />}
-										title={emptyMessage}
-										description={emptyDescription}
+										title={resolvedEmptyMessage}
+										description={resolvedEmptyDescription}
 									/>
 								</TableCell>
 							</TableRow>

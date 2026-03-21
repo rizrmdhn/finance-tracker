@@ -30,6 +30,7 @@ import { Spinner } from "@finance-tracker/ui/components/spinner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { ColorPicker } from "@/components/color-picker";
 import { CurrencyInput } from "@/components/currency-input";
 import { IconPicker } from "@/components/icon-picker";
@@ -45,6 +46,7 @@ export default function CreateAccountDialog({
 	open,
 	setIsOpen,
 }: CreateAccountDialogProps) {
+	const { t } = useTranslation();
 	const form = useForm<AccountInput>({
 		resolver: zodResolver(accountSchema),
 	});
@@ -58,12 +60,14 @@ export default function CreateAccountDialog({
 						trpc.account.listWithBalance.queryOptions(),
 					),
 				]);
-				globalSuccessToast("Account created successfully");
+				globalSuccessToast(t("accounts.toast.created"));
 				form.reset();
 				setIsOpen(false);
 			},
 			onError: (error) => {
-				globalErrorToast(`Failed to create account: ${error.message}`);
+				globalErrorToast(
+					t("accounts.toast.createFailed", { message: error.message }),
+				);
 			},
 		}),
 	);
@@ -76,21 +80,20 @@ export default function CreateAccountDialog({
 		<Dialog open={open} onOpenChange={setIsOpen}>
 			<DialogContent>
 				<DialogHeader>
-					<DialogTitle>Create Account</DialogTitle>
+					<DialogTitle>{t("accounts.create.title")}</DialogTitle>
 				</DialogHeader>
 				<form
 					onSubmit={form.handleSubmit(onSubmit)}
 					className="flex flex-col gap-4"
 				>
 					<FieldGroup>
-						{/* Name */}
 						<Controller
 							control={form.control}
 							name="name"
 							render={({ field, fieldState }) => (
 								<Field data-invalid={fieldState.invalid}>
-									<FieldLabel>Name</FieldLabel>
-									<Input placeholder="e.g. Checking Account" {...field} />
+									<FieldLabel>{t("common.name")}</FieldLabel>
+									<Input placeholder={t("accounts.create.namePlaceholder")} {...field} />
 									{fieldState.invalid && (
 										<FieldError errors={[fieldState.error]} />
 									)}
@@ -98,14 +101,13 @@ export default function CreateAccountDialog({
 							)}
 						/>
 
-						{/* Icon + Color — side by side */}
 						<div className="grid grid-cols-2 gap-3">
 							<Controller
 								control={form.control}
 								name="icon"
 								render={({ field, fieldState }) => (
 									<Field data-invalid={fieldState.invalid}>
-										<FieldLabel>Icon</FieldLabel>
+										<FieldLabel>{t("common.icon")}</FieldLabel>
 										<IconPicker value={field.value} onChange={field.onChange} />
 										{fieldState.invalid && (
 											<FieldError errors={[fieldState.error]} />
@@ -119,7 +121,7 @@ export default function CreateAccountDialog({
 								name="color"
 								render={({ field, fieldState }) => (
 									<Field data-invalid={fieldState.invalid}>
-										<FieldLabel>Color</FieldLabel>
+										<FieldLabel>{t("common.color")}</FieldLabel>
 										<ColorPicker
 											value={field.value}
 											onChange={field.onChange}
@@ -132,19 +134,18 @@ export default function CreateAccountDialog({
 							/>
 						</div>
 
-						{/* Type */}
 						<Controller
 							control={form.control}
 							name="type"
 							render={({ field, fieldState }) => (
 								<Field data-invalid={fieldState.invalid}>
-									<FieldLabel>Type</FieldLabel>
+									<FieldLabel>{t("common.type")}</FieldLabel>
 									<Select
 										onValueChange={field.onChange}
 										defaultValue={field.value}
 									>
 										<SelectTrigger className="w-full">
-											<SelectValue placeholder="Select account type">
+											<SelectValue placeholder={t("common.selectAccountType")}>
 												{field.value
 													? ACCOUNT_TYPE_LABELS[
 															field.value as (typeof ACCOUNT_TYPES)[number]
@@ -172,7 +173,7 @@ export default function CreateAccountDialog({
 							name="initialBalance"
 							render={({ field, fieldState }) => (
 								<Field data-invalid={fieldState.invalid}>
-									<FieldLabel>Initial Balance</FieldLabel>
+									<FieldLabel>{t("common.initialBalance")}</FieldLabel>
 									<CurrencyInput
 										value={field.value}
 										onChange={field.onChange}
@@ -190,13 +191,13 @@ export default function CreateAccountDialog({
 							name="currency"
 							render={({ field, fieldState }) => (
 								<Field data-invalid={fieldState.invalid}>
-									<FieldLabel>Currency</FieldLabel>
+									<FieldLabel>{t("common.currency")}</FieldLabel>
 									<Select
 										onValueChange={field.onChange}
 										defaultValue={field.value}
 									>
 										<SelectTrigger className="w-full">
-											<SelectValue placeholder="Select currency" />
+											<SelectValue placeholder={t("common.selectCurrency")} />
 										</SelectTrigger>
 										<SelectContent>
 											{SUPPORTED_CURRENCIES.map((currency) => (
@@ -217,7 +218,7 @@ export default function CreateAccountDialog({
 					<DialogFooter showCloseButton>
 						<Button type="submit" disabled={createAccountMutation.isPending}>
 							{createAccountMutation.isPending && <Spinner />}
-							Create
+							{t("common.create")}
 						</Button>
 					</DialogFooter>
 				</form>

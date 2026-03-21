@@ -34,6 +34,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
 import { ColorPicker } from "../../components/color-picker";
@@ -50,6 +51,7 @@ export default function EditCategoryDialog({
 	setIsOpen,
 	category,
 }: EditCategoryDialogProps) {
+	const { t } = useTranslation();
 	const form = useForm<CategoryUpdateInput>({
 		resolver: zodResolver(categoryUpdateSchema),
 		defaultValues: {
@@ -77,11 +79,13 @@ export default function EditCategoryDialog({
 		trpc.category.update.mutationOptions({
 			onSuccess: async () => {
 				await queryClient.invalidateQueries(trpc.category.list.queryOptions());
-				globalSuccessToast("Category updated successfully");
+				globalSuccessToast(t("categories.toast.updated"));
 				setIsOpen(false);
 			},
 			onError: (error) => {
-				globalErrorToast(`Failed to update category: ${error.message}`);
+				globalErrorToast(
+					t("categories.toast.updateFailed", { message: error.message }),
+				);
 			},
 		}),
 	);
@@ -95,21 +99,20 @@ export default function EditCategoryDialog({
 		<Dialog open={open} onOpenChange={setIsOpen}>
 			<DialogContent>
 				<DialogHeader>
-					<DialogTitle>Edit Category</DialogTitle>
+					<DialogTitle>{t("categories.edit.title")}</DialogTitle>
 				</DialogHeader>
 				<form
 					onSubmit={form.handleSubmit(onSubmit)}
 					className="flex flex-col gap-4"
 				>
 					<FieldGroup>
-						{/* Icon + Color — side by side */}
 						<div className="grid grid-cols-2 gap-3">
 							<Controller
 								control={form.control}
 								name="icon"
 								render={({ field, fieldState }) => (
 									<Field data-invalid={fieldState.invalid}>
-										<FieldLabel>Icon</FieldLabel>
+										<FieldLabel>{t("common.icon")}</FieldLabel>
 										<IconPicker value={field.value} onChange={field.onChange} />
 										{fieldState.invalid && (
 											<FieldError errors={[fieldState.error]} />
@@ -123,7 +126,7 @@ export default function EditCategoryDialog({
 								name="color"
 								render={({ field, fieldState }) => (
 									<Field data-invalid={fieldState.invalid}>
-										<FieldLabel>Color</FieldLabel>
+										<FieldLabel>{t("common.color")}</FieldLabel>
 										<ColorPicker
 											value={field.value}
 											onChange={field.onChange}
@@ -136,14 +139,13 @@ export default function EditCategoryDialog({
 							/>
 						</div>
 
-						{/* Name */}
 						<Controller
 							control={form.control}
 							name="name"
 							render={({ field, fieldState }) => (
 								<Field data-invalid={fieldState.invalid}>
-									<FieldLabel>Name</FieldLabel>
-									<Input placeholder="e.g. Groceries" {...field} />
+									<FieldLabel>{t("common.name")}</FieldLabel>
+									<Input placeholder={t("categories.edit.namePlaceholder")} {...field} />
 									{fieldState.invalid && (
 										<FieldError errors={[fieldState.error]} />
 									)}
@@ -151,16 +153,15 @@ export default function EditCategoryDialog({
 							)}
 						/>
 
-						{/* Type */}
 						<Controller
 							control={form.control}
 							name="type"
 							render={({ field, fieldState }) => (
 								<Field data-invalid={fieldState.invalid}>
-									<FieldLabel>Type</FieldLabel>
+									<FieldLabel>{t("common.type")}</FieldLabel>
 									<Select value={field.value} onValueChange={field.onChange}>
 										<SelectTrigger className="w-full">
-											<SelectValue placeholder="Select category type">
+											<SelectValue placeholder={t("common.selectCategoryType")}>
 												{field.value
 													? CATEGORY_TYPE_LABELS[
 															field.value as (typeof CATEGORY_TYPES)[number]
@@ -187,7 +188,7 @@ export default function EditCategoryDialog({
 					<DialogFooter showCloseButton>
 						<Button type="submit" disabled={updateCategoryMutation.isPending}>
 							{updateCategoryMutation.isPending && <Spinner />}
-							Save Changes
+							{t("common.saveChanges")}
 						</Button>
 					</DialogFooter>
 				</form>

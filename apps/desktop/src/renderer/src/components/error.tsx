@@ -1,9 +1,12 @@
 import { Button } from "@finance-tracker/ui/components/button";
 import { useRouter } from "@tanstack/react-router";
 import { AlertTriangle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { z } from "zod";
 
 export function ErrorComponent({ error }: { error: Error }) {
+	const { t } = useTranslation();
+
 	const router = useRouter();
 
 	// Format error message based on error type
@@ -46,7 +49,9 @@ export function ErrorComponent({ error }: { error: Error }) {
 			const prettified = z.prettifyError(error);
 			return (
 				<div className="max-w-2xl text-left">
-					<p className="mb-3 text-center font-semibold">Validasi data gagal:</p>
+					<p className="mb-3 text-center font-semibold">
+						{t("errors.validationFailed")}
+					</p>
 					{renderPrettifiedErrors(prettified)}
 				</div>
 			);
@@ -65,7 +70,9 @@ export function ErrorComponent({ error }: { error: Error }) {
 			const prettified = z.prettifyError(zodError);
 			return (
 				<div className="max-w-2xl text-left">
-					<p className="mb-3 text-center font-semibold">Validasi data gagal:</p>
+					<p className="mb-3 text-center font-semibold">
+						{t("errors.validationFailed")}
+					</p>
 					{renderPrettifiedErrors(prettified)}
 				</div>
 			);
@@ -73,7 +80,7 @@ export function ErrorComponent({ error }: { error: Error }) {
 
 		return (
 			<p className="max-w-md text-muted-foreground">
-				{error.message || "Maaf, terjadi kesalahan. Silakan coba lagi nanti."}
+				{error.message || t("errors.somethingWentWrong")}
 			</p>
 		);
 	};
@@ -85,16 +92,20 @@ export function ErrorComponent({ error }: { error: Error }) {
 					<AlertTriangle className="h-16 w-16 text-destructive" />
 				</div>
 				<div className="space-y-2">
-					<h1 className="font-bold text-4xl tracking-tight">Oops!</h1>
-					<h2 className="font-semibold text-2xl">Terjadi Kesalahan</h2>
+					<h1 className="font-bold text-4xl tracking-tight">
+						{t("errors.oops")}
+					</h1>
+					<h2 className="font-semibold text-2xl">
+						{t("errors.somethingWentWrong")}
+					</h2>
 					{getErrorMessage()}
 				</div>
 				<div className="flex gap-4">
 					<Button variant="outline" onClick={() => window.location.reload()}>
-						Muat Ulang
+						{t("errors.refresh")}
 					</Button>
 					<Button onClick={() => router.navigate({ to: "/" })}>
-						Ke Beranda
+						{t("errors.goHome")}
 					</Button>
 				</div>
 			</div>

@@ -20,6 +20,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { Ellipsis, Eye, LoaderCircle, Pencil, Printer } from "lucide-react";
 import type React from "react";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export type CustomAction = {
 	icon: React.ReactNode;
@@ -63,7 +64,7 @@ type DataTableActionCellProps = {
 export default function DataTableActionCell({
 	icon,
 	editIcon = <Pencil className="mr-4 size-4" />,
-	editText = "Edit",
+	editText,
 	triggerText,
 	dialogTitle,
 	dialogDescription,
@@ -76,12 +77,12 @@ export default function DataTableActionCell({
 	onConfirm,
 	showDetail = false,
 	detailIcon = <Eye className="mr-4 size-4" />,
-	detailText = "Lihat Detail",
+	detailText,
 	onDetailAction,
 	onHoverDetail,
 	showPrint = false,
 	printIcon = <Printer className="mr-4 size-4" />,
-	printText = "Cetak PDF",
+	printText,
 	onPrintAction,
 	deleteIcon = icon,
 	deleteText = triggerText,
@@ -89,6 +90,14 @@ export default function DataTableActionCell({
 	showEdit = true,
 	showDelete = true,
 }: DataTableActionCellProps) {
+	const { t } = useTranslation();
+	const resolvedEditText = editText ?? t("common.edit");
+	const resolvedDetailText = detailText ?? t("common.seeDetails");
+	const resolvedPrintText = printText ?? t("common.printPDF");
+	const resolvedDeleteText = deleteText ?? t("common.delete");
+	const resolvedCancelText = cancelText ?? t("common.cancel");
+	const resolvedConfirmText = confirmText ?? t("common.confirm");
+
 	const navigate = useNavigate();
 
 	const [isOpen, setIsOpen] = useState(false);
@@ -145,13 +154,13 @@ export default function DataTableActionCell({
 								render={
 									<button
 										type="button"
-										aria-label={detailText}
+										aria-label={resolvedDetailText}
 										className="flex items-center gap-2"
 										onMouseEnter={() => onHoverDetail?.()}
 										onClick={() => navigate({ to: onDetailAction })}
 									>
 										{detailIcon}
-										{detailText}
+										{resolvedDetailText}
 									</button>
 								}
 							/>
@@ -161,7 +170,7 @@ export default function DataTableActionCell({
 								onMouseEnter={() => onHoverDetail?.()}
 							>
 								{detailIcon}
-								{detailText}
+								{resolvedDetailText}
 							</DropdownMenuItem>
 						))}
 
@@ -173,13 +182,13 @@ export default function DataTableActionCell({
 								render={
 									<button
 										type="button"
-										aria-label={editText}
+										aria-label={resolvedEditText}
 										className="flex items-center gap-2"
 										onMouseEnter={() => onHoverEdit?.()}
 										onClick={() => navigate({ to: onEditAction })}
 									>
 										{editIcon}
-										{editText}
+										{resolvedEditText}
 									</button>
 								}
 							/>
@@ -190,7 +199,7 @@ export default function DataTableActionCell({
 							>
 								<div className="flex items-center gap-2">
 									{editIcon}
-									{editText}
+									{resolvedEditText}
 								</div>
 							</DropdownMenuItem>
 						))}
@@ -199,7 +208,7 @@ export default function DataTableActionCell({
 					{showPrint && onPrintAction && (
 						<DropdownMenuItem onClick={onPrintAction}>
 							{printIcon}
-							{printText}
+							{resolvedPrintText}
 						</DropdownMenuItem>
 					)}
 
@@ -217,7 +226,7 @@ export default function DataTableActionCell({
 								render={
 									<div className="flex items-center gap-2">
 										{deleteIcon}
-										{deleteText}
+										{resolvedDeleteText}
 									</div>
 								}
 							/>
@@ -232,7 +241,7 @@ export default function DataTableActionCell({
 				</AlertDialogHeader>
 				<AlertDialogFooter>
 					<AlertDialogCancel onClick={() => setIsOpen(false)}>
-						{cancelText ?? "Batal"}
+						{resolvedCancelText}
 					</AlertDialogCancel>
 					<AlertDialogAction
 						onClick={() => onConfirm()}
@@ -242,7 +251,7 @@ export default function DataTableActionCell({
 						{isLoading ? (
 							<LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
 						) : null}
-						{confirmText ?? "Konfirmasi"}
+						{resolvedConfirmText}
 					</AlertDialogAction>
 				</AlertDialogFooter>
 			</AlertDialogContent>

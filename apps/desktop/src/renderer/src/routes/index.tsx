@@ -15,6 +15,7 @@ import {
 	Wallet,
 } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AccountCombobox } from "@/components/account-combobox";
 import useModalState from "@/hooks/use-modal-state";
 import { trpc } from "../lib/trpc";
@@ -30,6 +31,7 @@ export const Route = createFileRoute("/")({
 });
 
 function HomeComponent() {
+	const { t } = useTranslation();
 	const { state, openModal, closeModal } = useModalState({
 		transaction: false,
 	});
@@ -70,13 +72,13 @@ function HomeComponent() {
 	return (
 		<div className="flex flex-col gap-6 p-6">
 			<div className="flex items-center justify-between">
-				<h1 className="font-semibold text-xl">Finance Tracker</h1>
+				<h1 className="font-semibold text-xl">{t("app.title")}</h1>
 				<div className="flex items-center gap-2">
 					<AccountCombobox
 						value={selectedAccountId}
 						onChange={setSelectedAccountId}
 						accounts={accounts}
-						placeholder="All accounts"
+						placeholder={t("common.allAccounts")}
 					/>
 					<DateRangePicker
 						from={dateRange.from}
@@ -84,7 +86,7 @@ function HomeComponent() {
 						onChange={(from, to) => setDateRange({ from, to })}
 					/>
 					<Button onClick={() => openModal("transaction")}>
-						Tambah Transaksi
+						{t("dashboard.addTransaction")}
 					</Button>
 				</div>
 			</div>
@@ -107,31 +109,31 @@ function HomeComponent() {
 				) : (
 					<>
 						<SummaryCard
-							title="Saldo"
+							title={t("dashboard.balance")}
 							value={balance}
 							icon={<Wallet className="size-4 text-muted-foreground" />}
 							highlight={balance >= 0 ? "positive" : "negative"}
 						/>
 						<SummaryCard
-							title="Pemasukan"
+							title={t("dashboard.income")}
 							value={income}
 							icon={<TrendingUp className="size-4 text-muted-foreground" />}
 							highlight="positive"
 						/>
 						<SummaryCard
-							title="Pengeluaran"
+							title={t("dashboard.expense")}
 							value={expense}
 							icon={<TrendingDown className="size-4 text-muted-foreground" />}
 							highlight="negative"
 						/>
 						<SummaryCard
-							title="Transfer"
+							title={t("dashboard.transfer")}
 							value={transfer}
 							icon={<ArrowLeftRight className="size-4 text-muted-foreground" />}
 							highlight="neutral"
 						/>
 						<SummaryCard
-							title="Tabungan"
+							title={t("dashboard.savings")}
 							value={savings}
 							icon={<PiggyBank className="size-4 text-muted-foreground" />}
 							highlight="neutral"

@@ -4,6 +4,17 @@ import { exposeElectronTRPC } from "trpc-electron/main";
 exposeElectronTRPC();
 
 // Guard against double-registration during HMR
+if (!("electronDataManager" in window)) {
+	contextBridge.exposeInMainWorld("electronDataManager", {
+		backup: (): Promise<{ success: boolean; cancelled?: boolean; error?: string }> =>
+			ipcRenderer.invoke("backup-database"),
+		restore: (): Promise<{ success: boolean; cancelled?: boolean; error?: string }> =>
+			ipcRenderer.invoke("restore-database"),
+		wipe: (): Promise<{ success: boolean; error?: string }> =>
+			ipcRenderer.invoke("wipe-database"),
+	});
+}
+
 if (!("electronUpdater" in window)) {
 	contextBridge.exposeInMainWorld("electronUpdater", {
 		checkForUpdates: () => {

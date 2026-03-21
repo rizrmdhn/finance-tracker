@@ -1,11 +1,13 @@
+import fs from "node:fs";
 import path from "node:path";
 import { appRouter, createTRPCContext } from "@finance-tracker/api";
 import { APP_SETTINGS_DEFAULTS } from "@finance-tracker/constants";
 import * as schema from "@finance-tracker/db";
 import Database from "better-sqlite3";
+import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { migrate } from "drizzle-orm/better-sqlite3/migrator";
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow, dialog, ipcMain } from "electron";
 import { autoUpdater } from "electron-updater";
 import { createIPCHandler } from "trpc-electron/main";
 
@@ -132,6 +134,54 @@ app.whenReady().then(() => {
 		router: appRouter,
 		windows: [win],
 		createContext: async () => await createTRPCContext({ db }),
+	});
+
+	ipcMain.handle("backup-database", async () => {
+		const result = await dialog.showSaveDialog(win, {
+			title: "Backup Database",
+			defaultPath: "finance-backup.db",
+			filters: [{ name: "SQLite Database", extensions: ["db"] }],
+		});
+		if (result.canceled || !result.filePath) return { success: false, cancelled: true };
+		try {
+			await fs.promises.copyFile(dbPath, result.filePath);
+			return { success: true };
+		} catch (error) {
+			return { success: false, error: (error as Error).message };
+		}
+	});
+
+	ipcMain.handle("restore-database", async () => {
+		const result = await dialog.showOpenDialog(win, {
+			title: "Restore Database",
+			filters: [{ name: "SQLite Database", extensions: ["db"] }],
+			properties: ["openFile"],
+		});
+		if (result.canceled || !result.filePaths[0]) return { success: false, cancelled: true };
+		try {
+			sqlite.close();
+			await fs.promises.copyFile(result.filePaths[0], dbPath);
+			app.relaunch();
+			app.exit(0);
+			return { success: true };
+		} catch (error) {
+			return { success: false, error: (error as Error).message };
+		}
+	});
+
+	ipcMain.handle("wipe-database", async () => {
+		try {
+			db.delete(schema.transactions).run();
+			db.delete(schema.categories).run();
+			db.delete(schema.accounts).run();
+			db.update(schema.appSettings)
+				.set({ value: "pending" })
+				.where(eq(schema.appSettings.key, "onboarding"))
+				.run();
+			return { success: true };
+		} catch (error) {
+			return { success: false, error: (error as Error).message };
+		}
 	});
 });
 
