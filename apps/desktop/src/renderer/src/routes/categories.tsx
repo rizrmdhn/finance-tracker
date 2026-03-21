@@ -1,5 +1,6 @@
 import type { Category } from "@finance-tracker/types";
 import { Button } from "@finance-tracker/ui/components/button";
+import { Skeleton } from "@finance-tracker/ui/components/skeleton";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { PencilIcon, Trash2Icon } from "lucide-react";
@@ -31,7 +32,9 @@ function CategoriesComponent() {
 
 	const [selected, setSelected] = useState<Category | null>(null);
 
-	const { data: categories = [] } = useQuery(trpc.category.list.queryOptions());
+	const { data: categories = [], isLoading } = useQuery(
+		trpc.category.list.queryOptions(),
+	);
 
 	const deleteMutation = useMutation(
 		trpc.category.delete.mutationOptions({
@@ -62,9 +65,13 @@ function CategoriesComponent() {
 			<div className="flex items-center justify-between">
 				<div>
 					<h1 className="font-semibold text-xl">Kategori</h1>
-					<p className="text-muted-foreground text-sm">
-						{categories.length} kategori
-					</p>
+					{isLoading ? (
+						<Skeleton className="mt-1 h-4 w-24" />
+					) : (
+						<p className="text-muted-foreground text-sm">
+							{categories.length} kategori
+						</p>
+					)}
 				</div>
 				<Button onClick={() => openModal("createCategory")}>
 					Tambah Kategori
@@ -116,7 +123,24 @@ function CategoriesComponent() {
 						</div>
 					);
 				})}
-				{categories.length === 0 && (
+				{isLoading &&
+					[...Array(3)].map((_, i) => (
+						<div
+							key={i}
+							className="flex h-12.5 items-center gap-3 rounded-lg border px-4 py-3"
+						>
+							<Skeleton className="size-4 shrink-0 rounded-full" />
+							<div className="flex flex-1 flex-col gap-1">
+								<Skeleton className="h-4 w-32" />
+							</div>
+							<Skeleton className="h-3 w-10" />
+							<div className="flex items-center gap-1">
+								<Skeleton className="size-7" />
+								<Skeleton className="size-7" />
+							</div>
+						</div>
+					))}
+				{categories.length === 0 && !isLoading && (
 					<p className="py-6 text-center text-muted-foreground text-sm">
 						Belum ada kategori
 					</p>
