@@ -30,6 +30,9 @@ import { queryClient, trpc } from "@/lib/trpc";
 
 declare global {
 	interface Window {
+		electronApp: {
+			getVersion: () => Promise<string>;
+		};
 		electronDataManager: {
 			backup: () => Promise<{ success: boolean; cancelled?: boolean; error?: string }>;
 			restore: () => Promise<{ success: boolean; cancelled?: boolean; error?: string }>;
@@ -64,6 +67,7 @@ function RouteComponent() {
 		state: "idle",
 	});
 	const [dataOpPending, setDataOpPending] = useState<"backup" | "restore" | "wipe" | null>(null);
+	const [appVersion, setAppVersion] = useState<string | null>(null);
 
 	const THEME_OPTIONS = [
 		{ value: "light", label: t("settings.appearance.light") },
@@ -115,6 +119,10 @@ function RouteComponent() {
 			},
 		}),
 	);
+
+	useEffect(() => {
+		window.electronApp?.getVersion().then(setAppVersion);
+	}, []);
 
 	useEffect(() => {
 		if (!window.electronUpdater) return;
@@ -496,6 +504,15 @@ function RouteComponent() {
 					/>
 				</SettingRow>
 			</section>
+
+			{appVersion && (
+				<>
+					<Separator />
+					<p className="text-muted-foreground text-xs">
+						Finance Tracker v{appVersion}
+					</p>
+				</>
+			)}
 		</div>
 	);
 }
