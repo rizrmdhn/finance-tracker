@@ -74,6 +74,7 @@ function RouteComponent() {
 					trpc.appSetting.get.queryOptions({ key: variables.key }),
 				);
 				globalSuccessToast(t("settings.toast.saved"));
+				globalSuccessToast(t("settings.toast.saved"));
 			},
 			onError: (error) => {
 				globalErrorToast(
@@ -90,8 +91,12 @@ function RouteComponent() {
 					trpc.appSetting.get.queryOptions({ key: "onboarding" }),
 				);
 				globalSuccessToast(t("settings.toast.onboardingReset"));
+				globalSuccessToast(t("settings.toast.onboardingReset"));
 			},
 			onError: (error) => {
+				globalErrorToast(
+					t("settings.toast.onboardingResetFailed", { message: error.message }),
+				);
 				globalErrorToast(
 					t("settings.toast.onboardingResetFailed", { message: error.message }),
 				);
@@ -155,7 +160,9 @@ function RouteComponent() {
 		<div className="flex max-w-xl flex-col gap-6">
 			<div>
 				<h1 className="font-semibold text-xl">{t("settings.heading")}</h1>
+				<h1 className="font-semibold text-xl">{t("settings.heading")}</h1>
 				<p className="text-muted-foreground text-sm">
+					{t("settings.subheading")}
 					{t("settings.subheading")}
 				</p>
 			</div>
@@ -341,6 +348,7 @@ function RouteComponent() {
 							<div className="flex items-center justify-between">
 								<div className="flex items-center gap-2 text-sm">
 									<CheckCircle2 className="size-4 text-green-500" />
+									{t("settings.advanced.readyToInstall")}
 									{t("settings.advanced.readyToInstall")}
 								</div>
 								<Button
