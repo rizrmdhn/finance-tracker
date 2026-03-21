@@ -85,7 +85,8 @@ app.whenReady().then(() => {
 				value,
 			})),
 		)
-		.onConflictDoNothing();
+		.onConflictDoNothing()
+		.run();
 
 	createWindow();
 	setupAutoUpdater();
