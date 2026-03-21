@@ -1,6 +1,6 @@
 {
 	"name": "@finance-tracker/desktop",
-	"version": "0.3.1",
+	"version": "0.3.2",
 	"main": "out/main/index.js",
 	"scripts": {
 		"dev": "electron-vite dev",
@@ -60,7 +60,8 @@
 					]
 				}
 			],
-			"icon": "src/resources/icon.icns"
+			"icon": "src/resources/icon.icns",
+			"artifactName": "Finance-Tracker-${version}-${arch}.${ext}"
 		},
 		"linux": {
 			"target": [
@@ -71,7 +72,8 @@
 					]
 				}
 			],
-			"icon": "src/resources/icon.png"
+			"icon": "src/resources/icon.png",
+			"artifactName": "Finance-Tracker-${version}.${ext}"
 		},
 		"npmRebuild": true,
 		"nativeRebuilder": "sequential",
