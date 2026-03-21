@@ -173,11 +173,29 @@ export interface Dictionary {
 			resetOnboardingDescription: string;
 			failedToCheck: string;
 		};
+		dataManagement: {
+			title: string;
+			backup: string;
+			backupDescription: string;
+			restore: string;
+			restoreDescription: string;
+			wipe: string;
+			wipeDescription: string;
+			wipeConfirmTitle: string;
+			wipeConfirmDescription: string;
+			wipeConfirmAction: string;
+		};
 		toast: {
 			saved: string;
 			saveFailed: string;
 			onboardingReset: string;
 			onboardingResetFailed: string;
+			backupSuccess: string;
+			backupFailed: string;
+			restoreSuccess: string;
+			restoreFailed: string;
+			wipeSuccess: string;
+			wipeFailed: string;
 		};
 	};
 	onboarding: {

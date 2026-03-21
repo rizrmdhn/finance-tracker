@@ -22,10 +22,21 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AlertCircle, CheckCircle2, Loader2, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { useTheme } from "@/components/theme-provider";
 import { pageHead } from "@/lib/page-head";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
+
+declare global {
+	interface Window {
+		electronDataManager: {
+			backup: () => Promise<{ success: boolean; cancelled?: boolean; error?: string }>;
+			restore: () => Promise<{ success: boolean; cancelled?: boolean; error?: string }>;
+			wipe: () => Promise<{ success: boolean; error?: string }>;
+		};
+	}
+}
 
 export const Route = createFileRoute("/settings")({
 	component: RouteComponent,
@@ -52,6 +63,7 @@ function RouteComponent() {
 	const [updateStatus, setUpdateStatus] = useState<UpdateStatus>({
 		state: "idle",
 	});
+	const [dataOpPending, setDataOpPending] = useState<"backup" | "restore" | "wipe" | null>(null);
 
 	const THEME_OPTIONS = [
 		{ value: "light", label: t("settings.appearance.light") },
@@ -156,8 +168,53 @@ function RouteComponent() {
 		window.electronUpdater?.checkForUpdates();
 	}
 
+	async function handleBackup() {
+		setDataOpPending("backup");
+		try {
+			const result = await window.electronDataManager.backup();
+			if (result.cancelled) return;
+			if (result.success) {
+				globalSuccessToast(t("settings.toast.backupSuccess"));
+			} else {
+				globalErrorToast(t("settings.toast.backupFailed", { message: result.error }));
+			}
+		} finally {
+			setDataOpPending(null);
+		}
+	}
+
+	async function handleRestore() {
+		setDataOpPending("restore");
+		try {
+			const result = await window.electronDataManager.restore();
+			if (result.cancelled) return;
+			if (result.success) {
+				globalSuccessToast(t("settings.toast.restoreSuccess"));
+			} else {
+				globalErrorToast(t("settings.toast.restoreFailed", { message: result.error }));
+			}
+		} finally {
+			setDataOpPending(null);
+		}
+	}
+
+	async function handleWipe() {
+		setDataOpPending("wipe");
+		try {
+			const result = await window.electronDataManager.wipe();
+			if (result.success) {
+				await queryClient.invalidateQueries();
+				globalSuccessToast(t("settings.toast.wipeSuccess"));
+			} else {
+				globalErrorToast(t("settings.toast.wipeFailed", { message: result.error }));
+			}
+		} finally {
+			setDataOpPending(null);
+		}
+	}
+
 	return (
-		<div className="flex max-w-xl flex-col gap-6">
+		<div className="flex max-w-2xl flex-col gap-6">
 			<div>
 				<h1 className="font-semibold text-xl">{t("settings.heading")}</h1>
 				<h1 className="font-semibold text-xl">{t("settings.heading")}</h1>
@@ -382,6 +439,62 @@ function RouteComponent() {
 					>
 						{t("settings.advanced.resetOnboarding")}
 					</Button>
+				</SettingRow>
+			</section>
+
+			<Separator />
+
+			{/* Data Management */}
+			<section className="flex flex-col gap-4">
+				<h2 className="font-medium text-sm">
+					{t("settings.dataManagement.title")}
+				</h2>
+
+				<SettingRow
+					label={t("settings.dataManagement.backup")}
+					description={t("settings.dataManagement.backupDescription")}
+				>
+					<Button
+						variant="outline"
+						onClick={handleBackup}
+						disabled={dataOpPending !== null}
+					>
+						{dataOpPending === "backup" && (
+							<Loader2 className="size-4 animate-spin" />
+						)}
+						{t("settings.dataManagement.backup")}
+					</Button>
+				</SettingRow>
+
+				<SettingRow
+					label={t("settings.dataManagement.restore")}
+					description={t("settings.dataManagement.restoreDescription")}
+				>
+					<Button
+						variant="outline"
+						onClick={handleRestore}
+						disabled={dataOpPending !== null}
+					>
+						{dataOpPending === "restore" && (
+							<Loader2 className="size-4 animate-spin" />
+						)}
+						{t("settings.dataManagement.restore")}
+					</Button>
+				</SettingRow>
+
+				<SettingRow
+					label={t("settings.dataManagement.wipe")}
+					description={t("settings.dataManagement.wipeDescription")}
+				>
+					<ConfirmationDialog
+						trigger={t("settings.dataManagement.wipe")}
+						title={t("settings.dataManagement.wipeConfirmTitle")}
+						description={t("settings.dataManagement.wipeConfirmDescription")}
+						confirmText={t("settings.dataManagement.wipeConfirmAction")}
+						variant="destructive"
+						isLoading={dataOpPending === "wipe"}
+						onConfirm={handleWipe}
+					/>
 				</SettingRow>
 			</section>
 		</div>

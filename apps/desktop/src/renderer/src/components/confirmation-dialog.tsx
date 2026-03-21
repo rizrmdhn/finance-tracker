@@ -111,7 +111,13 @@ export function ConfirmationDialog({
 	return (
 		<AlertDialog open={open} onOpenChange={onOpenChange}>
 			{trigger && (
-				<AlertDialogTrigger render={<Button />}>{trigger}</AlertDialogTrigger>
+				<AlertDialogTrigger
+					render={
+						<Button variant={destructiveClass ? "destructive" : "default"} />
+					}
+				>
+					{trigger}
+				</AlertDialogTrigger>
 			)}
 			<AlertDialogContent>
 				<AlertDialogHeader>
