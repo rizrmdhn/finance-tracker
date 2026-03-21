@@ -8,11 +8,11 @@ import { z } from "zod";
 
 export const accountSchema = z.object({
 	name: z.string().min(1),
-	icon: z.enum(ICON_NAMES),
-	color: z.enum(COLOR_VALUES),
-	type: z.enum(ACCOUNT_TYPES),
+	icon: z.enum(ICON_NAMES, { error: "Please select an icon" }),
+	color: z.enum(COLOR_VALUES, { error: "Please select a color" }),
+	type: z.enum(ACCOUNT_TYPES, { error: "Please select an account type" }),
 	initialBalance: z.number().int().nonnegative(),
-	currency: z.enum(SUPPORTED_CURRENCIES),
+	currency: z.enum(SUPPORTED_CURRENCIES, { error: "Please select a currency" }),
 });
 
 export const accountUpdateSchema = accountSchema.partial().extend({

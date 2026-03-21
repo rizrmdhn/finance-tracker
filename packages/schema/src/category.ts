@@ -7,9 +7,9 @@ import { z } from "zod";
 
 export const categorySchema = z.object({
 	name: z.string().min(1),
-	icon: z.enum(ICON_NAMES),
-	color: z.enum(COLOR_VALUES),
-	type: z.enum(CATEGORY_TYPES),
+	icon: z.enum(ICON_NAMES, { error: "Please select an icon" }),
+	color: z.enum(COLOR_VALUES, { error: "Please select a color" }),
+	type: z.enum(CATEGORY_TYPES, { error: "Please select a category type" }),
 });
 
 export const categoryUpdateSchema = categorySchema.partial().extend({

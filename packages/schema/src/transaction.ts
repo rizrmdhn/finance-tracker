@@ -29,16 +29,18 @@ export const updateTransactionSchema = transactionSchema.partial().extend({
 
 export const transactionFiltersSchema = z
 	.object({
-		from: z.number().optional(),
-		to: z.number().optional(),
-		accountId: z.string().optional(),
+		from: z.number({ error: "Please provide a valid start date" }).optional(),
+		to: z.number({ error: "Please provide a valid end date" }).optional(),
+		accountId: z
+			.string({ error: "Please provide a valid account ID" })
+			.optional(),
 	})
 	.optional();
 
 export const summaryFiltersSchema = z.object({
 	accountId: z.string().optional(),
-	from: z.number(),
-	to: z.number(),
+	from: z.number({ error: "Please provide a valid start date" }),
+	to: z.number({ error: "Please provide a valid end date" }),
 });
 
 export type PaginatedTransactionsInput = z.infer<
