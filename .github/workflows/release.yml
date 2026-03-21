@@ -56,13 +56,19 @@ jobs:
         include:
           - os: windows-latest
             args: --win
-            artifact: "apps/desktop/dist/**/*.exe"
+            artifact: |
+              apps/desktop/dist/**/*.exe
+              apps/desktop/dist/latest.yml
           - os: macos-latest
             args: --mac
-            artifact: "apps/desktop/dist/**/*.dmg"
+            artifact: |
+              apps/desktop/dist/**/*.dmg
+              apps/desktop/dist/latest-mac.yml
           - os: ubuntu-latest
             args: --linux
-            artifact: "apps/desktop/dist/**/*.AppImage"
+            artifact: |
+              apps/desktop/dist/**/*.AppImage
+              apps/desktop/dist/latest-linux.yml
 
     runs-on: ${{ matrix.os }}
 
