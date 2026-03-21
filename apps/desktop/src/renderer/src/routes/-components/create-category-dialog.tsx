@@ -29,6 +29,7 @@ import { Spinner } from "@finance-tracker/ui/components/spinner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
 import { ColorPicker } from "../../components/color-picker";
@@ -43,6 +44,7 @@ export default function CreateCategoryDialog({
 	open,
 	setIsOpen,
 }: CreateCategoryDialogProps) {
+	const { t } = useTranslation();
 	const form = useForm<CategoryInput>({
 		resolver: zodResolver(categorySchema),
 		defaultValues: {
@@ -57,12 +59,14 @@ export default function CreateCategoryDialog({
 		trpc.category.create.mutationOptions({
 			onSuccess: async () => {
 				await queryClient.invalidateQueries(trpc.category.list.queryOptions());
-				globalSuccessToast("Category created successfully");
+				globalSuccessToast(t("categories.toast.created"));
 				form.reset();
 				setIsOpen(false);
 			},
 			onError: (error) => {
-				globalErrorToast(`Failed to create category: ${error.message}`);
+				globalErrorToast(
+					t("categories.toast.createFailed", { message: error.message }),
+				);
 			},
 		}),
 	);
@@ -75,21 +79,20 @@ export default function CreateCategoryDialog({
 		<Dialog open={open} onOpenChange={setIsOpen}>
 			<DialogContent>
 				<DialogHeader>
-					<DialogTitle>Create Category</DialogTitle>
+					<DialogTitle>{t("categories.create.title")}</DialogTitle>
 				</DialogHeader>
 				<form
 					onSubmit={form.handleSubmit(onSubmit)}
 					className="flex flex-col gap-4"
 				>
 					<FieldGroup>
-						{/* Icon + Color — side by side */}
 						<div className="grid grid-cols-2 gap-3">
 							<Controller
 								control={form.control}
 								name="icon"
 								render={({ field, fieldState }) => (
 									<Field data-invalid={fieldState.invalid}>
-										<FieldLabel>Icon</FieldLabel>
+										<FieldLabel>{t("common.icon")}</FieldLabel>
 										<IconPicker value={field.value} onChange={field.onChange} />
 										{fieldState.invalid && (
 											<FieldError errors={[fieldState.error]} />
@@ -103,7 +106,7 @@ export default function CreateCategoryDialog({
 								name="color"
 								render={({ field, fieldState }) => (
 									<Field data-invalid={fieldState.invalid}>
-										<FieldLabel>Color</FieldLabel>
+										<FieldLabel>{t("common.color")}</FieldLabel>
 										<ColorPicker
 											value={field.value}
 											onChange={field.onChange}
@@ -116,14 +119,13 @@ export default function CreateCategoryDialog({
 							/>
 						</div>
 
-						{/* Name */}
 						<Controller
 							control={form.control}
 							name="name"
 							render={({ field, fieldState }) => (
 								<Field data-invalid={fieldState.invalid}>
-									<FieldLabel>Name</FieldLabel>
-									<Input placeholder="e.g. Groceries" {...field} />
+									<FieldLabel>{t("common.name")}</FieldLabel>
+									<Input placeholder={t("categories.create.namePlaceholder")} {...field} />
 									{fieldState.invalid && (
 										<FieldError errors={[fieldState.error]} />
 									)}
@@ -131,19 +133,18 @@ export default function CreateCategoryDialog({
 							)}
 						/>
 
-						{/* Type */}
 						<Controller
 							control={form.control}
 							name="type"
 							render={({ field, fieldState }) => (
 								<Field data-invalid={fieldState.invalid}>
-									<FieldLabel>Type</FieldLabel>
+									<FieldLabel>{t("common.type")}</FieldLabel>
 									<Select
 										onValueChange={field.onChange}
 										defaultValue={field.value}
 									>
 										<SelectTrigger className="w-full">
-											<SelectValue placeholder="Select category type">
+											<SelectValue placeholder={t("common.selectCategoryType")}>
 												{field.value
 													? CATEGORY_TYPE_LABELS[
 															field.value as (typeof CATEGORY_TYPES)[number]
@@ -170,7 +171,7 @@ export default function CreateCategoryDialog({
 					<DialogFooter showCloseButton>
 						<Button type="submit" disabled={createCategoryMutation.isPending}>
 							{createCategoryMutation.isPending && <Spinner />}
-							Create
+							{t("common.create")}
 						</Button>
 					</DialogFooter>
 				</form>

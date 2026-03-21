@@ -5,6 +5,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { PlusCircle } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import getTransactionsColumns from "@/components/columns/transaction-columns";
 import { DataTable } from "@/components/data-table/data-table";
 import { DataTableFilterMenu } from "@/components/data-table/data-table-filter-menu";
@@ -22,12 +23,13 @@ export const Route = createFileRoute("/transactions")({
 	component: TransactionsComponent,
 	head: () =>
 		pageHead(
-			"Transaksi",
-			"Kelola semua transaksi keuangan Anda di sini. Tambah, edit, atau hapus transaksi sesuai kebutuhan untuk menjaga catatan keuangan Anda tetap akurat dan terorganisir.",
+			"Transactions",
+			"Manage all your financial transactions here.",
 		),
 });
 
 function TransactionsComponent() {
+	const { t } = useTranslation();
 	const params = Route.useSearch();
 	const navigate = Route.useNavigate();
 
@@ -93,15 +95,15 @@ function TransactionsComponent() {
 			<div className="mb-4 flex items-center justify-end gap-4">
 				<Button onClick={() => openModal("create")}>
 					<PlusCircle className="size-4" />
-					Tambah Transaksi
+					{t("transactions.addTransaction")}
 				</Button>
 			</div>
 			<DataTable
 				table={table}
 				isLoading={isLoading}
 				error={error}
-				emptyMessage="Tidak ada transaksi yang ditemukan"
-				emptyDescription="Coba sesuaikan filter atau kata kunci pencarian Anda."
+				emptyMessage={t("transactions.noTransactions")}
+				emptyDescription={t("transactions.noTransactionsDescription")}
 			>
 				<DataTableToolbar table={table}>
 					<DataTableFilterMenu table={table} />

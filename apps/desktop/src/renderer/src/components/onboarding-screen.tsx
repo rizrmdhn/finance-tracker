@@ -30,6 +30,7 @@ import { Spinner } from "@finance-tracker/ui/components/spinner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { ColorPicker } from "@/components/color-picker";
 import { CurrencyInput } from "@/components/currency-input";
 import { IconPicker } from "@/components/icon-picker";
@@ -37,6 +38,7 @@ import { globalErrorToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
 
 export function OnboardingScreen() {
+	const { t } = useTranslation();
 	const form = useForm<AccountInput>({
 		resolver: zodResolver(accountSchema),
 		defaultValues: {
@@ -61,7 +63,9 @@ export function OnboardingScreen() {
 				});
 			},
 			onError: (error) => {
-				globalErrorToast(`Failed to create account: ${error.message}`);
+				globalErrorToast(
+					t("accounts.toast.createFailed", { message: error.message }),
+				);
 			},
 		}),
 	);
@@ -74,7 +78,9 @@ export function OnboardingScreen() {
 				);
 			},
 			onError: (error) => {
-				globalErrorToast(`Failed to complete onboarding: ${error.message}`);
+				globalErrorToast(
+					t("onboarding.toast.failed", { message: error.message }),
+				);
 			},
 		}),
 	);
@@ -90,10 +96,8 @@ export function OnboardingScreen() {
 		<div className="flex min-h-screen items-center justify-center bg-background p-4">
 			<Card className="w-full max-w-md">
 				<CardHeader>
-					<CardTitle className="text-2xl">Welcome to Finance Tracker</CardTitle>
-					<CardDescription>
-						Create your first account to start tracking your finances.
-					</CardDescription>
+					<CardTitle className="text-2xl">{t("onboarding.title")}</CardTitle>
+					<CardDescription>{t("onboarding.description")}</CardDescription>
 				</CardHeader>
 				<CardContent>
 					<form
@@ -106,8 +110,8 @@ export function OnboardingScreen() {
 								name="name"
 								render={({ field, fieldState }) => (
 									<Field data-invalid={fieldState.invalid}>
-										<FieldLabel>Account Name</FieldLabel>
-										<Input placeholder="e.g. Main Wallet" {...field} />
+										<FieldLabel>{t("onboarding.accountName")}</FieldLabel>
+										<Input placeholder={t("onboarding.accountNamePlaceholder")} {...field} />
 										{fieldState.invalid && (
 											<FieldError errors={[fieldState.error]} />
 										)}
@@ -121,7 +125,7 @@ export function OnboardingScreen() {
 									name="icon"
 									render={({ field, fieldState }) => (
 										<Field data-invalid={fieldState.invalid}>
-											<FieldLabel>Icon</FieldLabel>
+											<FieldLabel>{t("common.icon")}</FieldLabel>
 											<IconPicker
 												value={field.value}
 												onChange={field.onChange}
@@ -138,7 +142,7 @@ export function OnboardingScreen() {
 									name="color"
 									render={({ field, fieldState }) => (
 										<Field data-invalid={fieldState.invalid}>
-											<FieldLabel>Color</FieldLabel>
+											<FieldLabel>{t("common.color")}</FieldLabel>
 											<ColorPicker
 												value={field.value}
 												onChange={field.onChange}
@@ -156,13 +160,13 @@ export function OnboardingScreen() {
 								name="type"
 								render={({ field, fieldState }) => (
 									<Field data-invalid={fieldState.invalid}>
-										<FieldLabel>Account Type</FieldLabel>
+										<FieldLabel>{t("onboarding.accountType")}</FieldLabel>
 										<Select
 											onValueChange={field.onChange}
 											value={field.value}
 										>
 											<SelectTrigger className="w-full">
-												<SelectValue placeholder="Select account type">
+												<SelectValue placeholder={t("common.selectAccountType")}>
 													{field.value ? ACCOUNT_TYPE_LABELS[field.value as (typeof ACCOUNT_TYPES)[number]] : null}
 												</SelectValue>
 											</SelectTrigger>
@@ -186,13 +190,13 @@ export function OnboardingScreen() {
 								name="currency"
 								render={({ field, fieldState }) => (
 									<Field data-invalid={fieldState.invalid}>
-										<FieldLabel>Currency</FieldLabel>
+										<FieldLabel>{t("common.currency")}</FieldLabel>
 										<Select
 											onValueChange={field.onChange}
 											defaultValue={field.value}
 										>
 											<SelectTrigger className="w-full">
-												<SelectValue placeholder="Select currency" />
+												<SelectValue placeholder={t("common.selectCurrency")} />
 											</SelectTrigger>
 											<SelectContent>
 												{SUPPORTED_CURRENCIES.map((currency) => (
@@ -214,7 +218,7 @@ export function OnboardingScreen() {
 								name="initialBalance"
 								render={({ field, fieldState }) => (
 									<Field data-invalid={fieldState.invalid}>
-										<FieldLabel>Initial Balance</FieldLabel>
+										<FieldLabel>{t("common.initialBalance")}</FieldLabel>
 										<CurrencyInput
 											value={field.value}
 											onChange={field.onChange}
@@ -230,7 +234,7 @@ export function OnboardingScreen() {
 
 						<Button type="submit" disabled={isPending} className="w-full">
 							{isPending && <Spinner />}
-							Create Account & Get Started
+							{t("onboarding.submit")}
 						</Button>
 					</form>
 				</CardContent>

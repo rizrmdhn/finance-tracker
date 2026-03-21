@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 declare global {
@@ -28,12 +29,14 @@ declare global {
 }
 
 export function UpdateNotifier() {
+	const { t } = useTranslation();
+
 	useEffect(() => {
 		window.electronUpdater?.onUpdateDownloaded(() => {
-			toast("Update ready", {
-				description: "A new version has been downloaded.",
+			toast(t("update.toast.title"), {
+				description: t("update.toast.description"),
 				action: {
-					label: "Restart & Install",
+					label: t("update.toast.action"),
 					onClick: () => window.electronUpdater.installUpdate(),
 				},
 				duration: Number.POSITIVE_INFINITY,
@@ -43,7 +46,7 @@ export function UpdateNotifier() {
 		return () => {
 			window.electronUpdater?.removeAllListeners("update-downloaded");
 		};
-	}, []);
+	}, [t]);
 
 	return null;
 }

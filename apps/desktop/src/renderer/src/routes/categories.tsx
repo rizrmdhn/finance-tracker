@@ -5,6 +5,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { PencilIcon, Trash2Icon } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { ICON_MAP } from "@/components/icon-picker";
 import useModalState from "@/hooks/use-modal-state";
@@ -18,12 +19,13 @@ export const Route = createFileRoute("/categories")({
 	component: CategoriesComponent,
 	head: () =>
 		pageHead(
-			"Kategori",
-			"Kelola kategori keuangan Anda untuk mengorganisir transaksi dengan lebih baik. Tambah, edit, atau hapus kategori sesuai kebutuhan untuk menjaga catatan keuangan Anda tetap rapi dan terstruktur.",
+			"Categories",
+			"Manage your financial categories to organize transactions.",
 		),
 });
 
 function CategoriesComponent() {
+	const { t } = useTranslation();
 	const { state, openModal, closeModal } = useModalState({
 		createCategory: false,
 		editCategory: false,
@@ -40,12 +42,14 @@ function CategoriesComponent() {
 		trpc.category.delete.mutationOptions({
 			onSuccess: async () => {
 				await queryClient.invalidateQueries(trpc.category.list.queryOptions());
-				globalSuccessToast("Category deleted");
+				globalSuccessToast(t("categories.toast.deleted"));
 				closeModal("deleteCategory");
 				setSelected(null);
 			},
 			onError: (error) => {
-				globalErrorToast(`Failed to delete category: ${error.message}`);
+				globalErrorToast(
+					t("categories.toast.deleteFailed", { message: error.message }),
+				);
 			},
 		}),
 	);
@@ -64,17 +68,17 @@ function CategoriesComponent() {
 		<div className="flex flex-col gap-6">
 			<div className="flex items-center justify-between">
 				<div>
-					<h1 className="font-semibold text-xl">Kategori</h1>
+					<h1 className="font-semibold text-xl">{t("categories.title")}</h1>
 					{isLoading ? (
 						<Skeleton className="mt-1 h-4 w-24" />
 					) : (
 						<p className="text-muted-foreground text-sm">
-							{categories.length} kategori
+							{t("categories.categoryCount", { count: categories.length })}
 						</p>
 					)}
 				</div>
 				<Button onClick={() => openModal("createCategory")}>
-					Tambah Kategori
+					{t("categories.addCategory")}
 				</Button>
 			</div>
 
@@ -142,7 +146,7 @@ function CategoriesComponent() {
 					))}
 				{categories.length === 0 && !isLoading && (
 					<p className="py-6 text-center text-muted-foreground text-sm">
-						Belum ada kategori
+						{t("categories.noCategories")}
 					</p>
 				)}
 			</div>
@@ -167,9 +171,9 @@ function CategoriesComponent() {
 				onOpenChange={(open) =>
 					open ? openModal("deleteCategory") : closeModal("deleteCategory")
 				}
-				title="Delete Category"
-				description={`Are you sure you want to delete "${selected?.name}"? This cannot be undone.`}
-				confirmText="Delete"
+				title={t("categories.delete.title")}
+				description={t("categories.delete.description", { name: selected?.name })}
+				confirmText={t("categories.delete.confirm")}
 				variant="destructive"
 				isLoading={deleteMutation.isPending}
 				onConfirm={() => {
