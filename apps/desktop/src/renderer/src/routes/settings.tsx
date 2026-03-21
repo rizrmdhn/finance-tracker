@@ -17,13 +17,14 @@ import {
 	SelectValue,
 } from "@finance-tracker/ui/components/select";
 import { Separator } from "@finance-tracker/ui/components/separator";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { AlertCircle, CheckCircle2, Loader2, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { useTheme } from "@/components/theme-provider";
+import { useOptimisticMutation } from "@/lib/optimistic-update";
 import { pageHead } from "@/lib/page-head";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
@@ -34,8 +35,16 @@ declare global {
 			getVersion: () => Promise<string>;
 		};
 		electronDataManager: {
-			backup: () => Promise<{ success: boolean; cancelled?: boolean; error?: string }>;
-			restore: () => Promise<{ success: boolean; cancelled?: boolean; error?: string }>;
+			backup: () => Promise<{
+				success: boolean;
+				cancelled?: boolean;
+				error?: string;
+			}>;
+			restore: () => Promise<{
+				success: boolean;
+				cancelled?: boolean;
+				error?: string;
+			}>;
 			wipe: () => Promise<{ success: boolean; error?: string }>;
 		};
 	}
@@ -66,7 +75,9 @@ function RouteComponent() {
 	const [updateStatus, setUpdateStatus] = useState<UpdateStatus>({
 		state: "idle",
 	});
-	const [dataOpPending, setDataOpPending] = useState<"backup" | "restore" | "wipe" | null>(null);
+	const [dataOpPending, setDataOpPending] = useState<
+		"backup" | "restore" | "wipe" | null
+	>(null);
 	const [appVersion, setAppVersion] = useState<string | null>(null);
 
 	const THEME_OPTIONS = [
@@ -83,13 +94,17 @@ function RouteComponent() {
 		trpc.appSetting.get.queryOptions({ key: "language" }),
 	);
 
-	const setSettingMutation = useMutation(
-		trpc.appSetting.set.mutationOptions({
-			onSuccess: async (_, variables) => {
-				await queryClient.invalidateQueries(
-					trpc.appSetting.get.queryOptions({ key: variables.key }),
-				);
-				globalSuccessToast(t("settings.toast.saved"));
+	const setSettingMutation = useOptimisticMutation(
+		trpc.appSetting.set.mutationOptions(),
+		{
+			queryOptions: (variables) =>
+				trpc.appSetting.get.queryOptions({ key: variables.key }), // This will be overridden in the mutationFn, but we need it here for the optimistic update
+			operation: {
+				type: "update",
+				getId: (variables) => variables.key,
+				getUpdatedFields: (variables) => ({ value: variables.value }),
+			},
+			onSuccess: () => {
 				globalSuccessToast(t("settings.toast.saved"));
 			},
 			onError: (error) => {
@@ -97,27 +112,28 @@ function RouteComponent() {
 					t("settings.toast.saveFailed", { message: error.message }),
 				);
 			},
-		}),
+		},
 	);
 
-	const resetOnboardingMutation = useMutation(
-		trpc.appSetting.set.mutationOptions({
-			onSuccess: async () => {
-				await queryClient.invalidateQueries(
-					trpc.appSetting.get.queryOptions({ key: "onboarding" }),
-				);
-				globalSuccessToast(t("settings.toast.onboardingReset"));
+	const resetOnboardingMutation = useOptimisticMutation(
+		trpc.appSetting.set.mutationOptions(),
+		{
+			queryOptions: () =>
+				trpc.appSetting.get.queryOptions({ key: "onboarding" }), // This will be overridden in the mutationFn, but we need it here for the optimistic update
+			operation: {
+				type: "update",
+				getId: () => "onboarding",
+				getUpdatedFields: () => ({ value: "pending" }),
+			},
+			onSuccess: () => {
 				globalSuccessToast(t("settings.toast.onboardingReset"));
 			},
 			onError: (error) => {
 				globalErrorToast(
 					t("settings.toast.onboardingResetFailed", { message: error.message }),
 				);
-				globalErrorToast(
-					t("settings.toast.onboardingResetFailed", { message: error.message }),
-				);
 			},
-		}),
+		},
 	);
 
 	useEffect(() => {
@@ -184,7 +200,9 @@ function RouteComponent() {
 			if (result.success) {
 				globalSuccessToast(t("settings.toast.backupSuccess"));
 			} else {
-				globalErrorToast(t("settings.toast.backupFailed", { message: result.error }));
+				globalErrorToast(
+					t("settings.toast.backupFailed", { message: result.error }),
+				);
 			}
 		} finally {
 			setDataOpPending(null);
@@ -199,7 +217,9 @@ function RouteComponent() {
 			if (result.success) {
 				globalSuccessToast(t("settings.toast.restoreSuccess"));
 			} else {
-				globalErrorToast(t("settings.toast.restoreFailed", { message: result.error }));
+				globalErrorToast(
+					t("settings.toast.restoreFailed", { message: result.error }),
+				);
 			}
 		} finally {
 			setDataOpPending(null);
@@ -214,7 +234,9 @@ function RouteComponent() {
 				await queryClient.invalidateQueries();
 				globalSuccessToast(t("settings.toast.wipeSuccess"));
 			} else {
-				globalErrorToast(t("settings.toast.wipeFailed", { message: result.error }));
+				globalErrorToast(
+					t("settings.toast.wipeFailed", { message: result.error }),
+				);
 			}
 		} finally {
 			setDataOpPending(null);
@@ -225,9 +247,7 @@ function RouteComponent() {
 		<div className="flex max-w-2xl flex-col gap-6">
 			<div>
 				<h1 className="font-semibold text-xl">{t("settings.heading")}</h1>
-				<h1 className="font-semibold text-xl">{t("settings.heading")}</h1>
 				<p className="text-muted-foreground text-sm">
-					{t("settings.subheading")}
 					{t("settings.subheading")}
 				</p>
 			</div>
@@ -362,15 +382,6 @@ function RouteComponent() {
 					</div>
 				)}
 
-				{updateStatus.state === "error" && (
-					<div className="flex items-center gap-2 text-destructive text-sm">
-						<AlertCircle className="size-4" />
-						{t("settings.advanced.failedToCheck", {
-							message: updateStatus.message,
-						})}
-					</div>
-				)}
-
 				{(updateStatus.state === "available" ||
 					updateStatus.state === "downloading" ||
 					updateStatus.state === "downloaded") && (
@@ -400,7 +411,10 @@ function RouteComponent() {
 						)}
 
 						{updateStatus.state === "downloading" && (
-							<Progress value={updateStatus.percent} className="flex-col gap-1.5">
+							<Progress
+								value={updateStatus.percent}
+								className="flex-col gap-1.5"
+							>
 								<div className="flex w-full items-center justify-between">
 									<ProgressLabel>
 										{t("settings.advanced.downloading")}
@@ -416,7 +430,6 @@ function RouteComponent() {
 							<div className="flex items-center justify-between">
 								<div className="flex items-center gap-2 text-sm">
 									<CheckCircle2 className="size-4 text-green-500" />
-									{t("settings.advanced.readyToInstall")}
 									{t("settings.advanced.readyToInstall")}
 								</div>
 								<Button

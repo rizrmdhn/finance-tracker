@@ -77,8 +77,8 @@ interface UseOptimisticMutationOptions<
 	TInput,
 	TQueryData,
 > {
-	/** The query whose cache will be optimistically updated */
-	queryOptions: { queryKey: QueryKey };
+	/** The query whose cache will be optimistically updated. Can be a static options object or a function that receives mutation variables. */
+	queryOptions: { queryKey: QueryKey } | ((variables: TInput) => { queryKey: QueryKey });
 	/** What kind of optimistic change to apply */
 	operation: OptimisticOperation<TInput, InferItem<TQueryData>>;
 	/** Called after the server confirms success (after optimistic) */
@@ -135,12 +135,17 @@ export function useOptimisticMutation<
 		onSettled,
 	}: UseOptimisticMutationOptions<TMutationData, TError, TInput, TQueryData>,
 ) {
-	const { queryKey } = queryOptions;
+	const resolveQueryKey = (variables: TInput): QueryKey =>
+		typeof queryOptions === "function"
+			? queryOptions(variables).queryKey
+			: queryOptions.queryKey;
 
-	return useMutation<TMutationData, TError, TInput, { previous: TQueryData }>({
+	return useMutation<TMutationData, TError, TInput, { previous: TQueryData; queryKey: QueryKey }>({
 		...mutationOpts,
 
 		async onMutate(input: TInput) {
+			const queryKey = resolveQueryKey(input);
+
 			// 1. Cancel any outgoing refetches so they don't overwrite our optimistic update
 			await queryClient.cancelQueries({ queryKey });
 
@@ -155,13 +160,13 @@ export function useOptimisticMutation<
 				});
 			}
 
-			return { previous: previous as TQueryData };
+			return { previous: previous as TQueryData, queryKey };
 		},
 
 		async onError(error, _input, context) {
 			// 4. Roll back to the snapshot
-			if (context?.previous !== undefined) {
-				queryClient.setQueryData<TQueryData>(queryKey, context.previous);
+			if (context?.previous !== undefined && context.queryKey !== undefined) {
+				queryClient.setQueryData<TQueryData>(context.queryKey, context.previous);
 			}
 			await onError?.(error);
 		},
@@ -170,8 +175,9 @@ export function useOptimisticMutation<
 			await onSuccess?.(data);
 		},
 
-		async onSettled() {
+		async onSettled(_data, _error, variables) {
 			// 5. Always refetch to make sure we're in sync with server
+			const queryKey = resolveQueryKey(variables);
 			await queryClient.invalidateQueries({ queryKey });
 			await onSettled?.();
 		},
