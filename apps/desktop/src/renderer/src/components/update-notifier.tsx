@@ -1,11 +1,27 @@
 import { useEffect } from "react";
-import { toast } from "sonner"; // already in your deps
+import { toast } from "sonner";
 
 declare global {
 	interface Window {
 		updater: {
+			checkForUpdates: () => void;
+			onUpdateAvailable: (
+				callback: (info: {
+					version: string;
+					releaseNotes: string | null;
+				}) => void,
+			) => void;
+			onUpdateNotAvailable: (callback: () => void) => void;
+			onDownloadProgress: (
+				callback: (progress: {
+					percent: number;
+					transferred: number;
+					total: number;
+				}) => void,
+			) => void;
 			onUpdateDownloaded: (callback: () => void) => void;
 			installUpdate: () => void;
+			removeAllListeners: (channel: string) => void;
 		};
 	}
 }
@@ -22,6 +38,10 @@ export function UpdateNotifier() {
 				duration: Number.POSITIVE_INFINITY,
 			});
 		});
+
+		return () => {
+			window.updater?.removeAllListeners("update-downloaded");
+		};
 	}, []);
 
 	return null;

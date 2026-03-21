@@ -14,16 +14,38 @@ const isDev = process.env.NODE_ENV_ELECTRON_VITE === "development";
 let win: BrowserWindow;
 
 function setupAutoUpdater() {
-	if (isDev) return;
+	if (isDev) {
+		ipcMain.on("check-for-updates", () => {
+			win.webContents.send("update-not-available");
+		});
+		return;
+	}
 
-	autoUpdater.checkForUpdatesAndNotify();
+	autoUpdater.on("update-available", (info) => {
+		win.webContents.send("update-available", {
+			version: info.version,
+			releaseNotes: info.releaseNotes ?? null,
+		});
+	});
 
-	autoUpdater.on("update-available", () => {
-		win.webContents.send("update-available");
+	autoUpdater.on("update-not-available", () => {
+		win.webContents.send("update-not-available");
+	});
+
+	autoUpdater.on("download-progress", (progress) => {
+		win.webContents.send("download-progress", {
+			percent: Math.round(progress.percent),
+			transferred: progress.transferred,
+			total: progress.total,
+		});
 	});
 
 	autoUpdater.on("update-downloaded", () => {
 		win.webContents.send("update-downloaded");
+	});
+
+	ipcMain.on("check-for-updates", () => {
+		autoUpdater.checkForUpdates();
 	});
 
 	ipcMain.on("install-update", () => {
