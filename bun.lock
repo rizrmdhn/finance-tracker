@@ -158,6 +158,7 @@
       "name": "@finance-tracker/api",
       "version": "0.0.1",
       "dependencies": {
+        "@finance-tracker/constants": "workspace:*",
         "@finance-tracker/db": "workspace:*",
         "@finance-tracker/queries": "workspace:*",
         "@finance-tracker/schema": "workspace:*",

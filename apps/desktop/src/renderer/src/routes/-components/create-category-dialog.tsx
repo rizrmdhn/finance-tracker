@@ -143,7 +143,13 @@ export default function CreateCategoryDialog({
 										defaultValue={field.value}
 									>
 										<SelectTrigger className="w-full">
-											<SelectValue placeholder="Select category type" />
+											<SelectValue placeholder="Select category type">
+												{field.value
+													? CATEGORY_TYPE_LABELS[
+															field.value as (typeof CATEGORY_TYPES)[number]
+														]
+													: null}
+											</SelectValue>
 										</SelectTrigger>
 										<SelectContent>
 											{CATEGORY_TYPES.map((type) => (

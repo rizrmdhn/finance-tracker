@@ -6,6 +6,7 @@ import {
 	SidebarTrigger,
 } from "@finance-tracker/ui/components/sidebar";
 import type { QueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import {
 	createRootRouteWithContext,
@@ -17,10 +18,11 @@ import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { Toaster } from "sonner";
 import { AppSidebar } from "@/components/app-sidebar";
 import { NotFoundComponent } from "@/components/not-found";
+import { OnboardingScreen } from "@/components/onboarding-screen";
 import { ThemeProvider } from "@/components/theme-provider";
 import { UpdateNotifier } from "@/components/update-notifier";
 import { pageHead } from "../lib/page-head";
-import type { trpc } from "../lib/trpc";
+import { trpc } from "../lib/trpc";
 
 export interface RouterAppContext {
 	trpc: typeof trpc;
@@ -46,6 +48,22 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 });
 
 function RootComponent() {
+	const { data: onboarding, isLoading } = useQuery(
+		trpc.appSetting.get.queryOptions({ key: "onboarding" }),
+	);
+
+	if (isLoading) return null;
+
+	if (onboarding?.value === "pending") {
+		return (
+			<ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+				<HeadContent />
+				<OnboardingScreen />
+				<Toaster position="top-right" richColors />
+			</ThemeProvider>
+		);
+	}
+
 	return (
 		<>
 			<HeadContent />

@@ -144,7 +144,13 @@ export default function CreateAccountDialog({
 										defaultValue={field.value}
 									>
 										<SelectTrigger className="w-full">
-											<SelectValue placeholder="Select category type" />
+											<SelectValue placeholder="Select account type">
+												{field.value
+													? ACCOUNT_TYPE_LABELS[
+															field.value as (typeof ACCOUNT_TYPES)[number]
+														]
+													: null}
+											</SelectValue>
 										</SelectTrigger>
 										<SelectContent>
 											{ACCOUNT_TYPES.map((type) => (
