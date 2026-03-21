@@ -136,6 +136,8 @@ app.whenReady().then(() => {
 		createContext: async () => await createTRPCContext({ db }),
 	});
 
+	ipcMain.handle("get-app-version", () => app.getVersion());
+
 	ipcMain.handle("backup-database", async () => {
 		const result = await dialog.showSaveDialog(win, {
 			title: "Backup Database",

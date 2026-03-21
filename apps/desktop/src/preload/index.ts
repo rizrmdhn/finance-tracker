@@ -3,6 +3,12 @@ import { exposeElectronTRPC } from "trpc-electron/main";
 
 exposeElectronTRPC();
 
+if (!("electronApp" in window)) {
+	contextBridge.exposeInMainWorld("electronApp", {
+		getVersion: (): Promise<string> => ipcRenderer.invoke("get-app-version"),
+	});
+}
+
 // Guard against double-registration during HMR
 if (!("electronDataManager" in window)) {
 	contextBridge.exposeInMainWorld("electronDataManager", {

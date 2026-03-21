@@ -1,81 +1,91 @@
-# finance-tracker
+# Finance Tracker
 
-This project was created with [Better-T-Stack](https://github.com/AmanVarshney01/create-better-t-stack), a modern TypeScript stack that combines React, TanStack Router, and more.
+A personal finance tracking application built as a TypeScript monorepo, available on web, desktop (Electron), and mobile (Expo).
 
-## Features
+## Apps
 
-- **TypeScript** - For type safety and improved developer experience
-- **TanStack Router** - File-based routing with full type safety
-- **React Native** - Build mobile apps using React
-- **Expo** - Tools for React Native development
-- **TailwindCSS** - Utility-first CSS for rapid UI development
-- **Shared UI package** - shadcn/ui primitives live in `packages/ui`
-- **Turborepo** - Optimized monorepo build system
-- **Biome** - Linting and formatting
+| App | Description |
+|-----|-------------|
+| `apps/web` | Web frontend (React + TanStack Router) |
+| `apps/desktop` | Desktop app (Electron, v0.3.3) — Windows/macOS/Linux |
+| `apps/native` | Mobile app (React Native + Expo) |
+
+## Packages
+
+| Package | Description |
+|---------|-------------|
+| `packages/api` | tRPC router and API handlers |
+| `packages/db` | Drizzle ORM setup, migrations, and SQLite database |
+| `packages/schema` | Shared Zod schemas |
+| `packages/queries` | Shared TanStack Query hooks |
+| `packages/ui` | Shared shadcn/ui components and styles |
+| `packages/types` | Shared TypeScript types |
+| `packages/constants` | Shared constants |
+| `packages/dictionaries` | i18n dictionaries |
+| `packages/env` | Environment variable validation |
+| `packages/utils` | Shared utility functions |
+| `packages/config` | Shared tooling config (TypeScript, Biome, Tailwind) |
 
 ## Getting Started
 
-First, install the dependencies:
+Install dependencies:
 
 ```bash
 bun install
 ```
 
-Then, run the development server:
+Run all apps in development mode:
 
 ```bash
 bun run dev
 ```
 
-Open [http://localhost:3001](http://localhost:3001) in your browser to see the web application.
-Use the Expo Go app to run the mobile application.
+- Web: [http://localhost:3001](http://localhost:3001)
+- Desktop: Electron window opens automatically
+- Mobile: Use the Expo Go app after running `bun run dev:native`
 
-## UI Customization
+## Available Scripts
 
-React web apps in this stack share shadcn/ui primitives through `packages/ui`.
+| Script | Description |
+|--------|-------------|
+| `bun run dev` | Start all apps in development mode |
+| `bun run dev:web` | Start only the web app |
+| `bun run dev:desktop` | Start only the desktop app |
+| `bun run dev:native` | Start the Expo/React Native dev server |
+| `bun run build` | Build all apps |
+| `bun run desktop:build` | Build the desktop app |
+| `bun run desktop:pack` | Package the desktop app as an installer |
+| `bun run db:migrate` | Run database migrations |
+| `bun run db:generate` | Generate Drizzle migration files |
+| `bun run db:studio` | Open Drizzle Studio |
+| `bun run check-types` | Type-check all apps and packages |
+| `bun run check` | Run Biome formatting and linting (with auto-fix) |
 
-- Change design tokens and global styles in `packages/ui/src/styles/globals.css`
-- Update shared primitives in `packages/ui/src/components/*`
-- Adjust shadcn aliases or style config in `packages/ui/components.json` and `apps/web/components.json`
+## Tech Stack
 
-### Add more shared components
+- **TypeScript** — end-to-end type safety
+- **Turborepo** — monorepo task orchestration
+- **tRPC** — fully typed API layer shared across apps
+- **Drizzle ORM + SQLite** — local-first database
+- **React + TanStack Router** — web and desktop UI
+- **Electron + electron-vite** — desktop packaging
+- **React Native + Expo** — mobile
+- **TailwindCSS v4** — styling
+- **shadcn/ui** — shared UI primitives (`packages/ui`)
+- **Biome** — linting and formatting
 
-Run this from the project root to add more primitives to the shared UI package:
+## UI Components
+
+Shared shadcn/ui primitives live in `packages/ui`. To add more:
 
 ```bash
 npx shadcn@latest add accordion dialog popover sheet table -c packages/ui
 ```
 
-Import shared components like this:
+Import shared components:
 
 ```tsx
 import { Button } from "@finance-tracker/ui/components/button";
 ```
 
-### Add app-specific blocks
-
-If you want to add app-specific blocks instead of shared primitives, run the shadcn CLI from `apps/web`.
-
-## Git Hooks and Formatting
-
-- Format and lint fix: `bun run check`
-
-## Project Structure
-
-```
-finance-tracker/
-├── apps/
-│   ├── web/         # Frontend application (React + TanStack Router)
-│   ├── native/      # Mobile application (React Native, Expo)
-├── packages/
-│   ├── ui/          # Shared shadcn/ui components and styles
-```
-
-## Available Scripts
-
-- `bun run dev`: Start all applications in development mode
-- `bun run build`: Build all applications
-- `bun run dev:web`: Start only the web application
-- `bun run check-types`: Check TypeScript types across all apps
-- `bun run dev:native`: Start the React Native/Expo development server
-- `bun run check`: Run Biome formatting and linting
+For app-specific blocks, run the shadcn CLI from the individual app directory.
