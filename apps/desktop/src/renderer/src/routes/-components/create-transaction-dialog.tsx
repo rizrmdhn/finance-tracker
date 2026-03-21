@@ -21,6 +21,7 @@ import { Textarea } from "@finance-tracker/ui/components/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { AccountCombobox } from "@/components/account-combobox";
 import { CategoryCombobox } from "@/components/category-combobox";
 import { CurrencyInput } from "@/components/currency-input";
@@ -41,6 +42,7 @@ export default function CreateTransactionDialog({
 	open,
 	setIsOpen,
 }: CreateTransactionDialogProps) {
+	const { t } = useTranslation();
 	const form = useForm<TransactionInput>({
 		resolver: zodResolver(transactionSchema),
 	});
@@ -58,7 +60,7 @@ export default function CreateTransactionDialog({
 						to: currentTo,
 					}),
 				);
-				globalSuccessToast("Transaction created successfully");
+				globalSuccessToast(t("transactions.toast.created"));
 				form.reset();
 				setIsOpen(false);
 			},
@@ -83,7 +85,7 @@ export default function CreateTransactionDialog({
 		<Dialog open={open} onOpenChange={setIsOpen}>
 			<DialogContent>
 				<DialogHeader>
-					<DialogTitle>Create Transaction</DialogTitle>
+					<DialogTitle>{t("transactions.create.title")}</DialogTitle>
 				</DialogHeader>
 				<form
 					onSubmit={form.handleSubmit(onSubmit)}
@@ -95,7 +97,7 @@ export default function CreateTransactionDialog({
 							name="accountId"
 							render={({ field, fieldState }) => (
 								<Field data-invalid={fieldState.invalid}>
-									<FieldLabel>Account</FieldLabel>
+									<FieldLabel>{t("common.account")}</FieldLabel>
 									<AccountCombobox
 										value={field.value}
 										onChange={field.onChange}
@@ -113,7 +115,7 @@ export default function CreateTransactionDialog({
 							name="categoryId"
 							render={({ field, fieldState }) => (
 								<Field data-invalid={fieldState.invalid}>
-									<FieldLabel>Category</FieldLabel>
+									<FieldLabel>{t("common.category")}</FieldLabel>
 									<CategoryCombobox
 										value={field.value}
 										onChange={field.onChange}
@@ -132,7 +134,7 @@ export default function CreateTransactionDialog({
 								name="toAccountId"
 								render={({ field, fieldState }) => (
 									<Field data-invalid={fieldState.invalid}>
-										<FieldLabel>To Account</FieldLabel>
+										<FieldLabel>{t("common.toAccount")}</FieldLabel>
 										<AccountCombobox
 											value={field.value}
 											onChange={field.onChange}
@@ -152,7 +154,7 @@ export default function CreateTransactionDialog({
 								name="amount"
 								render={({ field, fieldState }) => (
 									<Field data-invalid={fieldState.invalid}>
-										<FieldLabel>Amount</FieldLabel>
+										<FieldLabel>{t("common.amount")}</FieldLabel>
 										<CurrencyInput
 											value={field.value}
 											onChange={field.onChange}
@@ -169,7 +171,7 @@ export default function CreateTransactionDialog({
 								name="tags"
 								render={({ field, fieldState }) => (
 									<Field data-invalid={fieldState.invalid}>
-										<FieldLabel>Tags</FieldLabel>
+										<FieldLabel>{t("common.tags")}</FieldLabel>
 										<TagsInput value={field.value} onChange={field.onChange} />
 										{fieldState.invalid && (
 											<FieldError errors={[fieldState.error]} />
@@ -184,8 +186,8 @@ export default function CreateTransactionDialog({
 							name="note"
 							render={({ field, fieldState }) => (
 								<Field data-invalid={fieldState.invalid}>
-									<FieldLabel>Note</FieldLabel>
-									<Textarea placeholder="e.g. Groceries" {...field} />
+									<FieldLabel>{t("common.note")}</FieldLabel>
+									<Textarea placeholder={t("transactions.notePlaceholder")} {...field} />
 									{fieldState.invalid && (
 										<FieldError errors={[fieldState.error]} />
 									)}
@@ -198,7 +200,7 @@ export default function CreateTransactionDialog({
 							name="date"
 							render={({ field, fieldState }) => (
 								<Field data-invalid={fieldState.invalid}>
-									<FieldLabel>Date</FieldLabel>
+									<FieldLabel>{t("common.date")}</FieldLabel>
 									<DatePicker value={field.value} onChange={field.onChange} />
 									{fieldState.invalid && (
 										<FieldError errors={[fieldState.error]} />
@@ -214,7 +216,7 @@ export default function CreateTransactionDialog({
 							disabled={createTransactionMutation.isPending}
 						>
 							{createTransactionMutation.isPending && <Spinner />}
-							Create
+							{t("common.create")}
 						</Button>
 					</DialogFooter>
 				</form>

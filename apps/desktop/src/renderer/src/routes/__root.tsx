@@ -1,4 +1,5 @@
 import "../index.css";
+import "@/lib/i18n";
 import { Separator } from "@finance-tracker/ui/components/separator";
 import {
 	SidebarInset,
@@ -15,6 +16,8 @@ import {
 	Outlet,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Toaster } from "sonner";
 import { AppSidebar } from "@/components/app-sidebar";
 import { NotFoundComponent } from "@/components/not-found";
@@ -48,9 +51,21 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 });
 
 function RootComponent() {
+	const { i18n } = useTranslation();
+
 	const { data: onboarding, isLoading } = useQuery(
 		trpc.appSetting.get.queryOptions({ key: "onboarding" }),
 	);
+
+	const { data: language } = useQuery(
+		trpc.appSetting.get.queryOptions({ key: "language" }),
+	);
+
+	useEffect(() => {
+		if (language?.value) {
+			i18n.changeLanguage(language.value);
+		}
+	}, [language, i18n]);
 
 	if (isLoading) return null;
 

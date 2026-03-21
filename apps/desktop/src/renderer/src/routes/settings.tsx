@@ -1,3 +1,9 @@
+import {
+	CURRENCY_LABELS,
+	LANGUAGE_LABELS,
+	SUPPORTED_CURRENCIES,
+	SUPPORTED_LANGUAGES,
+} from "@finance-tracker/constants";
 import { Button } from "@finance-tracker/ui/components/button";
 import {
 	Progress,
@@ -11,16 +17,11 @@ import {
 	SelectValue,
 } from "@finance-tracker/ui/components/select";
 import { Separator } from "@finance-tracker/ui/components/separator";
-import {
-	CURRENCY_LABELS,
-	LANGUAGE_LABELS,
-	SUPPORTED_CURRENCIES,
-	SUPPORTED_LANGUAGES,
-} from "@finance-tracker/constants";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { CheckCircle2, Loader2, RefreshCw } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useTheme } from "@/components/theme-provider";
 import { pageHead } from "@/lib/page-head";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
@@ -28,15 +29,8 @@ import { queryClient, trpc } from "@/lib/trpc";
 
 export const Route = createFileRoute("/settings")({
 	component: RouteComponent,
-	head: () =>
-		pageHead("Pengaturan", "Kelola preferensi aplikasi Finance Tracker."),
+	head: () => pageHead("Settings", "Manage your Finance Tracker preferences."),
 });
-
-const THEME_OPTIONS = [
-	{ value: "light", label: "Light" },
-	{ value: "dark", label: "Dark" },
-	{ value: "system", label: "System" },
-];
 
 type UpdateStatus =
 	| { state: "idle" }
@@ -47,9 +41,16 @@ type UpdateStatus =
 	| { state: "downloaded" };
 
 function RouteComponent() {
+	const { t, i18n } = useTranslation();
 	const { theme, setTheme } = useTheme();
 	const [updateStatus, setUpdateStatus] = useState<UpdateStatus>({ state: "idle" });
 	const listenersAttached = useRef(false);
+
+	const THEME_OPTIONS = [
+		{ value: "light", label: t("settings.appearance.light") },
+		{ value: "dark", label: t("settings.appearance.dark") },
+		{ value: "system", label: t("settings.appearance.system") },
+	];
 
 	const { data: currency } = useQuery(
 		trpc.appSetting.get.queryOptions({ key: "currency" }),
@@ -65,10 +66,10 @@ function RouteComponent() {
 				await queryClient.invalidateQueries(
 					trpc.appSetting.get.queryOptions({ key: variables.key }),
 				);
-				globalSuccessToast("Pengaturan berhasil disimpan");
+				globalSuccessToast(t("settings.toast.saved"));
 			},
 			onError: (error) => {
-				globalErrorToast(`Gagal menyimpan pengaturan: ${error.message}`);
+				globalErrorToast(t("settings.toast.saveFailed", { message: error.message }));
 			},
 		}),
 	);
@@ -79,10 +80,12 @@ function RouteComponent() {
 				await queryClient.invalidateQueries(
 					trpc.appSetting.get.queryOptions({ key: "onboarding" }),
 				);
-				globalSuccessToast("Onboarding berhasil direset");
+				globalSuccessToast(t("settings.toast.onboardingReset"));
 			},
 			onError: (error) => {
-				globalErrorToast(`Gagal mereset onboarding: ${error.message}`);
+				globalErrorToast(
+					t("settings.toast.onboardingResetFailed", { message: error.message }),
+				);
 			},
 		}),
 	);
@@ -132,9 +135,9 @@ function RouteComponent() {
 	return (
 		<div className="flex max-w-xl flex-col gap-6">
 			<div>
-				<h1 className="font-semibold text-xl">Pengaturan</h1>
+				<h1 className="font-semibold text-xl">{t("settings.heading")}</h1>
 				<p className="text-muted-foreground text-sm">
-					Kelola preferensi aplikasi Anda
+					{t("settings.subheading")}
 				</p>
 			</div>
 
@@ -142,8 +145,11 @@ function RouteComponent() {
 
 			{/* Appearance */}
 			<section className="flex flex-col gap-4">
-				<h2 className="font-medium text-sm">Tampilan</h2>
-				<SettingRow label="Tema" description="Pilih tema tampilan aplikasi">
+				<h2 className="font-medium text-sm">{t("settings.appearance.title")}</h2>
+				<SettingRow
+					label={t("settings.appearance.theme")}
+					description={t("settings.appearance.themeDescription")}
+				>
 					<Select value={theme} onValueChange={(v) => setTheme(v as typeof theme)}>
 						<SelectTrigger className="w-48">
 							<SelectValue />
@@ -163,10 +169,10 @@ function RouteComponent() {
 
 			{/* Localization */}
 			<section className="flex flex-col gap-4">
-				<h2 className="font-medium text-sm">Lokalisasi</h2>
+				<h2 className="font-medium text-sm">{t("settings.localization.title")}</h2>
 				<SettingRow
-					label="Mata Uang"
-					description="Mata uang default untuk tampilan saldo"
+					label={t("settings.localization.currency")}
+					description={t("settings.localization.currencyDescription")}
 				>
 					<Select
 						value={currency?.value ?? "IDR"}
@@ -187,12 +193,18 @@ function RouteComponent() {
 					</Select>
 				</SettingRow>
 
-				<SettingRow label="Bahasa" description="Bahasa tampilan aplikasi">
+				<SettingRow
+					label={t("settings.localization.language")}
+					description={t("settings.localization.languageDescription")}
+				>
 					<Select
 						value={language?.value ?? "id"}
-						onValueChange={(v) =>
-							v && setSettingMutation.mutate({ key: "language", value: v })
-						}
+						onValueChange={(v) => {
+							if (v) {
+								setSettingMutation.mutate({ key: "language", value: v });
+								i18n.changeLanguage(v);
+							}
+						}}
 					>
 						<SelectTrigger className="w-48">
 							<SelectValue />
@@ -212,11 +224,11 @@ function RouteComponent() {
 
 			{/* Advanced */}
 			<section className="flex flex-col gap-4">
-				<h2 className="font-medium text-sm">Lanjutan</h2>
+				<h2 className="font-medium text-sm">{t("settings.advanced.title")}</h2>
 
 				<SettingRow
-					label="Pembaruan Aplikasi"
-					description="Periksa apakah ada versi terbaru"
+					label={t("settings.advanced.updates")}
+					description={t("settings.advanced.updatesDescription")}
 				>
 					<Button
 						variant="outline"
@@ -232,14 +244,14 @@ function RouteComponent() {
 						) : (
 							<RefreshCw className="size-4" />
 						)}
-						Cek Pembaruan
+						{t("settings.advanced.checkUpdates")}
 					</Button>
 				</SettingRow>
 
 				{updateStatus.state === "up-to-date" && (
 					<div className="flex items-center gap-2 text-muted-foreground text-sm">
 						<CheckCircle2 className="size-4 text-green-500" />
-						Aplikasi sudah versi terbaru
+						{t("settings.advanced.upToDate")}
 					</div>
 				)}
 
@@ -249,7 +261,9 @@ function RouteComponent() {
 					<div className="flex flex-col gap-3 rounded-lg border p-4">
 						{updateStatus.state !== "downloaded" && (
 							<p className="font-medium text-sm">
-								Versi {updateStatus.version} tersedia
+								{t("settings.advanced.versionAvailable", {
+									version: updateStatus.version,
+								})}
 							</p>
 						)}
 
@@ -262,17 +276,17 @@ function RouteComponent() {
 
 						{updateStatus.state === "available" && (
 							<p className="text-muted-foreground text-xs">
-								Pembaruan akan diunduh secara otomatis.
+								{t("settings.advanced.downloadingAuto")}
 							</p>
 						)}
 
 						{updateStatus.state === "downloading" && (
 							<div className="flex flex-col gap-1.5">
 								<div className="flex items-center justify-between">
-									<ProgressLabel>Mengunduh pembaruan...</ProgressLabel>
+									<ProgressLabel>{t("settings.advanced.downloading")}</ProgressLabel>
 									<span className="text-muted-foreground text-xs tabular-nums">
-									{updateStatus.percent}%
-								</span>
+										{updateStatus.percent}%
+									</span>
 								</div>
 								<Progress value={updateStatus.percent} />
 							</div>
@@ -282,10 +296,10 @@ function RouteComponent() {
 							<div className="flex items-center justify-between">
 								<div className="flex items-center gap-2 text-sm">
 									<CheckCircle2 className="size-4 text-green-500" />
-									Siap dipasang
+									{t("settings.advanced.readyToInstall")}
 								</div>
 								<Button size="sm" onClick={() => window.updater?.installUpdate()}>
-									Restart &amp; Pasang
+									{t("settings.advanced.restartInstall")}
 								</Button>
 							</div>
 						)}
@@ -293,8 +307,8 @@ function RouteComponent() {
 				)}
 
 				<SettingRow
-					label="Reset Onboarding"
-					description="Tampilkan kembali layar onboarding saat aplikasi dibuka"
+					label={t("settings.advanced.resetOnboarding")}
+					description={t("settings.advanced.resetOnboardingDescription")}
 				>
 					<Button
 						variant="outline"
@@ -306,7 +320,7 @@ function RouteComponent() {
 						}
 						disabled={resetOnboardingMutation.isPending}
 					>
-						Reset Onboarding
+						{t("settings.advanced.resetOnboarding")}
 					</Button>
 				</SettingRow>
 			</section>

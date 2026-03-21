@@ -23,6 +23,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { AccountCombobox } from "@/components/account-combobox";
 import { CategoryCombobox } from "@/components/category-combobox";
 import { CurrencyInput } from "@/components/currency-input";
@@ -42,6 +43,7 @@ export default function EditTransactionDialog({
 	setIsOpen,
 	transaction,
 }: EditTransactionDialogProps) {
+	const { t } = useTranslation();
 	const form = useForm<UpdateTransactionInput>({
 		resolver: zodResolver(updateTransactionSchema),
 		defaultValues: { id: "" },
@@ -70,7 +72,7 @@ export default function EditTransactionDialog({
 				await queryClient.invalidateQueries(
 					trpc.transaction.list.queryOptions(),
 				);
-				globalSuccessToast("Transaction updated successfully");
+				globalSuccessToast(t("transactions.toast.updated"));
 				setIsOpen(false);
 			},
 			onError: (error) => {
@@ -94,7 +96,7 @@ export default function EditTransactionDialog({
 		<Dialog open={open} onOpenChange={setIsOpen}>
 			<DialogContent>
 				<DialogHeader>
-					<DialogTitle>Edit Transaction</DialogTitle>
+					<DialogTitle>{t("transactions.edit.title")}</DialogTitle>
 				</DialogHeader>
 				<form
 					onSubmit={form.handleSubmit(onSubmit)}
@@ -106,7 +108,7 @@ export default function EditTransactionDialog({
 							name="accountId"
 							render={({ field, fieldState }) => (
 								<Field data-invalid={fieldState.invalid}>
-									<FieldLabel>Account</FieldLabel>
+									<FieldLabel>{t("common.account")}</FieldLabel>
 									<AccountCombobox
 										value={field.value}
 										onChange={field.onChange}
@@ -124,7 +126,7 @@ export default function EditTransactionDialog({
 							name="categoryId"
 							render={({ field, fieldState }) => (
 								<Field data-invalid={fieldState.invalid}>
-									<FieldLabel>Category</FieldLabel>
+									<FieldLabel>{t("common.category")}</FieldLabel>
 									<CategoryCombobox
 										value={field.value}
 										onChange={field.onChange}
@@ -143,7 +145,7 @@ export default function EditTransactionDialog({
 								name="toAccountId"
 								render={({ field, fieldState }) => (
 									<Field data-invalid={fieldState.invalid}>
-										<FieldLabel>To Account</FieldLabel>
+										<FieldLabel>{t("common.toAccount")}</FieldLabel>
 										<AccountCombobox
 											value={field.value}
 											onChange={field.onChange}
@@ -163,7 +165,7 @@ export default function EditTransactionDialog({
 								name="amount"
 								render={({ field, fieldState }) => (
 									<Field data-invalid={fieldState.invalid}>
-										<FieldLabel>Amount</FieldLabel>
+										<FieldLabel>{t("common.amount")}</FieldLabel>
 										<CurrencyInput
 											value={field.value}
 											onChange={field.onChange}
@@ -180,7 +182,7 @@ export default function EditTransactionDialog({
 								name="tags"
 								render={({ field, fieldState }) => (
 									<Field data-invalid={fieldState.invalid}>
-										<FieldLabel>Tags</FieldLabel>
+										<FieldLabel>{t("common.tags")}</FieldLabel>
 										<TagsInput value={field.value} onChange={field.onChange} />
 										{fieldState.invalid && (
 											<FieldError errors={[fieldState.error]} />
@@ -195,8 +197,8 @@ export default function EditTransactionDialog({
 							name="note"
 							render={({ field, fieldState }) => (
 								<Field data-invalid={fieldState.invalid}>
-									<FieldLabel>Note</FieldLabel>
-									<Textarea placeholder="e.g. Groceries" {...field} />
+									<FieldLabel>{t("common.note")}</FieldLabel>
+									<Textarea placeholder={t("transactions.notePlaceholder")} {...field} />
 									{fieldState.invalid && (
 										<FieldError errors={[fieldState.error]} />
 									)}
@@ -209,7 +211,7 @@ export default function EditTransactionDialog({
 							name="date"
 							render={({ field, fieldState }) => (
 								<Field data-invalid={fieldState.invalid}>
-									<FieldLabel>Date</FieldLabel>
+									<FieldLabel>{t("common.date")}</FieldLabel>
 									<DatePicker value={field.value} onChange={field.onChange} />
 									{fieldState.invalid && (
 										<FieldError errors={[fieldState.error]} />
@@ -222,7 +224,7 @@ export default function EditTransactionDialog({
 					<DialogFooter showCloseButton>
 						<Button type="submit" disabled={updateMutation.isPending}>
 							{updateMutation.isPending && <Spinner />}
-							Save Changes
+							{t("common.saveChanges")}
 						</Button>
 					</DialogFooter>
 				</form>

@@ -89,6 +89,9 @@
 	},
 	"devDependencies": {
 		"@finance-tracker/constants": "workspace:*",
+		"@finance-tracker/dictionaries": "workspace:*",
+		"i18next": "^25.3.2",
+		"react-i18next": "^15.5.3",
 		"@finance-tracker/types": "workspace:*",
 		"@finance-tracker/ui": "workspace:*",
 		"@finance-tracker/utils": "workspace:*",

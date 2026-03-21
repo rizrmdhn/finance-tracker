@@ -5,6 +5,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { PencilIcon, Trash2Icon } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { ICON_MAP } from "@/components/icon-picker";
 import useModalState from "@/hooks/use-modal-state";
@@ -18,12 +19,13 @@ export const Route = createFileRoute("/accounts")({
 	component: RouteComponent,
 	head: () =>
 		pageHead(
-			"Akun",
-			"Kelola akun keuangan Anda untuk melacak sumber pendapatan dan pengeluaran dengan lebih baik. Tambah, edit, atau hapus akun sesuai kebutuhan untuk menjaga catatan keuangan Anda tetap akurat dan terorganisir.",
+			"Accounts",
+			"Manage your financial accounts to track income and expense sources.",
 		),
 });
 
 function RouteComponent() {
+	const { t } = useTranslation();
 	const { state, openModal, closeModal } = useModalState({
 		create: false,
 		edit: false,
@@ -42,12 +44,14 @@ function RouteComponent() {
 				await queryClient.invalidateQueries(
 					trpc.account.listWithBalance.queryOptions(),
 				);
-				globalSuccessToast("Account deleted");
+				globalSuccessToast(t("accounts.toast.deleted"));
 				closeModal("delete");
 				setSelected(null);
 			},
 			onError: (error) => {
-				globalErrorToast(`Failed to delete account: ${error.message}`);
+				globalErrorToast(
+					t("accounts.toast.deleteFailed", { message: error.message }),
+				);
 			},
 		}),
 	);
@@ -66,16 +70,16 @@ function RouteComponent() {
 		<div className="flex flex-col gap-6">
 			<div className="flex items-center justify-between">
 				<div>
-					<h1 className="font-semibold text-xl">Akun</h1>
+					<h1 className="font-semibold text-xl">{t("accounts.title")}</h1>
 					{isLoading ? (
 						<Skeleton className="mt-1 h-4 w-24" />
 					) : (
 						<p className="text-muted-foreground text-sm">
-							{accounts.length} akun
+							{t("accounts.accountCount", { count: accounts.length })}
 						</p>
 					)}
 				</div>
-				<Button onClick={() => openModal("create")}>Tambah Akun</Button>
+				<Button onClick={() => openModal("create")}>{t("accounts.addAccount")}</Button>
 			</div>
 
 			<div className="flex flex-col gap-2">
@@ -150,7 +154,7 @@ function RouteComponent() {
 					))}
 				{accounts.length === 0 && !isLoading && (
 					<p className="py-6 text-center text-muted-foreground text-sm">
-						Belum ada akun
+						{t("accounts.noAccounts")}
 					</p>
 				)}
 			</div>
@@ -173,9 +177,9 @@ function RouteComponent() {
 				onOpenChange={(open) =>
 					open ? openModal("delete") : closeModal("delete")
 				}
-				title="Delete Account"
-				description={`Are you sure you want to delete "${selected?.name}"? This cannot be undone.`}
-				confirmText="Delete"
+				title={t("accounts.delete.title")}
+				description={t("accounts.delete.description", { name: selected?.name })}
+				confirmText={t("accounts.delete.confirm")}
 				variant="destructive"
 				isLoading={deleteMutation.isPending}
 				onConfirm={() => {

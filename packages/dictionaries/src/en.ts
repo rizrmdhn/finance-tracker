@@ -1,0 +1,183 @@
+export const en = {
+	app: {
+		title: "Finance Tracker",
+		description:
+			"Track your finances with ease. Manage your income, expenses, and budgets all in one place.",
+	},
+	sidebar: {
+		dashboard: "Dashboard",
+		accounts: "Accounts",
+		categories: "Categories",
+		transactions: "Transactions",
+		settings: "Settings",
+	},
+	common: {
+		name: "Name",
+		icon: "Icon",
+		color: "Color",
+		type: "Type",
+		currency: "Currency",
+		initialBalance: "Initial Balance",
+		create: "Create",
+		saveChanges: "Save Changes",
+		delete: "Delete",
+		account: "Account",
+		category: "Category",
+		toAccount: "To Account",
+		amount: "Amount",
+		tags: "Tags",
+		note: "Note",
+		date: "Date",
+		allAccounts: "All accounts",
+		selectAccountType: "Select account type",
+		selectCurrency: "Select currency",
+		selectCategoryType: "Select category type",
+	},
+	dashboard: {
+		addTransaction: "Add Transaction",
+		balance: "Balance",
+		income: "Income",
+		expense: "Expense",
+		transfer: "Transfer",
+		savings: "Savings",
+	},
+	accounts: {
+		title: "Accounts",
+		description:
+			"Manage your financial accounts to track income and expense sources more effectively. Add, edit, or delete accounts as needed to keep your financial records accurate and organized.",
+		addAccount: "Add Account",
+		accountCount: "{{count}} accounts",
+		noAccounts: "No accounts yet",
+		create: {
+			title: "Create Account",
+			namePlaceholder: "e.g. Checking Account",
+		},
+		edit: {
+			title: "Update Account",
+			namePlaceholder: "e.g. Checking Account",
+		},
+		delete: {
+			title: "Delete Account",
+			description:
+				'Are you sure you want to delete "{{name}}"? This cannot be undone.',
+			confirm: "Delete",
+		},
+		toast: {
+			created: "Account created successfully",
+			createFailed: "Failed to create account: {{message}}",
+			updated: "Account updated successfully",
+			updateFailed: "Failed to update account: {{message}}",
+			deleted: "Account deleted",
+			deleteFailed: "Failed to delete account: {{message}}",
+		},
+	},
+	categories: {
+		title: "Categories",
+		description:
+			"Manage your financial categories to organize transactions more effectively. Add, edit, or delete categories as needed to keep your financial records tidy and structured.",
+		addCategory: "Add Category",
+		categoryCount: "{{count}} categories",
+		noCategories: "No categories yet",
+		create: {
+			title: "Create Category",
+			namePlaceholder: "e.g. Groceries",
+		},
+		edit: {
+			title: "Edit Category",
+			namePlaceholder: "e.g. Groceries",
+		},
+		delete: {
+			title: "Delete Category",
+			description:
+				'Are you sure you want to delete "{{name}}"? This cannot be undone.',
+			confirm: "Delete",
+		},
+		toast: {
+			created: "Category created successfully",
+			createFailed: "Failed to create category: {{message}}",
+			updated: "Category updated successfully",
+			updateFailed: "Failed to update category: {{message}}",
+			deleted: "Category deleted",
+			deleteFailed: "Failed to delete category: {{message}}",
+		},
+	},
+	transactions: {
+		title: "Transactions",
+		description:
+			"Manage all your financial transactions here. Add, edit, or delete transactions as needed to keep your financial records accurate and organized.",
+		addTransaction: "Add Transaction",
+		noTransactions: "No transactions found",
+		noTransactionsDescription: "Try adjusting your filters or search query.",
+		notePlaceholder: "e.g. Coffee with friends",
+		create: {
+			title: "Create Transaction",
+		},
+		edit: {
+			title: "Edit Transaction",
+		},
+		toast: {
+			created: "Transaction created successfully",
+			updated: "Transaction updated successfully",
+		},
+	},
+	settings: {
+		title: "Settings",
+		description: "Manage your Finance Tracker preferences.",
+		heading: "Settings",
+		subheading: "Manage your application preferences",
+		appearance: {
+			title: "Appearance",
+			theme: "Theme",
+			themeDescription: "Choose the app display theme",
+			light: "Light",
+			dark: "Dark",
+			system: "System",
+		},
+		localization: {
+			title: "Localization",
+			currency: "Currency",
+			currencyDescription: "Default currency for balance display",
+			language: "Language",
+			languageDescription: "Application display language",
+		},
+		advanced: {
+			title: "Advanced",
+			updates: "App Updates",
+			updatesDescription: "Check for the latest version",
+			checkUpdates: "Check for Updates",
+			upToDate: "App is up to date",
+			versionAvailable: "Version {{version}} available",
+			downloadingAuto: "The update will be downloaded automatically.",
+			downloading: "Downloading update...",
+			readyToInstall: "Ready to install",
+			restartInstall: "Restart & Install",
+			resetOnboarding: "Reset Onboarding",
+			resetOnboardingDescription:
+				"Show the onboarding screen again when the app opens",
+		},
+		toast: {
+			saved: "Settings saved successfully",
+			saveFailed: "Failed to save settings: {{message}}",
+			onboardingReset: "Onboarding reset successfully",
+			onboardingResetFailed: "Failed to reset onboarding: {{message}}",
+		},
+	},
+	onboarding: {
+		title: "Welcome to Finance Tracker",
+		description: "Create your first account to start tracking your finances.",
+		accountName: "Account Name",
+		accountNamePlaceholder: "e.g. Main Wallet",
+		accountType: "Account Type",
+		submit: "Create Account & Get Started",
+		toast: {
+			failed: "Failed to complete onboarding: {{message}}",
+		},
+	},
+	update: {
+		toast: {
+			title: "Update ready",
+			description: "A new version has been downloaded.",
+			action: "Restart & Install",
+		},
+	},
+} as const;
