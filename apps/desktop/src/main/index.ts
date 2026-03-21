@@ -1,5 +1,6 @@
 import path from "node:path";
 import { appRouter, createTRPCContext } from "@finance-tracker/api";
+import { APP_SETTINGS_DEFAULTS } from "@finance-tracker/constants";
 import * as schema from "@finance-tracker/db";
 import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
@@ -75,6 +76,17 @@ app.whenReady().then(() => {
 		: path.join(process.resourcesPath, "migrations");
 
 	migrate(db, { migrationsFolder });
+
+	// Seeding default app settings
+	db.insert(schema.appSettings)
+		.values(
+			Object.entries(APP_SETTINGS_DEFAULTS).map(([key, value]) => ({
+				key,
+				value,
+			})),
+		)
+		.onConflictDoNothing()
+		.run();
 
 	createWindow();
 	setupAutoUpdater();

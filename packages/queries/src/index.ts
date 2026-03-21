@@ -1,4 +1,5 @@
 export * from "./account";
+export * from "./app-settings";
 export * from "./category";
 export * from "./errors";
 export * from "./transaction";

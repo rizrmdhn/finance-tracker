@@ -79,7 +79,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Build & package desktop
-        run: bunx electron-vite build && bunx electron-builder ${{ matrix.args }} --publish always
+        run: bunx electron-vite build && bunx electron-builder ${{ matrix.args }} --publish never
         working-directory: apps/desktop
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

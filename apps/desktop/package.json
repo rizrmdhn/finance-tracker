@@ -1,12 +1,12 @@
 {
 	"name": "@finance-tracker/desktop",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"main": "out/main/index.js",
 	"scripts": {
 		"dev": "electron-vite dev",
 		"build": "electron-vite build",
 		"rebuild": "electron-rebuild -f -w better-sqlite3",
-		"package": "bun run build && electron-builder --publish always",
+		"package": "bun run build && electron-builder --win",
 		"package:dir": "bun run build && electron-builder --win --dir",
 		"check-types": "tsc --noEmit"
 	},

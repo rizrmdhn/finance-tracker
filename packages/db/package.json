@@ -6,15 +6,18 @@
 	},
 	"scripts": {
 		"check-types": "tsc --noEmit",
-		"db:studio": "drizzle-kit studio",
-		"db:migrate": "drizzle-kit migrate",
-		"db:generate": "drizzle-kit generate"
+		"db:studio": "bun with-env drizzle-kit studio",
+		"db:migrate": "bun with-env drizzle-kit migrate",
+		"db:generate": "bun with-env drizzle-kit generate",
+		"with-env": "dotenv -e ../../.env --"
 	},
 	"dependencies": {
 		"@finance-tracker/constants": "workspace:*",
-		"drizzle-orm": "catalog:",
+		"@finance-tracker/env": "workspace:*",
+		"@paralleldrive/cuid2": "^3.3.0",
 		"better-sqlite3": "catalog:",
-		"@paralleldrive/cuid2": "^3.3.0"
+		"dotenv-cli": "catalog:",
+		"drizzle-orm": "catalog:"
 	},
 	"devDependencies": {
 		"drizzle-kit": "catalog:",
