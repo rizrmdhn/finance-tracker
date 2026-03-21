@@ -44,8 +44,14 @@ function setupAutoUpdater() {
 		win.webContents.send("update-downloaded");
 	});
 
+	autoUpdater.on("error", (error) => {
+		win.webContents.send("update-error", error.message);
+	});
+
 	ipcMain.on("check-for-updates", () => {
-		autoUpdater.checkForUpdates();
+		autoUpdater.checkForUpdates().catch((error) => {
+			win.webContents.send("update-error", (error as Error).message);
+		});
 	});
 
 	ipcMain.on("install-update", () => {
@@ -112,6 +118,15 @@ app.whenReady().then(() => {
 
 	createWindow();
 	setupAutoUpdater();
+
+	// Auto-check for updates shortly after launch (production only)
+	if (!isDev) {
+		setTimeout(() => {
+			autoUpdater.checkForUpdates().catch(() => {
+				// silently ignore startup check failures
+			});
+		}, 3000);
+	}
 
 	createIPCHandler({
 		router: appRouter,
