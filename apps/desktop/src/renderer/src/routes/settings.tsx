@@ -291,14 +291,18 @@ function RouteComponent() {
 				{updateStatus.state === "error" && (
 					<div className="flex items-center gap-2 text-destructive text-sm">
 						<AlertCircle className="size-4" />
-						Gagal memeriksa pembaruan: {updateStatus.message}
+						{t("settings.advanced.failedToCheck", {
+							message: updateStatus.message,
+						})}
 					</div>
 				)}
 
 				{updateStatus.state === "error" && (
 					<div className="flex items-center gap-2 text-destructive text-sm">
 						<AlertCircle className="size-4" />
-						Gagal memeriksa pembaruan: {updateStatus.message}
+						{t("settings.advanced.failedToCheck", {
+							message: updateStatus.message,
+						})}
 					</div>
 				)}
 

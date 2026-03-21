@@ -155,6 +155,7 @@ export const id = {
 			resetOnboarding: "Reset Onboarding",
 			resetOnboardingDescription:
 				"Tampilkan kembali layar onboarding saat aplikasi dibuka",
+			failedToCheck: "Gagal memeriksa pembaruan: {{message}}",
 		},
 		toast: {
 			saved: "Pengaturan berhasil disimpan",

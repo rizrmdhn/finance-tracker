@@ -154,6 +154,7 @@ export const en = {
 			resetOnboarding: "Reset Onboarding",
 			resetOnboardingDescription:
 				"Show the onboarding screen again when the app opens",
+			failedToCheck: "Failed to check for updates: {{message}}",
 		},
 		toast: {
 			saved: "Settings saved successfully",
