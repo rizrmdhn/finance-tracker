@@ -1,3 +1,5 @@
+import type { Dictionary } from "./types";
+
 export const id = {
 	app: {
 		title: "Finance Tracker",
@@ -182,4 +184,4 @@ export const id = {
 			action: "Restart & Pasang",
 		},
 	},
-} as const;
+} satisfies Dictionary;

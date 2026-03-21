@@ -1,3 +1,5 @@
+import type { Dictionary } from "./types";
+
 export const en = {
 	app: {
 		title: "Finance Tracker",
@@ -181,4 +183,4 @@ export const en = {
 			action: "Restart & Install",
 		},
 	},
-} as const;
+} satisfies Dictionary;
