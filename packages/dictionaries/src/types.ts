@@ -20,6 +20,8 @@ export interface Dictionary {
 		create: string;
 		saveChanges: string;
 		delete: string;
+		cancel: string;
+		confirm: string;
 		account: string;
 		category: string;
 		toAccount: string;
@@ -31,6 +33,26 @@ export interface Dictionary {
 		selectAccountType: string;
 		selectCurrency: string;
 		selectCategoryType: string;
+		selectDate: string;
+		selectIcon: string;
+		selectColor: string;
+		searchIcon: string;
+		noIconsFound: string;
+		addTag: string;
+		edit: string;
+		seeDetails: string;
+		printPDF: string;
+	};
+	errors: {
+		noData: string;
+		somethingWentWrong: string;
+		pageNotFound: string;
+		pageNotFoundDescription: string;
+		goBack: string;
+		goHome: string;
+		oops: string;
+		refresh: string;
+		validationFailed: string;
 	};
 	dashboard: {
 		addTransaction: string;
@@ -46,6 +68,7 @@ export interface Dictionary {
 		addAccount: string;
 		accountCount: string;
 		noAccounts: string;
+		searchAccount: string;
 		create: {
 			title: string;
 			namePlaceholder: string;
@@ -74,6 +97,7 @@ export interface Dictionary {
 		addCategory: string;
 		categoryCount: string;
 		noCategories: string;
+		searchCategory: string;
 		create: {
 			title: string;
 			namePlaceholder: string;

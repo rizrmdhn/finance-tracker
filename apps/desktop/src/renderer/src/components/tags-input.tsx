@@ -1,6 +1,7 @@
 import { cn } from "@finance-tracker/ui/lib/utils";
 import { XIcon } from "lucide-react";
 import { useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface TagsInputProps {
 	value?: string[];
@@ -12,9 +13,12 @@ interface TagsInputProps {
 export function TagsInput({
 	value = [],
 	onChange,
-	placeholder = "Add tag...",
+	placeholder,
 	className,
 }: TagsInputProps) {
+	const { t } = useTranslation();
+	const resolvedPlaceholder = placeholder ?? t("common.addTag");
+
 	const [input, setInput] = useState("");
 	const inputRef = useRef<HTMLInputElement>(null);
 
@@ -40,20 +44,16 @@ export function TagsInput({
 	}
 
 	return (
-		<div
+		<label
 			className={cn(
 				"flex min-h-7 w-full flex-wrap items-center gap-1 rounded-md border border-input bg-input/20 px-2 py-1 transition-colors focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/30 dark:bg-input/30",
 				className,
 			)}
-			onClick={() => inputRef.current?.focus()}
-			onKeyDown={(e) => {
-				if (e.key === "Enter" || e.key === " ") inputRef.current?.focus();
-			}}
 		>
 			{value.map((tag) => (
 				<span
 					key={tag}
-					className="inline-flex items-center gap-1 rounded bg-accent px-1.5 py-0.5 text-xs font-medium"
+					className="inline-flex items-center gap-1 rounded bg-accent px-1.5 py-0.5 font-medium text-xs"
 				>
 					{tag}
 					<button
@@ -76,9 +76,9 @@ export function TagsInput({
 				onBlur={() => {
 					if (input.trim()) addTag(input);
 				}}
-				placeholder={value.length === 0 ? placeholder : ""}
+				placeholder={value.length === 0 ? resolvedPlaceholder : ""}
 				className="min-w-16 flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground"
 			/>
-		</div>
+		</label>
 	);
 }

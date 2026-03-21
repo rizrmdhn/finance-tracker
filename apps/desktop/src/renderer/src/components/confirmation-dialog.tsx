@@ -12,6 +12,7 @@ import {
 import { Button } from "@finance-tracker/ui/components/button";
 import { cn } from "@finance-tracker/ui/lib/utils";
 import { LoaderCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 /**
  * Props for {@link ConfirmationDialog}.
@@ -92,13 +93,16 @@ export function ConfirmationDialog({
 	title,
 	description,
 	children,
-	cancelText = "Batal",
-	confirmText = "Konfirmasi",
+	cancelText,
+	confirmText,
 	isLoading = false,
 	onConfirm,
 	confirmClassName,
 	variant = "default",
 }: ConfirmationDialogProps) {
+	const { t } = useTranslation();
+	const resolvedCancelText = cancelText ?? t("common.cancel");
+	const resolvedConfirmText = confirmText ?? t("common.confirm");
 	const destructiveClass =
 		variant === "destructive"
 			? "bg-destructive text-white hover:bg-destructive/90"
@@ -117,7 +121,7 @@ export function ConfirmationDialog({
 				{children && <div className="py-4">{children}</div>}
 				<AlertDialogFooter>
 					<AlertDialogCancel disabled={isLoading}>
-						{cancelText}
+						{resolvedCancelText}
 					</AlertDialogCancel>
 					<AlertDialogAction
 						onClick={(e) => {
@@ -130,7 +134,7 @@ export function ConfirmationDialog({
 						{isLoading && (
 							<LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
 						)}
-						{confirmText}
+						{resolvedConfirmText}
 					</AlertDialogAction>
 				</AlertDialogFooter>
 			</AlertDialogContent>

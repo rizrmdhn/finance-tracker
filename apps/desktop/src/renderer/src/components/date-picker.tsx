@@ -8,6 +8,7 @@ import {
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface DatePickerProps {
 	value?: number;
@@ -15,11 +16,10 @@ interface DatePickerProps {
 	placeholder?: string;
 }
 
-export function DatePicker({
-	value,
-	onChange,
-	placeholder = "Pick a date",
-}: DatePickerProps) {
+export function DatePicker({ value, onChange, placeholder }: DatePickerProps) {
+	const { t } = useTranslation();
+	const resolvedPlaceholder = placeholder ?? t("common.selectDate");
+
 	const [open, setOpen] = useState(false);
 	const selected = value ? new Date(value) : undefined;
 
@@ -38,7 +38,7 @@ export function DatePicker({
 				{selected ? (
 					<span>{format(selected, "dd MMM yyyy")}</span>
 				) : (
-					<span className="text-muted-foreground">{placeholder}</span>
+					<span className="text-muted-foreground">{resolvedPlaceholder}</span>
 				)}
 			</PopoverTrigger>
 			<PopoverContent className="w-auto p-0" align="start">

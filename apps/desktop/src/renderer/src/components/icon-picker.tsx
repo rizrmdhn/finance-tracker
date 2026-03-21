@@ -69,6 +69,7 @@ import {
 	Zap,
 } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export const ICON_MAP: Record<string, LucideIcon> = {
 	Activity,
@@ -136,6 +137,8 @@ interface IconPickerProps {
 }
 
 export function IconPicker({ value, onChange }: IconPickerProps) {
+	const { t } = useTranslation();
+
 	const [search, setSearch] = useState("");
 	const [open, setOpen] = useState(false);
 
@@ -169,7 +172,7 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
 			</PopoverTrigger>
 			<PopoverContent className="w-68 gap-2 p-2" align="start">
 				<Input
-					placeholder="Search icons..."
+					placeholder={t("common.searchIcon")}
 					value={search}
 					onChange={(e) => setSearch(e.target.value)}
 				/>
@@ -197,7 +200,7 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
 					})}
 					{filtered.length === 0 && (
 						<p className="col-span-8 py-4 text-center text-muted-foreground text-xs">
-							No icons found
+							{t("common.noIconsFound")}
 						</p>
 					)}
 				</div>

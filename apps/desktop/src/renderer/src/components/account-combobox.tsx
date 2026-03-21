@@ -12,6 +12,7 @@ import {
 	InputGroupText,
 } from "@finance-tracker/ui/components/input-group";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ICON_MAP } from "@/components/icon-picker";
 
 interface AccountComboboxProps {
@@ -25,8 +26,11 @@ export function AccountCombobox({
 	value,
 	onChange,
 	accounts,
-	placeholder = "Search Account...",
+	placeholder,
 }: AccountComboboxProps) {
+	const { t } = useTranslation();
+	const resolvedPlaceholder = placeholder ?? t("accounts.searchAccount");
+
 	const [inputValue, setInputValue] = useState(
 		() => accounts.find((c) => c.id === value)?.name ?? "",
 	);
@@ -53,7 +57,7 @@ export function AccountCombobox({
 		>
 			<ComboboxInput
 				showClear={!!value}
-				placeholder={placeholder}
+				placeholder={resolvedPlaceholder}
 				value={inputValue}
 				onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
 					setInputValue(e.target.value)
