@@ -392,8 +392,8 @@ function RouteComponent() {
 						)}
 
 						{updateStatus.state === "downloading" && (
-							<div className="flex flex-col gap-1.5">
-								<div className="flex items-center justify-between">
+							<Progress value={updateStatus.percent} className="flex-col gap-1.5">
+								<div className="flex w-full items-center justify-between">
 									<ProgressLabel>
 										{t("settings.advanced.downloading")}
 									</ProgressLabel>
@@ -401,8 +401,7 @@ function RouteComponent() {
 										{updateStatus.percent}%
 									</span>
 								</div>
-								<Progress value={updateStatus.percent} />
-							</div>
+							</Progress>
 						)}
 
 						{updateStatus.state === "downloaded" && (
