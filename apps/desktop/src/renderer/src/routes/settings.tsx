@@ -19,8 +19,8 @@ import {
 } from "@finance-tracker/constants";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { CheckCircle2, Loader2, RefreshCw } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { AlertCircle, CheckCircle2, Loader2, RefreshCw } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTheme } from "@/components/theme-provider";
 import { pageHead } from "@/lib/page-head";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
@@ -42,6 +42,7 @@ type UpdateStatus =
 	| { state: "idle" }
 	| { state: "checking" }
 	| { state: "up-to-date" }
+	| { state: "error"; message: string }
 	| { state: "available"; version: string; releaseNotes: string | null }
 	| { state: "downloading"; version: string; releaseNotes: string | null; percent: number }
 	| { state: "downloaded" };
@@ -49,7 +50,6 @@ type UpdateStatus =
 function RouteComponent() {
 	const { theme, setTheme } = useTheme();
 	const [updateStatus, setUpdateStatus] = useState<UpdateStatus>({ state: "idle" });
-	const listenersAttached = useRef(false);
 
 	const { data: currency } = useQuery(
 		trpc.appSetting.get.queryOptions({ key: "currency" }),
@@ -88,10 +88,9 @@ function RouteComponent() {
 	);
 
 	useEffect(() => {
-		if (listenersAttached.current || !window.updater) return;
-		listenersAttached.current = true;
+		if (!window.electronUpdater) return;
 
-		window.updater.onUpdateAvailable((info) => {
+		window.electronUpdater.onUpdateAvailable((info) => {
 			setUpdateStatus({
 				state: "available",
 				version: info.version,
@@ -99,11 +98,15 @@ function RouteComponent() {
 			});
 		});
 
-		window.updater.onUpdateNotAvailable(() => {
+		window.electronUpdater.onUpdateNotAvailable(() => {
 			setUpdateStatus({ state: "up-to-date" });
 		});
 
-		window.updater.onDownloadProgress((progress) => {
+		window.electronUpdater.onUpdateError((message) => {
+			setUpdateStatus({ state: "error", message });
+		});
+
+		window.electronUpdater.onDownloadProgress((progress) => {
 			setUpdateStatus((prev) => ({
 				state: "downloading",
 				version: prev.state === "available" || prev.state === "downloading" ? prev.version : "",
@@ -112,21 +115,22 @@ function RouteComponent() {
 			}));
 		});
 
-		window.updater.onUpdateDownloaded(() => {
+		window.electronUpdater.onUpdateDownloaded(() => {
 			setUpdateStatus({ state: "downloaded" });
 		});
 
 		return () => {
-			window.updater?.removeAllListeners("update-available");
-			window.updater?.removeAllListeners("update-not-available");
-			window.updater?.removeAllListeners("download-progress");
-			window.updater?.removeAllListeners("update-downloaded");
+			window.electronUpdater?.removeAllListeners("update-available");
+			window.electronUpdater?.removeAllListeners("update-not-available");
+			window.electronUpdater?.removeAllListeners("download-progress");
+			window.electronUpdater?.removeAllListeners("update-downloaded");
+			window.electronUpdater?.removeAllListeners("update-error");
 		};
 	}, []);
 
 	function handleCheckForUpdates() {
 		setUpdateStatus({ state: "checking" });
-		window.updater?.checkForUpdates();
+		window.electronUpdater?.checkForUpdates();
 	}
 
 	return (
@@ -243,6 +247,13 @@ function RouteComponent() {
 					</div>
 				)}
 
+				{updateStatus.state === "error" && (
+					<div className="flex items-center gap-2 text-destructive text-sm">
+						<AlertCircle className="size-4" />
+						Gagal memeriksa pembaruan: {updateStatus.message}
+					</div>
+				)}
+
 				{(updateStatus.state === "available" ||
 					updateStatus.state === "downloading" ||
 					updateStatus.state === "downloaded") && (
@@ -284,7 +295,7 @@ function RouteComponent() {
 									<CheckCircle2 className="size-4 text-green-500" />
 									Siap dipasang
 								</div>
-								<Button size="sm" onClick={() => window.updater?.installUpdate()}>
+								<Button size="sm" onClick={() => window.electronUpdater?.installUpdate()}>
 									Restart &amp; Pasang
 								</Button>
 							</div>
