@@ -65,12 +65,18 @@ function createWindow() {
 	win = new BrowserWindow({
 		width: 1200,
 		height: 800,
+		show: false, // hide until ready-to-show to avoid white flash
+		backgroundColor: "#09090b", // match app background so no flash on show
 		icon: path.join(__dirname, "../../src/resources/icon.ico"),
 		webPreferences: {
 			preload: path.join(__dirname, "../preload/index.js"),
 			sandbox: false,
 		},
 		autoHideMenuBar: !isDev,
+	});
+
+	win.once("ready-to-show", () => {
+		win.show();
 	});
 
 	if (isDev && process.env.ELECTRON_RENDERER_URL) {

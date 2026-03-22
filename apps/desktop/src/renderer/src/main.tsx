@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-router";
 import ReactDOM from "react-dom/client";
 import { queryClient, trpc } from "../src/lib/trpc";
+import { SplashScreen } from "./components/splash-screen";
 import { routeTree } from "./routeTree.gen";
 
 const router = createRouter({
@@ -14,6 +15,7 @@ const router = createRouter({
 	defaultPreload: "intent",
 	scrollRestoration: true,
 	context: { trpc, queryClient },
+	defaultPendingComponent: () => <SplashScreen />,
 	Wrap: function WrapComponent({ children }: { children: React.ReactNode }) {
 		return (
 			<QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
