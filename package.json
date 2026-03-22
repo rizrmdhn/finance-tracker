@@ -1,5 +1,17 @@
 {
 	"name": "finance-tracker",
+	"description": "Personal finance tracking monorepo for web, desktop, and mobile apps.",
+	"keywords": [
+		"finance",
+		"expense-tracker",
+		"budgeting",
+		"typescript",
+		"monorepo",
+		"turborepo",
+		"react",
+		"electron",
+		"expo"
+	],
 	"private": true,
 	"workspaces": {
 		"packages": [
