@@ -88,7 +88,9 @@ if (process.platform === "win32") {
 }
 
 app.whenReady().then(() => {
-	const dbPath = path.join(app.getPath("userData"), "finance.db");
+	const dbPath = isDev
+		? path.join(app.getPath("userData"), "finance-dev.db")
+		: path.join(app.getPath("userData"), "finance.db");
 	const sqlite = new Database(dbPath);
 	sqlite.pragma("journal_mode = WAL");
 	if (isDev) {
