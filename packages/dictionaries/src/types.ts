@@ -8,6 +8,7 @@ export interface Dictionary {
 		accounts: string;
 		categories: string;
 		transactions: string;
+		budgets: string;
 		settings: string;
 	};
 	common: {
@@ -42,6 +43,7 @@ export interface Dictionary {
 		edit: string;
 		seeDetails: string;
 		printPDF: string;
+		viewAll: string;
 	};
 	errors: {
 		noData: string;
@@ -61,6 +63,8 @@ export interface Dictionary {
 		expense: string;
 		transfer: string;
 		savings: string;
+		budgetOverview: string;
+		noBudgetsDescription: string;
 	};
 	accounts: {
 		title: string;
@@ -207,6 +211,41 @@ export interface Dictionary {
 		submit: string;
 		toast: {
 			failed: string;
+		};
+	};
+	budgets: {
+		title: string;
+		description: string;
+		addBudget: string;
+		budgetCount: string;
+		noBudgets: string;
+		period: string;
+		monthly: string;
+		weekly: string;
+		selectPeriod: string;
+		startDate: string;
+		spent: string;
+		remaining: string;
+		overBy: string;
+		overBudget: string;
+		create: {
+			title: string;
+		};
+		edit: {
+			title: string;
+		};
+		delete: {
+			title: string;
+			description: string;
+			confirm: string;
+		};
+		toast: {
+			created: string;
+			createFailed: string;
+			updated: string;
+			updateFailed: string;
+			deleted: string;
+			deleteFailed: string;
 		};
 	};
 	update: {

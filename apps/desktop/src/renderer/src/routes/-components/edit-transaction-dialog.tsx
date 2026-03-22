@@ -69,9 +69,17 @@ export default function EditTransactionDialog({
 	const updateMutation = useMutation(
 		trpc.transaction.update.mutationOptions({
 			onSuccess: async () => {
-				await queryClient.invalidateQueries(
-					trpc.transaction.list.queryOptions(),
-				);
+				await Promise.all([
+					queryClient.invalidateQueries({
+						queryKey: trpc.transaction.list.queryKey(),
+					}),
+					queryClient.invalidateQueries({
+						queryKey: trpc.transaction.summary.queryKey(),
+					}),
+					queryClient.invalidateQueries({
+						queryKey: trpc.transaction.paginated.queryKey(),
+					}),
+				]);
 				globalSuccessToast(t("transactions.toast.updated"));
 				setIsOpen(false);
 			},
@@ -198,7 +206,10 @@ export default function EditTransactionDialog({
 							render={({ field, fieldState }) => (
 								<Field data-invalid={fieldState.invalid}>
 									<FieldLabel>{t("common.note")}</FieldLabel>
-									<Textarea placeholder={t("transactions.notePlaceholder")} {...field} />
+									<Textarea
+										placeholder={t("transactions.notePlaceholder")}
+										{...field}
+									/>
 									{fieldState.invalid && (
 										<FieldError errors={[fieldState.error]} />
 									)}

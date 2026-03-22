@@ -29,14 +29,11 @@ import { DatePicker } from "@/components/date-picker";
 import { TagsInput } from "@/components/tags-input";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
-import { getCurrentMonthRange } from "./utils";
 
 interface CreateTransactionDialogProps {
 	open: boolean;
 	setIsOpen: (open: boolean) => void;
 }
-
-const { from: currentFrom, to: currentTo } = getCurrentMonthRange();
 
 export default function CreateTransactionDialog({
 	open,
@@ -49,17 +46,18 @@ export default function CreateTransactionDialog({
 
 	const createTransactionMutation = useMutation(
 		trpc.transaction.create.mutationOptions({
-			onSuccess: async (data) => {
-				await queryClient.invalidateQueries(
-					trpc.transaction.list.queryOptions(),
-				);
-				await queryClient.invalidateQueries(
-					trpc.transaction.summary.queryOptions({
-						accountId: data.accountId,
-						from: currentFrom,
-						to: currentTo,
+			onSuccess: async () => {
+				await Promise.all([
+					queryClient.invalidateQueries({
+						queryKey: trpc.transaction.list.queryKey(),
 					}),
-				);
+					queryClient.invalidateQueries({
+						queryKey: trpc.transaction.summary.queryKey(),
+					}),
+					queryClient.invalidateQueries({
+						queryKey: trpc.transaction.paginated.queryKey(),
+					}),
+				]);
 				globalSuccessToast(t("transactions.toast.created"));
 				form.reset();
 				setIsOpen(false);
@@ -187,7 +185,10 @@ export default function CreateTransactionDialog({
 							render={({ field, fieldState }) => (
 								<Field data-invalid={fieldState.invalid}>
 									<FieldLabel>{t("common.note")}</FieldLabel>
-									<Textarea placeholder={t("transactions.notePlaceholder")} {...field} />
+									<Textarea
+										placeholder={t("transactions.notePlaceholder")}
+										{...field}
+									/>
 									{fieldState.invalid && (
 										<FieldError errors={[fieldState.error]} />
 									)}

@@ -20,11 +20,12 @@ import { AccountCombobox } from "@/components/account-combobox";
 import useModalState from "@/hooks/use-modal-state";
 import { trpc } from "../lib/trpc";
 import { AnalyticsCard } from "./-components/analytics-card";
+import { BudgetOverviewWidget } from "./-components/budget-overview-widget";
 import CreateTransactionDialog from "./-components/create-transaction-dialog";
 import { DateRangePicker } from "./-components/date-range-picker";
 import { RecentTransactions } from "./-components/recent-transactions";
 import { SummaryCard } from "./-components/summary-card";
-import { getSixMonthsRange } from "./-components/utils";
+import { getCurrentMonthRange } from "./-components/utils";
 
 export const Route = createFileRoute("/")({
 	component: HomeComponent,
@@ -36,7 +37,7 @@ function HomeComponent() {
 		transaction: false,
 	});
 
-	const defaultRange = getSixMonthsRange();
+	const defaultRange = getCurrentMonthRange();
 	const [dateRange, setDateRange] = useState(defaultRange);
 	const [selectedAccountId, setSelectedAccountId] = useState<
 		string | undefined
@@ -161,6 +162,8 @@ function HomeComponent() {
 					categories={categories}
 				/>
 			)}
+
+			<BudgetOverviewWidget from={dateRange.from} to={dateRange.to} />
 
 			<CreateTransactionDialog
 				open={state.transaction}

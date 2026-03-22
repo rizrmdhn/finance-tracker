@@ -20,6 +20,7 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Toaster } from "sonner";
 import { AppSidebar } from "@/components/app-sidebar";
+import { SplashScreen } from "@/components/splash-screen";
 import { NotFoundComponent } from "@/components/not-found";
 import { OnboardingScreen } from "@/components/onboarding-screen";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -67,7 +68,13 @@ function RootComponent() {
 		}
 	}, [language, i18n]);
 
-	if (isLoading) return null;
+	if (isLoading) {
+		return (
+			<ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+				<SplashScreen />
+			</ThemeProvider>
+		);
+	}
 
 	if (onboarding?.value === "pending") {
 		return (
