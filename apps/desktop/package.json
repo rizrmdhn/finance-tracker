@@ -46,8 +46,9 @@
 			"icon": "src/resources/icon.ico"
 		},
 		"nsis": {
-			"oneClick": false,
-			"allowToChangeInstallationDirectory": true,
+			"oneClick": true,
+			"perMachine": false,
+			"allowToChangeInstallationDirectory": false,
 			"artifactName": "Finance-Tracker-Setup-${version}.${ext}"
 		},
 		"mac": {
