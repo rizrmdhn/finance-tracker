@@ -2,6 +2,7 @@ import {
 	createCategory,
 	deleteCategory,
 	getCategories,
+	seedDefaultCategories,
 	updateCategory,
 } from "@finance-tracker/queries";
 import { categorySchema, categoryUpdateSchema } from "@finance-tracker/schema";
@@ -46,4 +47,12 @@ export const categoryRouter = createTRPCRouter({
 			if (err) throw toTRPCError(err);
 			return data;
 		}),
+
+	seedDefaults: publicProcedure.mutation(async ({ ctx }) => {
+		const [data, err] = await tryCatchAsync(() =>
+			seedDefaultCategories(ctx.db),
+		);
+		if (err) throw toTRPCError(err);
+		return data;
+	}),
 });

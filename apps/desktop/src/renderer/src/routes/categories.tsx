@@ -38,6 +38,20 @@ function CategoriesComponent() {
 		trpc.category.list.queryOptions(),
 	);
 
+	const seedDefaultsMutation = useMutation(
+		trpc.category.seedDefaults.mutationOptions({
+			onSuccess: async () => {
+				await queryClient.invalidateQueries(trpc.category.list.queryOptions());
+				globalSuccessToast(t("categories.toast.defaultsLoaded"));
+			},
+			onError: (error) => {
+				globalErrorToast(
+					t("categories.toast.defaultsLoadFailed", { message: error.message }),
+				);
+			},
+		}),
+	);
+
 	const deleteMutation = useMutation(
 		trpc.category.delete.mutationOptions({
 			onSuccess: async () => {
@@ -145,9 +159,19 @@ function CategoriesComponent() {
 						</div>
 					))}
 				{categories.length === 0 && !isLoading && (
-					<p className="py-6 text-center text-muted-foreground text-sm">
-						{t("categories.noCategories")}
-					</p>
+					<div className="flex flex-col items-center gap-3 py-8 text-center">
+						<p className="text-muted-foreground text-sm">
+							{t("categories.noCategories")}
+						</p>
+						<Button
+							variant="outline"
+							size="sm"
+							disabled={seedDefaultsMutation.isPending}
+							onClick={() => seedDefaultsMutation.mutate()}
+						>
+							{t("categories.loadDefaults")}
+						</Button>
+					</div>
 				)}
 			</div>
 

@@ -115,6 +115,7 @@ export interface Dictionary {
 			description: string;
 			confirm: string;
 		};
+		loadDefaults: string;
 		toast: {
 			created: string;
 			createFailed: string;
@@ -122,6 +123,8 @@ export interface Dictionary {
 			updateFailed: string;
 			deleted: string;
 			deleteFailed: string;
+			defaultsLoaded: string;
+			defaultsLoadFailed: string;
 		};
 	};
 	transactions: {

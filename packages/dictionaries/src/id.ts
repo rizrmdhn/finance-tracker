@@ -123,6 +123,7 @@ export const id = {
 				'Apakah Anda yakin ingin menghapus "{{name}}"? Tindakan ini tidak dapat dibatalkan.',
 			confirm: "Hapus",
 		},
+		loadDefaults: "Muat kategori default",
 		toast: {
 			created: "Kategori berhasil dibuat",
 			createFailed: "Gagal membuat kategori: {{message}}",
@@ -130,6 +131,8 @@ export const id = {
 			updateFailed: "Gagal memperbarui kategori: {{message}}",
 			deleted: "Kategori dihapus",
 			deleteFailed: "Gagal menghapus kategori: {{message}}",
+			defaultsLoaded: "Kategori default berhasil dimuat",
+			defaultsLoadFailed: "Gagal memuat kategori default: {{message}}",
 		},
 	},
 	transactions: {
