@@ -51,7 +51,11 @@ export default function CreateTransactionDialog({
 		trpc.transaction.create.mutationOptions({
 			onSuccess: async (data) => {
 				await queryClient.invalidateQueries(
-					trpc.transaction.list.queryOptions(),
+					trpc.transaction.list.queryOptions({
+						accountId: data.accountId,
+						from: currentFrom,
+						to: currentTo,
+					}),
 				);
 				await queryClient.invalidateQueries(
 					trpc.transaction.summary.queryOptions({
@@ -187,7 +191,10 @@ export default function CreateTransactionDialog({
 							render={({ field, fieldState }) => (
 								<Field data-invalid={fieldState.invalid}>
 									<FieldLabel>{t("common.note")}</FieldLabel>
-									<Textarea placeholder={t("transactions.notePlaceholder")} {...field} />
+									<Textarea
+										placeholder={t("transactions.notePlaceholder")}
+										{...field}
+									/>
 									{fieldState.invalid && (
 										<FieldError errors={[fieldState.error]} />
 									)}
