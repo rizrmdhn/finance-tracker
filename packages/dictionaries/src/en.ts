@@ -123,6 +123,7 @@ export const en = {
 				'Are you sure you want to delete "{{name}}"? This cannot be undone.',
 			confirm: "Delete",
 		},
+		loadDefaults: "Load default categories",
 		toast: {
 			created: "Category created successfully",
 			createFailed: "Failed to create category: {{message}}",
@@ -130,6 +131,8 @@ export const en = {
 			updateFailed: "Failed to update category: {{message}}",
 			deleted: "Category deleted",
 			deleteFailed: "Failed to delete category: {{message}}",
+			defaultsLoaded: "Default categories loaded",
+			defaultsLoadFailed: "Failed to load default categories: {{message}}",
 		},
 	},
 	transactions: {
