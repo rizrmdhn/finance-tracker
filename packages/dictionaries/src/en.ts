@@ -11,6 +11,7 @@ export const en = {
 		accounts: "Accounts",
 		categories: "Categories",
 		transactions: "Transactions",
+		budgets: "Budgets",
 		settings: "Settings",
 	},
 	common: {
@@ -45,6 +46,7 @@ export const en = {
 		edit: "Edit",
 		seeDetails: "See details",
 		printPDF: "Print PDF",
+		viewAll: "View all",
 	},
 	errors: {
 		noData: "No data",
@@ -65,6 +67,8 @@ export const en = {
 		expense: "Expense",
 		transfer: "Transfer",
 		savings: "Savings",
+		budgetOverview: "Budget Overview",
+		noBudgetsDescription: "No budgets set. Add budgets to track your spending limits.",
 	},
 	accounts: {
 		title: "Accounts",
@@ -217,6 +221,43 @@ export const en = {
 		submit: "Create Account & Get Started",
 		toast: {
 			failed: "Failed to complete onboarding: {{message}}",
+		},
+	},
+	budgets: {
+		title: "Budgets",
+		description:
+			"Set spending limits per category and track how much you've used. Stay on top of your finances by managing budgets for each period.",
+		addBudget: "Add Budget",
+		budgetCount: "{{count}} budgets",
+		noBudgets: "No budgets yet",
+		period: "Period",
+		monthly: "Monthly",
+		weekly: "Weekly",
+		selectPeriod: "Select period",
+		startDate: "Start Date",
+		spent: "Spent",
+		remaining: "Remaining: {{amount}}",
+		overBy: "Over by {{amount}}",
+		overBudget: "Over budget",
+		create: {
+			title: "Create Budget",
+		},
+		edit: {
+			title: "Edit Budget",
+		},
+		delete: {
+			title: "Delete Budget",
+			description:
+				'Are you sure you want to delete the budget for "{{name}}"? This cannot be undone.',
+			confirm: "Delete",
+		},
+		toast: {
+			created: "Budget created successfully",
+			createFailed: "Failed to create budget: {{message}}",
+			updated: "Budget updated successfully",
+			updateFailed: "Failed to update budget: {{message}}",
+			deleted: "Budget deleted",
+			deleteFailed: "Failed to delete budget: {{message}}",
 		},
 	},
 	update: {

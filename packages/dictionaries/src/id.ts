@@ -11,6 +11,7 @@ export const id = {
 		accounts: "Akun",
 		categories: "Kategori",
 		transactions: "Transaksi",
+		budgets: "Anggaran",
 		settings: "Pengaturan",
 	},
 	common: {
@@ -45,6 +46,7 @@ export const id = {
 		edit: "Edit",
 		seeDetails: "Lihat detail",
 		printPDF: "Cetak PDF",
+		viewAll: "Lihat semua",
 	},
 	errors: {
 		noData: "Tidak ada data",
@@ -65,6 +67,8 @@ export const id = {
 		expense: "Pengeluaran",
 		transfer: "Transfer",
 		savings: "Tabungan",
+		budgetOverview: "Ringkasan Anggaran",
+		noBudgetsDescription: "Belum ada anggaran. Tambahkan anggaran untuk melacak batas pengeluaran Anda.",
 	},
 	accounts: {
 		title: "Akun",
@@ -218,6 +222,43 @@ export const id = {
 		submit: "Buat Akun & Mulai",
 		toast: {
 			failed: "Gagal menyelesaikan onboarding: {{message}}",
+		},
+	},
+	budgets: {
+		title: "Anggaran",
+		description:
+			"Tetapkan batas pengeluaran per kategori dan lacak seberapa banyak yang telah digunakan. Kelola anggaran untuk setiap periode agar keuangan Anda tetap terkontrol.",
+		addBudget: "Tambah Anggaran",
+		budgetCount: "{{count}} anggaran",
+		noBudgets: "Belum ada anggaran",
+		period: "Periode",
+		monthly: "Bulanan",
+		weekly: "Mingguan",
+		selectPeriod: "Pilih periode",
+		startDate: "Tanggal Mulai",
+		spent: "Terpakai",
+		remaining: "Sisa: {{amount}}",
+		overBy: "Melebihi {{amount}}",
+		overBudget: "Melebihi anggaran",
+		create: {
+			title: "Buat Anggaran",
+		},
+		edit: {
+			title: "Edit Anggaran",
+		},
+		delete: {
+			title: "Hapus Anggaran",
+			description:
+				'Apakah Anda yakin ingin menghapus anggaran untuk "{{name}}"? Tindakan ini tidak dapat dibatalkan.',
+			confirm: "Hapus",
+		},
+		toast: {
+			created: "Anggaran berhasil dibuat",
+			createFailed: "Gagal membuat anggaran: {{message}}",
+			updated: "Anggaran berhasil diperbarui",
+			updateFailed: "Gagal memperbarui anggaran: {{message}}",
+			deleted: "Anggaran dihapus",
+			deleteFailed: "Gagal menghapus anggaran: {{message}}",
 		},
 	},
 	update: {

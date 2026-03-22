@@ -6,6 +6,7 @@ import m0001 from './0001_flaky_domino.sql';
 import m0002 from './0002_sleepy_roughhouse.sql';
 import m0003 from './0003_loose_thanos.sql';
 import m0004 from './0004_right_ink.sql';
+import m0005 from './0005_unknown_puppet_master.sql';
 
   export default {
     journal,
@@ -14,7 +15,8 @@ import m0004 from './0004_right_ink.sql';
 m0001,
 m0002,
 m0003,
-m0004
+m0004,
+m0005
     }
   }
   

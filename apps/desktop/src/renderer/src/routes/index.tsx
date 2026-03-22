@@ -20,6 +20,7 @@ import { AccountCombobox } from "@/components/account-combobox";
 import useModalState from "@/hooks/use-modal-state";
 import { trpc } from "../lib/trpc";
 import { AnalyticsCard } from "./-components/analytics-card";
+import { BudgetOverviewWidget } from "./-components/budget-overview-widget";
 import CreateTransactionDialog from "./-components/create-transaction-dialog";
 import { DateRangePicker } from "./-components/date-range-picker";
 import { RecentTransactions } from "./-components/recent-transactions";
@@ -161,6 +162,8 @@ function HomeComponent() {
 					categories={categories}
 				/>
 			)}
+
+			<BudgetOverviewWidget from={dateRange.from} to={dateRange.to} />
 
 			<CreateTransactionDialog
 				open={state.transaction}

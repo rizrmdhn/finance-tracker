@@ -15,6 +15,13 @@
       "when": 1774012595075,
       "tag": "0001_loud_darwin",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1774169331849,
+      "tag": "0002_thick_triathlon",
+      "breakpoints": true
     }
   ]
 }
