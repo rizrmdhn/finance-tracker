@@ -23,6 +23,10 @@ function setupAutoUpdater() {
 		return;
 	}
 
+	// Auto-download updates without user interaction
+	autoUpdater.autoDownload = true;
+	autoUpdater.autoInstallOnAppQuit = true;
+
 	autoUpdater.on("update-available", (info) => {
 		win.webContents.send("update-available", {
 			version: info.version,
@@ -57,7 +61,9 @@ function setupAutoUpdater() {
 	});
 
 	ipcMain.on("install-update", () => {
-		autoUpdater.quitAndInstall();
+		// isSilent = true: no installer UI shown
+		// isForceRunAfter = true: relaunch the app after install completes
+		autoUpdater.quitAndInstall(true, true);
 	});
 }
 

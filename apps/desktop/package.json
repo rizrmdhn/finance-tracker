@@ -1,6 +1,6 @@
 {
 	"name": "@finance-tracker/desktop",
-	"version": "0.4.1",
+	"version": "0.4.2",
 	"main": "out/main/index.js",
 	"scripts": {
 		"dev": "electron-vite dev",
@@ -46,8 +46,9 @@
 			"icon": "src/resources/icon.ico"
 		},
 		"nsis": {
-			"oneClick": false,
-			"allowToChangeInstallationDirectory": true,
+			"oneClick": true,
+			"perMachine": false,
+			"allowToChangeInstallationDirectory": false,
 			"artifactName": "Finance-Tracker-Setup-${version}.${ext}"
 		},
 		"mac": {
