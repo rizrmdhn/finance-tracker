@@ -50,6 +50,11 @@ export const summaryFiltersSchema = z.object({
 	to: z.number({ error: "Please provide a valid end date" }),
 });
 
+export const exportTransactionsSchema = paginatedTransactionsSchema.omit({
+	page: true,
+	limit: true,
+});
+
 export type PaginatedTransactionsInput = z.infer<
 	typeof paginatedTransactionsSchema
 >;
@@ -57,3 +62,7 @@ export type TransactionInput = z.infer<typeof transactionSchema>;
 export type UpdateTransactionInput = z.infer<typeof updateTransactionSchema>;
 export type TransactionFilters = z.infer<typeof transactionFiltersSchema>;
 export type SummaryFilters = z.infer<typeof summaryFiltersSchema>;
+export type ExportTransactionsInput = Omit<
+	PaginatedTransactionsInput,
+	"page" | "limit"
+>;

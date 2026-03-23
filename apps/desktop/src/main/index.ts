@@ -198,6 +198,59 @@ app.whenReady().then(() => {
 		}
 	});
 
+	ipcMain.handle(
+		"export-file",
+		async (
+			_,
+			payload: {
+				content: string;
+				format: "csv" | "json";
+				defaultName: string;
+			},
+		) => {
+			const result = await dialog.showSaveDialog(win, {
+				title: "Export Transactions",
+				defaultPath: payload.defaultName,
+				filters: [
+					payload.format === "csv"
+						? { name: "CSV", extensions: ["csv"] }
+						: { name: "JSON", extensions: ["json"] },
+				],
+			});
+			if (result.canceled || !result.filePath)
+				return { success: false, cancelled: true };
+			try {
+				await fs.promises.writeFile(result.filePath, payload.content, "utf-8");
+				return { success: true };
+			} catch (error) {
+				return { success: false, error: (error as Error).message };
+			}
+		},
+	);
+
+	ipcMain.handle("import-file", async () => {
+		const result = await dialog.showOpenDialog(win, {
+			title: "Import Transactions",
+			filters: [{ name: "CSV / JSON", extensions: ["csv", "json"] }],
+			properties: ["openFile"],
+		});
+		if (result.canceled || !result.filePaths[0])
+			return { success: false, cancelled: true };
+		try {
+			const content = await fs.promises.readFile(
+				result.filePaths[0],
+				"utf-8",
+			);
+			return {
+				success: true,
+				content,
+				filename: path.basename(result.filePaths[0]),
+			};
+		} catch (error) {
+			return { success: false, error: (error as Error).message };
+		}
+	});
+
 	ipcMain.handle("wipe-database", async () => {
 		try {
 			db.delete(schema.transactions).run();

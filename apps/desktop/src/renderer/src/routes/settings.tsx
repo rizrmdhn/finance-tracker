@@ -29,27 +29,6 @@ import { pageHead } from "@/lib/page-head";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
 
-declare global {
-	interface Window {
-		electronApp: {
-			getVersion: () => Promise<string>;
-		};
-		electronDataManager: {
-			backup: () => Promise<{
-				success: boolean;
-				cancelled?: boolean;
-				error?: string;
-			}>;
-			restore: () => Promise<{
-				success: boolean;
-				cancelled?: boolean;
-				error?: string;
-			}>;
-			wipe: () => Promise<{ success: boolean; error?: string }>;
-		};
-	}
-}
-
 export const Route = createFileRoute("/settings")({
 	component: RouteComponent,
 	head: () => pageHead("Settings", "Manage your Finance Tracker preferences."),
