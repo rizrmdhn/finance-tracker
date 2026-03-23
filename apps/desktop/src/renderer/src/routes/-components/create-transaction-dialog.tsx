@@ -3,6 +3,7 @@ import {
 	transactionSchema,
 } from "@finance-tracker/schema";
 import { Button } from "@finance-tracker/ui/components/button";
+import { Checkbox } from "@finance-tracker/ui/components/checkbox";
 import {
 	Dialog,
 	DialogContent,
@@ -16,8 +17,16 @@ import {
 	FieldGroup,
 	FieldLabel,
 } from "@finance-tracker/ui/components/field";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@finance-tracker/ui/components/select";
 import { Spinner } from "@finance-tracker/ui/components/spinner";
 import { Textarea } from "@finance-tracker/ui/components/textarea";
+import { RECURRENCE_FREQUENCIES, REUCRRENCE_FREQUENCY_LABELS } from "@finance-tracker/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
@@ -46,7 +55,7 @@ export default function CreateTransactionDialog({
 
 	const createTransactionMutation = useMutation(
 		trpc.transaction.create.mutationOptions({
-			onSuccess: async () => {
+			onSuccess: async (_, variables) => {
 				await Promise.all([
 					queryClient.invalidateQueries({
 						queryKey: trpc.transaction.list.queryKey(),
@@ -57,6 +66,14 @@ export default function CreateTransactionDialog({
 					queryClient.invalidateQueries({
 						queryKey: trpc.transaction.paginated.queryKey(),
 					}),
+					// If a recurrence rule was created, refresh the recurring list too
+					...(variables.recurrence
+						? [
+								queryClient.invalidateQueries({
+									queryKey: trpc.recurrence.list.queryKey(),
+								}),
+							]
+						: []),
 				]);
 				globalSuccessToast(t("transactions.toast.created"));
 				form.reset();
@@ -209,6 +226,80 @@ export default function CreateTransactionDialog({
 								</Field>
 							)}
 						/>
+
+						{/* Repeat / Recurrence */}
+						<Field>
+							<div className="flex items-center gap-2">
+								<Checkbox
+									id="repeat-checkbox"
+									checked={!!form.watch("recurrence")}
+									onCheckedChange={(checked) => {
+										if (checked) {
+											form.setValue("recurrence", { frequency: "monthly" });
+										} else {
+											form.setValue("recurrence", undefined);
+										}
+									}}
+								/>
+								<FieldLabel htmlFor="repeat-checkbox" className="cursor-pointer">
+									{t("transactions.repeat")}
+								</FieldLabel>
+							</div>
+						</Field>
+
+						{form.watch("recurrence") && (
+							<>
+								<Controller
+									control={form.control}
+									name="recurrence.frequency"
+									render={({ field, fieldState }) => (
+										<Field data-invalid={fieldState.invalid}>
+											<FieldLabel>{t("transactions.frequency")}</FieldLabel>
+											<Select
+												value={field.value}
+												onValueChange={field.onChange}
+											>
+												<SelectTrigger className="w-full">
+													<SelectValue />
+												</SelectTrigger>
+												<SelectContent>
+													{RECURRENCE_FREQUENCIES.map((f) => (
+														<SelectItem key={f} value={f}>
+															{REUCRRENCE_FREQUENCY_LABELS[f]}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+											{fieldState.invalid && (
+												<FieldError errors={[fieldState.error]} />
+											)}
+										</Field>
+									)}
+								/>
+
+								<Controller
+									control={form.control}
+									name="recurrence.endDate"
+									render={({ field, fieldState }) => (
+										<Field data-invalid={fieldState.invalid}>
+											<FieldLabel>
+												{t("transactions.endDate")}{" "}
+												<span className="text-muted-foreground text-xs">
+													({t("common.optional")})
+												</span>
+											</FieldLabel>
+											<DatePicker
+												value={field.value}
+												onChange={field.onChange}
+											/>
+											{fieldState.invalid && (
+												<FieldError errors={[fieldState.error]} />
+											)}
+										</Field>
+									)}
+								/>
+							</>
+						)}
 					</FieldGroup>
 
 					<DialogFooter showCloseButton>

@@ -3,4 +3,6 @@ export * from "./app-settings";
 export * from "./budget";
 export * from "./category";
 export * from "./errors";
+export * from "./recurrence";
+export * from "./recurrence-job";
 export * from "./transaction";

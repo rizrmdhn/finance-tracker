@@ -5,3 +5,4 @@ export * from "./colors";
 export * from "./currency";
 export * from "./date";
 export * from "./icons";
+export * from "./recurrence";

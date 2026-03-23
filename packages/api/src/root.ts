@@ -2,6 +2,7 @@ import { accountRouter } from "./routers/account";
 import { appSettingsRouter } from "./routers/app-settings";
 import { budgetRouter } from "./routers/budget";
 import { categoryRouter } from "./routers/category";
+import { recurrenceRouter } from "./routers/recurrence";
 import { transactionRouter } from "./routers/transaction";
 import { createCallerFactory, createTRPCRouter } from "./trpc";
 
@@ -16,6 +17,7 @@ export const appRouter = createTRPCRouter({
 	account: accountRouter,
 	appSetting: appSettingsRouter,
 	budget: budgetRouter,
+	recurrence: recurrenceRouter,
 });
 
 // export type definition of API

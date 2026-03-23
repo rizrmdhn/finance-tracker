@@ -1,3 +1,4 @@
+import { RECURRENCE_FREQUENCIES } from "@finance-tracker/constants";
 import type { transactions } from "@finance-tracker/db";
 import { z } from "zod";
 import { createPaginationSchema } from "./pagination";
@@ -21,6 +22,12 @@ export const transactionSchema = z.object({
 	toAccountId: z.string().optional(),
 	tags: z.array(z.string()).optional(),
 	date: z.number(),
+	recurrence: z
+		.object({
+			frequency: z.enum(RECURRENCE_FREQUENCIES),
+			endDate: z.number().optional(),
+		})
+		.optional(),
 });
 
 export const updateTransactionSchema = transactionSchema.partial().extend({

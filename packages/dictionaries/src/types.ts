@@ -8,6 +8,7 @@ export interface Dictionary {
 		accounts: string;
 		categories: string;
 		transactions: string;
+		recurring: string;
 		budgets: string;
 		settings: string;
 	};
@@ -30,6 +31,7 @@ export interface Dictionary {
 		tags: string;
 		note: string;
 		date: string;
+		optional: string;
 		allAccounts: string;
 		selectAccountType: string;
 		selectCurrency: string;
@@ -134,6 +136,9 @@ export interface Dictionary {
 		noTransactions: string;
 		noTransactionsDescription: string;
 		notePlaceholder: string;
+		repeat: string;
+		frequency: string;
+		endDate: string;
 		create: {
 			title: string;
 		};
@@ -249,6 +254,30 @@ export interface Dictionary {
 			updateFailed: string;
 			deleted: string;
 			deleteFailed: string;
+		};
+	};
+	recurrences: {
+		title: string;
+		ruleCount: string;
+		noRules: string;
+		nextRun: string;
+		active: string;
+		paused: string;
+		pause: string;
+		resume: string;
+		edit: {
+			title: string;
+		};
+		delete: {
+			title: string;
+			description: string;
+			confirm: string;
+		};
+		toast: {
+			updated: string;
+			deleted: string;
+			paused: string;
+			resumed: string;
 		};
 	};
 	update: {

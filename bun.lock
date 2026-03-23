@@ -18,10 +18,11 @@
     },
     "apps/desktop": {
       "name": "@finance-tracker/desktop",
-      "version": "0.2.2",
+      "version": "0.4.2",
       "dependencies": {
         "@finance-tracker/api": "workspace:*",
         "@finance-tracker/db": "workspace:*",
+        "@finance-tracker/queries": "workspace:*",
         "@finance-tracker/schema": "workspace:*",
         "better-sqlite3": "catalog:",
         "drizzle-orm": "catalog:",
@@ -235,10 +236,12 @@
       "name": "@finance-tracker/queries",
       "version": "0.0.1",
       "dependencies": {
+        "@finance-tracker/constants": "workspace:*",
         "@finance-tracker/db": "workspace:*",
         "@finance-tracker/schema": "workspace:*",
         "@finance-tracker/types": "workspace:*",
         "@finance-tracker/utils": "workspace:*",
+        "date-fns": "catalog:",
         "drizzle-orm": "catalog:",
       },
       "devDependencies": {

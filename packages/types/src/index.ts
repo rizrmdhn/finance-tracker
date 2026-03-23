@@ -3,4 +3,5 @@ export * from "./app-settings";
 export * from "./budget";
 export * from "./category";
 export * from "./data-table";
+export * from "./recurrence";
 export * from "./transaction";

@@ -1,3 +1,4 @@
+import { RECURRENCE_FREQUENCIES } from "@finance-tracker/constants";
 import { createId } from "@paralleldrive/cuid2";
 import { relations } from "drizzle-orm";
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
@@ -14,7 +15,7 @@ export const recurrences = sqliteTable(
 			.references(() => transactions.id)
 			.notNull(),
 		frequency: text("frequency", {
-			enum: ["daily", "weekly", "monthly", "yearly"],
+			enum: RECURRENCE_FREQUENCIES,
 		}).notNull(),
 		nextRunAt: integer("next_run_at").notNull(), // unix ms
 		endDate: integer("end_date"), // unix ms, nullable
