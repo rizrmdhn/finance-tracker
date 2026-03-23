@@ -7,6 +7,7 @@ import { Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SplashScreen } from "@/components/splash-screen";
+import { ToastBridge } from "@/components/toast-bridge";
 import { AppThemeProvider } from "@/contexts/app-theme-context";
 import migrations from "@/drizzle/migrations";
 import { db } from "@/lib/db";
@@ -43,13 +44,7 @@ function MigratedApp() {
 		return <SplashScreen />;
 	}
 
-	return (
-		<AppThemeProvider>
-			<HeroUINativeProvider>
-				<StackLayout />
-			</HeroUINativeProvider>
-		</AppThemeProvider>
-	);
+	return <StackLayout />;
 }
 
 export default function Layout() {
@@ -57,9 +52,15 @@ export default function Layout() {
 		<GestureHandlerRootView style={{ flex: 1 }}>
 			<KeyboardProvider>
 				<QueryClientProvider client={queryClient}>
-					<MigratedApp />
+					<AppThemeProvider>
+						<HeroUINativeProvider>
+							<ToastBridge />
+							<MigratedApp />
+						</HeroUINativeProvider>
+					</AppThemeProvider>
 				</QueryClientProvider>
 			</KeyboardProvider>
 		</GestureHandlerRootView>
 	);
 }
+

@@ -30,6 +30,7 @@ export const createTRPCContext = async ({ db }: { db: AnyDatabase }) => {
  */
 const t = initTRPC.context<typeof createTRPCContext>().create({
 	transformer: SuperJSON,
+	isServer: true,
 	sse: {
 		ping: { enabled: true, intervalMs: 10_000 },
 		client: { reconnectAfterInactivityMs: 30_000 },
