@@ -11,6 +11,7 @@ export const id = {
 		accounts: "Akun",
 		categories: "Kategori",
 		transactions: "Transaksi",
+		recurring: "Berulang",
 		budgets: "Anggaran",
 		settings: "Pengaturan",
 	},
@@ -33,6 +34,7 @@ export const id = {
 		tags: "Tag",
 		note: "Catatan",
 		date: "Tanggal",
+		optional: "opsional",
 		allAccounts: "Semua akun",
 		selectAccountType: "Pilih tipe akun",
 		selectCurrency: "Pilih mata uang",
@@ -144,6 +146,9 @@ export const id = {
 		noTransactionsDescription:
 			"Coba sesuaikan filter atau kata kunci pencarian Anda.",
 		notePlaceholder: "mis. Kopi dengan teman",
+		repeat: "Ulangi",
+		frequency: "Frekuensi",
+		endDate: "Tanggal Berakhir",
 		create: {
 			title: "Buat Transaksi",
 		},
@@ -262,6 +267,31 @@ export const id = {
 			updateFailed: "Gagal memperbarui anggaran: {{message}}",
 			deleted: "Anggaran dihapus",
 			deleteFailed: "Gagal menghapus anggaran: {{message}}",
+		},
+	},
+	recurrences: {
+		title: "Transaksi Berulang",
+		ruleCount: "{{count}} aturan",
+		noRules: "Belum ada transaksi berulang. Buat transaksi dan centang \"Ulangi\" untuk memulai.",
+		nextRun: "Jadwal berikutnya",
+		active: "Aktif",
+		paused: "Dijeda",
+		pause: "Jeda",
+		resume: "Lanjutkan",
+		edit: {
+			title: "Edit Aturan Berulang",
+		},
+		delete: {
+			title: "Hapus Aturan Berulang",
+			description:
+				'Apakah Anda yakin ingin menghapus aturan berulang untuk "{{name}}"? Tindakan ini tidak dapat dibatalkan.',
+			confirm: "Hapus",
+		},
+		toast: {
+			updated: "Aturan berulang diperbarui",
+			deleted: "Aturan berulang dihapus",
+			paused: "Aturan berulang dijeda",
+			resumed: "Aturan berulang dilanjutkan",
 		},
 	},
 	update: {

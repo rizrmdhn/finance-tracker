@@ -1,7 +1,10 @@
 import {
+	computeNextRunAt,
+	createRecurrence,
 	createTransaction,
 	deleteTransaction,
 	getOffsetPaginatedTransactions,
+	getRecurrenceByTemplateId,
 	getTransactionSummary,
 	getTransactions,
 	updateTransaction,
@@ -14,6 +17,7 @@ import {
 	updateTransactionSchema,
 } from "@finance-tracker/schema";
 import { tryCatchAsync } from "@finance-tracker/utils";
+import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import { toTRPCError } from "../utils/to-trpc-error";
 
@@ -41,10 +45,26 @@ export const transactionRouter = createTRPCRouter({
 	create: publicProcedure
 		.input(transactionSchema)
 		.mutation(async ({ ctx, input }) => {
+			const { recurrence: recurrenceInput, ...txInput } = input;
+
 			const [data, err] = await tryCatchAsync(() =>
-				createTransaction(ctx.db, input),
+				createTransaction(ctx.db, txInput),
 			);
 			if (err) throw toTRPCError(err);
+
+			if (recurrenceInput && data) {
+				const nextRunAt = computeNextRunAt(recurrenceInput.frequency, data.date);
+				const [, recErr] = await tryCatchAsync(() =>
+					createRecurrence(ctx.db, {
+						templateTransactionId: data.id,
+						frequency: recurrenceInput.frequency,
+						nextRunAt,
+						endDate: recurrenceInput.endDate,
+					}),
+				);
+				if (recErr) throw toTRPCError(recErr);
+			}
+
 			return data;
 		}),
 
@@ -61,6 +81,19 @@ export const transactionRouter = createTRPCRouter({
 	delete: publicProcedure
 		.input(updateTransactionSchema.pick({ id: true }))
 		.mutation(async ({ ctx, input }) => {
+			// Block deletion if a recurrence rule references this transaction
+			const [existingRule, ruleErr] = await tryCatchAsync(() =>
+				getRecurrenceByTemplateId(ctx.db, input.id),
+			);
+			if (ruleErr) throw toTRPCError(ruleErr);
+			if (existingRule) {
+				throw new TRPCError({
+					code: "CONFLICT",
+					message:
+						"This transaction has a recurring rule attached. Delete the recurring rule first.",
+				});
+			}
+
 			const [data, err] = await tryCatchAsync(() =>
 				deleteTransaction(ctx.db, input.id),
 			);

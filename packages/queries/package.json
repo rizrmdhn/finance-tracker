@@ -12,7 +12,9 @@
 		"@finance-tracker/schema": "workspace:*",
 		"@finance-tracker/utils": "workspace:*",
 		"@finance-tracker/types": "workspace:*",
-		"drizzle-orm": "catalog:"
+		"drizzle-orm": "catalog:",
+		"date-fns": "catalog:",
+		"@finance-tracker/constants": "workspace:*"
 	},
 	"devDependencies": {
 		"@finance-tracker/config": "workspace:*",

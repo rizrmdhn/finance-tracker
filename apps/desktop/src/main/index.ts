@@ -3,6 +3,7 @@ import path from "node:path";
 import { appRouter, createTRPCContext } from "@finance-tracker/api";
 import { APP_SETTINGS_DEFAULTS } from "@finance-tracker/constants";
 import * as schema from "@finance-tracker/db";
+import { processRecurrences } from "@finance-tracker/queries";
 import Database from "better-sqlite3";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/better-sqlite3";
@@ -131,6 +132,18 @@ app.whenReady().then(() => {
 		)
 		.onConflictDoNothing()
 		.run();
+
+	// Process any recurring transactions that came due since the app was last open
+	processRecurrences(db).catch((err: unknown) => {
+		console.error("[recurrence] startup pass failed:", err);
+	});
+
+	// Re-check every hour for same-day recurring transactions (e.g. daily frequency)
+	setInterval(() => {
+		processRecurrences(db).catch((err: unknown) => {
+			console.error("[recurrence] interval pass failed:", err);
+		});
+	}, 60 * 60 * 1000);
 
 	createWindow();
 	setupAutoUpdater();

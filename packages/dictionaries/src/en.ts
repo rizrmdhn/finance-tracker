@@ -11,6 +11,7 @@ export const en = {
 		accounts: "Accounts",
 		categories: "Categories",
 		transactions: "Transactions",
+		recurring: "Recurring",
 		budgets: "Budgets",
 		settings: "Settings",
 	},
@@ -33,6 +34,7 @@ export const en = {
 		tags: "Tags",
 		note: "Note",
 		date: "Date",
+		optional: "optional",
 		allAccounts: "All accounts",
 		selectAccountType: "Select account type",
 		selectCurrency: "Select currency",
@@ -143,6 +145,9 @@ export const en = {
 		noTransactions: "No transactions found",
 		noTransactionsDescription: "Try adjusting your filters or search query.",
 		notePlaceholder: "e.g. Coffee with friends",
+		repeat: "Repeat",
+		frequency: "Frequency",
+		endDate: "End Date",
 		create: {
 			title: "Create Transaction",
 		},
@@ -261,6 +266,31 @@ export const en = {
 			updateFailed: "Failed to update budget: {{message}}",
 			deleted: "Budget deleted",
 			deleteFailed: "Failed to delete budget: {{message}}",
+		},
+	},
+	recurrences: {
+		title: "Recurring Transactions",
+		ruleCount: "{{count}} rules",
+		noRules: "No recurring transactions yet. Create a transaction and check \"Repeat\" to get started.",
+		nextRun: "Next run",
+		active: "Active",
+		paused: "Paused",
+		pause: "Pause",
+		resume: "Resume",
+		edit: {
+			title: "Edit Recurring Rule",
+		},
+		delete: {
+			title: "Delete Recurring Rule",
+			description:
+				'Are you sure you want to delete the recurring rule for "{{name}}"? This cannot be undone.',
+			confirm: "Delete",
+		},
+		toast: {
+			updated: "Recurring rule updated",
+			deleted: "Recurring rule deleted",
+			paused: "Recurring rule paused",
+			resumed: "Recurring rule resumed",
 		},
 	},
 	update: {
