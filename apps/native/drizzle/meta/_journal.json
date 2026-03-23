@@ -43,6 +43,13 @@
       "when": 1774169333465,
       "tag": "0005_unknown_puppet_master",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1774236020281,
+      "tag": "0006_misty_daimon_hellstrom",
+      "breakpoints": true
     }
   ]
 }

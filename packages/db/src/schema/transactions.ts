@@ -10,6 +10,7 @@ import {
 import { timestamp } from "../utils";
 import { accounts } from "./accounts";
 import { categories } from "./categories";
+import { recurrences } from "./recurrences";
 
 export const transactions = sqliteTable(
 	"transactions",
@@ -49,5 +50,9 @@ export const transactionRelations = relations(transactions, ({ one }) => ({
 	toAccount: one(accounts, {
 		fields: [transactions.toAccountId],
 		references: [accounts.id],
+	}),
+	recurrence: one(recurrences, {
+		fields: [transactions.id],
+		references: [recurrences.templateTransactionId],
 	}),
 }));
