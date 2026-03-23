@@ -36,6 +36,15 @@
 		"desktop:build": {
 			"dependsOn": ["^build"],
 			"outputs": ["dist/**"]
+		},
+		"doctor": {
+			"cache": false
+		},
+		"android": {
+			"cache": false
+		},
+		"dev:android": {
+			"cache": false
 		}
 	}
 }

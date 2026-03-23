@@ -1,16 +1,16 @@
 import "@/global.css";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
 import { Stack } from "expo-router";
 import { HeroUINativeProvider } from "heroui-native";
-import { ActivityIndicator, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
+import { SplashScreen } from "@/components/splash-screen";
 import { AppThemeProvider } from "@/contexts/app-theme-context";
 import migrations from "@/drizzle/migrations";
 import { db } from "@/lib/db";
-
-const queryClient = new QueryClient();
+import { queryClient } from "@/lib/trpc";
 
 export const unstable_settings = {
 	initialRouteName: "(drawer)",
@@ -40,11 +40,7 @@ function MigratedApp() {
 	}
 
 	if (!success) {
-		return (
-			<View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-				<ActivityIndicator />
-			</View>
-		);
+		return <SplashScreen />;
 	}
 
 	return (
