@@ -224,10 +224,13 @@ export default function DataTableActionCell({
 								focus:bg-destructive
 								onClick={() => setIsOpen(true)}
 								render={
-									<div className="flex items-center gap-2">
+									<button
+										type="button"
+										className="flex w-full items-center gap-2"
+									>
 										{deleteIcon}
 										{resolvedDeleteText}
-									</div>
+									</button>
 								}
 							/>
 						</DropdownMenuItem>

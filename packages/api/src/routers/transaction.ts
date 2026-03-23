@@ -3,6 +3,7 @@ import {
 	createRecurrence,
 	createTransaction,
 	deleteTransaction,
+	getAllFilteredTransactions,
 	getOffsetPaginatedTransactions,
 	getRecurrenceByTemplateId,
 	getTransactionSummary,
@@ -10,6 +11,7 @@ import {
 	updateTransaction,
 } from "@finance-tracker/queries";
 import {
+	exportTransactionsSchema,
 	paginatedTransactionsSchema,
 	summaryFiltersSchema,
 	transactionFiltersSchema,
@@ -53,7 +55,10 @@ export const transactionRouter = createTRPCRouter({
 			if (err) throw toTRPCError(err);
 
 			if (recurrenceInput && data) {
-				const nextRunAt = computeNextRunAt(recurrenceInput.frequency, data.date);
+				const nextRunAt = computeNextRunAt(
+					recurrenceInput.frequency,
+					data.date,
+				);
 				const [, recErr] = await tryCatchAsync(() =>
 					createRecurrence(ctx.db, {
 						templateTransactionId: data.id,
@@ -96,6 +101,16 @@ export const transactionRouter = createTRPCRouter({
 
 			const [data, err] = await tryCatchAsync(() =>
 				deleteTransaction(ctx.db, input.id),
+			);
+			if (err) throw toTRPCError(err);
+			return data;
+		}),
+
+	exportData: publicProcedure
+		.input(exportTransactionsSchema)
+		.query(async ({ ctx, input }) => {
+			const [data, err] = await tryCatchAsync(() =>
+				getAllFilteredTransactions(ctx.db, input),
 			);
 			if (err) throw toTRPCError(err);
 			return data;

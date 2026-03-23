@@ -18,6 +18,19 @@ if (!("electronDataManager" in window)) {
 			ipcRenderer.invoke("restore-database"),
 		wipe: (): Promise<{ success: boolean; error?: string }> =>
 			ipcRenderer.invoke("wipe-database"),
+		exportFile: (payload: {
+			content: string;
+			format: "csv" | "json";
+			defaultName: string;
+		}): Promise<{ success: boolean; cancelled?: boolean; error?: string }> =>
+			ipcRenderer.invoke("export-file", payload),
+		importFile: (): Promise<{
+			success: boolean;
+			cancelled?: boolean;
+			content?: string;
+			filename?: string;
+			error?: string;
+		}> => ipcRenderer.invoke("import-file"),
 	});
 }
 

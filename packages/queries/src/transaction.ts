@@ -1,5 +1,6 @@
 import { type AnyDatabase, accounts, transactions } from "@finance-tracker/db";
 import type {
+	ExportTransactionsInput,
 	PaginatedTransactionsInput,
 	TransactionInput,
 	UpdateTransactionInput,
@@ -109,6 +110,19 @@ export async function deleteTransaction(db: AnyDatabase, id: string) {
 	}
 
 	return result;
+}
+
+export async function getAllFilteredTransactions(
+	db: AnyDatabase,
+	input: ExportTransactionsInput,
+) {
+	const result = await getOffsetPaginated({
+		db,
+		table: transactions,
+		input: { ...input, page: 1, limit: 100_000 },
+		conditions: [],
+	});
+	return result.data as (typeof transactions.$inferSelect)[];
 }
 
 export async function getTransactionSummary(
