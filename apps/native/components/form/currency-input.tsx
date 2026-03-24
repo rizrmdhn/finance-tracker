@@ -58,13 +58,14 @@ export function CurrencyInput({
 	return (
 		<View
 			className={cn(
-				"flex h-10 flex-row items-center overflow-hidden rounded-md border border-input bg-background shadow-black/5 shadow-sm dark:bg-input/30",
+				"flex h-10 flex-row items-center rounded-md border border-input bg-background shadow-black/5 shadow-sm dark:bg-input/30",
 				focused && "border-ring",
 				className,
 			)}
 		>
 			<TextInput
 				className="flex-1 px-3 text-base text-foreground"
+				style={{ height: 40, textAlignVertical: "center", lineHeight: undefined }}
 				keyboardType="numeric"
 				value={display}
 				onChangeText={handleChangeText}

@@ -13,6 +13,7 @@ import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
+import { OnboardingScreen } from "@/components/onboarding-screen";
 import { SplashScreen } from "@/components/splash-screen";
 import { ToastBridge } from "@/components/toast-bridge";
 import { AppThemeProvider } from "@/contexts/app-theme-context";
@@ -53,6 +54,10 @@ function MigratedApp() {
 			.execute();
 	}, [success]);
 
+	const { data: onboarding, isLoading } = useQuery(
+		trpc.appSetting.get.queryOptions({ key: "onboarding" }),
+	);
+
 	const { data: language } = useQuery(
 		trpc.appSetting.get.queryOptions({ key: "language" }),
 	);
@@ -73,8 +78,12 @@ function MigratedApp() {
 		);
 	}
 
-	if (!success) {
+	if (!success || isLoading) {
 		return <SplashScreen />;
+	}
+
+	if (onboarding?.value === "pending") {
+		return <OnboardingScreen />;
 	}
 
 	return <StackLayout />;

@@ -170,7 +170,7 @@ export function IconPicker({ value, onChange, color }: IconPickerProps) {
 		<>
 			<Pressable
 				onPress={() => setModalVisible(true)}
-				className="size-10 items-center justify-center rounded-md border border-input bg-background"
+				className="size-10 w-full items-center justify-center rounded-md border border-input bg-background"
 			>
 				{SelectedIcon ? (
 					<SelectedIcon size={16} color={color ?? "#94a3b8"} />
