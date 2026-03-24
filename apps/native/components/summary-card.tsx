@@ -29,7 +29,11 @@ export function SummaryCard({
 				</View>
 			</CardHeader>
 			<CardContent>
-				<Text className={`font-bold text-2xl tabular-nums ${valueColor}`}>
+				<Text
+					className={`font-bold text-2xl tabular-nums ${valueColor}`}
+					numberOfLines={1}
+					adjustsFontSizeToFit
+				>
 					{formatCurrency(value)}
 				</Text>
 			</CardContent>

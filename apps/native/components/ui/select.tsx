@@ -33,7 +33,7 @@ function SelectValue({
 		<SelectPrimitive.Value
 			ref={ref}
 			className={cn(
-				"line-clamp-1 flex flex-row items-center gap-2 text-foreground text-sm",
+				"line-clamp-1 flex flex-1 flex-row items-center gap-2 text-foreground text-sm",
 				!value && "text-muted-foreground",
 				className,
 			)}
@@ -71,7 +71,7 @@ function SelectTrigger({
 			<Icon
 				as={ChevronDown}
 				aria-hidden={true}
-				className="size-4 text-muted-foreground"
+				className="size-4 shrink-0 text-muted-foreground"
 			/>
 		</SelectPrimitive.Trigger>
 	);
