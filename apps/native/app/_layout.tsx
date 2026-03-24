@@ -18,6 +18,7 @@ import { SplashScreen } from "@/components/splash-screen";
 import { ToastBridge } from "@/components/toast-bridge";
 import { AppThemeProvider } from "@/contexts/app-theme-context";
 import migrations from "@/drizzle/migrations";
+import { useNavigationPersistence } from "@/hooks/use-navigation-persistence";
 import { db } from "@/lib/db";
 import { queryClient, trpc } from "@/lib/trpc";
 
@@ -26,6 +27,8 @@ export const unstable_settings = {
 };
 
 function StackLayout() {
+	useNavigationPersistence();
+
 	return (
 		<Stack screenOptions={{}}>
 			<Stack.Screen name="(drawer)" options={{ headerShown: false }} />
