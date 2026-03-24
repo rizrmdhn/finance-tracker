@@ -71,7 +71,7 @@ export default function CreateAccountDialog({
 		<ModalSheet
 			open={open}
 			onClose={() => setIsOpen(false)}
-			title={t("transactions.create.title")}
+			title={t("accounts.create.title")}
 		>
 			<Controller
 				control={form.control}
