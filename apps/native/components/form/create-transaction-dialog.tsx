@@ -255,7 +255,7 @@ export default function CreateTransactionDialog({
 									<SelectTrigger className="w-full">
 										<SelectValue placeholder="Select frequency" />
 									</SelectTrigger>
-									<SelectContent>
+									<SelectContent portalHost="modal-select">
 										{RECURRENCE_FREQUENCIES.map((f) => (
 											<SelectItem
 												key={f}

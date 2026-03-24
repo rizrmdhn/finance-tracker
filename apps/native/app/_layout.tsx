@@ -7,15 +7,14 @@ import { PortalHost } from "@rn-primitives/portal";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
 import { Stack } from "expo-router";
-import { HeroUINativeProvider } from "heroui-native";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
+import { Toaster } from "sonner-native";
 import { OnboardingScreen } from "@/components/onboarding-screen";
 import { SplashScreen } from "@/components/splash-screen";
-import { ToastBridge } from "@/components/toast-bridge";
 import { AppThemeProvider } from "@/contexts/app-theme-context";
 import migrations from "@/drizzle/migrations";
 import { useNavigationPersistence } from "@/hooks/use-navigation-persistence";
@@ -104,11 +103,9 @@ export default function Layout() {
 				<QueryClientProvider client={queryClient}>
 					<QueryDevTools />
 					<AppThemeProvider>
-						<HeroUINativeProvider>
-							<ToastBridge />
-							<MigratedApp />
-							<PortalHost />
-						</HeroUINativeProvider>
+						<MigratedApp />
+						<PortalHost />
+						<Toaster richColors />
 					</AppThemeProvider>
 				</QueryClientProvider>
 			</KeyboardProvider>

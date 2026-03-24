@@ -129,7 +129,7 @@ export default function CreateAccountDialog({
 										}
 									: undefined
 							}
-							onValueChange={field.onChange}
+							onValueChange={(option) => field.onChange(option?.value)}
 						>
 							<SelectTrigger className="w-full">
 								<SelectValue placeholder={t("common.selectAccountType")}>
@@ -140,7 +140,7 @@ export default function CreateAccountDialog({
 										: null}
 								</SelectValue>
 							</SelectTrigger>
-							<SelectContent>
+							<SelectContent portalHost="modal-select">
 								{ACCOUNT_TYPES.map((type) => (
 									<SelectItem
 										key={type}
@@ -178,7 +178,7 @@ export default function CreateAccountDialog({
 					<Field data-invalid={fieldState.invalid}>
 						<FieldLabel>{t("common.currency")}</FieldLabel>
 						<Select
-							onValueChange={field.onChange}
+							onValueChange={(option) => field.onChange(option?.value)}
 							value={
 								field.value
 									? { value: field.value, label: field.value }
@@ -188,7 +188,7 @@ export default function CreateAccountDialog({
 							<SelectTrigger className="w-full">
 								<SelectValue placeholder={t("common.selectCurrency")} />
 							</SelectTrigger>
-							<SelectContent>
+							<SelectContent portalHost="modal-select">
 								{SUPPORTED_CURRENCIES.map((currency) => (
 									<SelectItem
 										key={currency}

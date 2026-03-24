@@ -1,3 +1,4 @@
+import { PortalHost } from "@rn-primitives/portal";
 import { X } from "lucide-react-native";
 import type React from "react";
 import {
@@ -19,7 +20,12 @@ interface ModalSheetProps {
 	children: React.ReactNode;
 }
 
-export function ModalSheet({ open, onClose, title, children }: ModalSheetProps) {
+export function ModalSheet({
+	open,
+	onClose,
+	title,
+	children,
+}: ModalSheetProps) {
 	const insets = useSafeAreaInsets();
 
 	return (
@@ -54,6 +60,7 @@ export function ModalSheet({ open, onClose, title, children }: ModalSheetProps) 
 						{children}
 					</ScrollView>
 				</KeyboardAvoidingView>
+				<PortalHost name="modal-select" />
 			</View>
 		</Modal>
 	);
