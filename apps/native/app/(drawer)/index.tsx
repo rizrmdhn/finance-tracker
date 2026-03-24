@@ -11,6 +11,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { View } from "react-native";
 import { AnalyticsCard } from "@/components/analytics-card";
+import { BudgetOverviewWidget } from "@/components/budget-overview-widget";
 import { Container } from "@/components/container";
 import { AccountCombobox } from "@/components/form/account-combobox";
 import CreateTransactionDialog from "@/components/form/create-transaction-dialog";
@@ -188,6 +189,8 @@ export default function Home() {
 					categories={categories}
 				/>
 			)}
+
+			<BudgetOverviewWidget from={dateRange.from} to={dateRange.to} />
 
 			<CreateTransactionDialog
 				open={state.transaction}

@@ -222,7 +222,10 @@ export function CategoryCombobox({
 					setQuery("");
 				}}
 			>
-				<View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
+				<View
+					className="flex-1 bg-background"
+					style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
+				>
 					<KeyboardAvoidingView
 						behavior={Platform.OS === "ios" ? "padding" : "height"}
 						className="flex-1"
@@ -263,50 +266,50 @@ export function CategoryCombobox({
 						</View>
 
 						{/* List */}
-					<View style={{ flex: 1 }}>
-						<FlatList
-							data={filtered}
-							keyExtractor={(item) => item.id}
-							keyboardShouldPersistTaps="handled"
-							ListEmptyComponent={
-								<View className="items-center py-8">
-									<Text className="text-muted-foreground text-sm">
-										No categories found
-									</Text>
-								</View>
-							}
-							renderItem={({ item }) => {
-								const ItemIcon = item.icon ? ICON_MAP[item.icon] : null;
-								const isSelected = item.id === value;
-								return (
-									<Pressable
-										onPress={() => handleSelect(item.id)}
-										className={cn(
-											"flex-row items-center gap-3 px-4 py-3",
-											isSelected && "bg-accent",
-										)}
-									>
-										{ItemIcon ? (
-											<ItemIcon size={16} color={item.color ?? "#94a3b8"} />
-										) : (
-											<View
-												className="size-3 rounded-full"
-												style={{
-													backgroundColor: item.color ?? "#94a3b8",
-												}}
-											/>
-										)}
-										<Text className="flex-1 text-foreground text-sm">
-											{item.name}
+						<View style={{ flex: 1 }}>
+							<FlatList
+								data={filtered}
+								keyExtractor={(item) => item.id}
+								keyboardShouldPersistTaps="handled"
+								ListEmptyComponent={
+									<View className="items-center py-8">
+										<Text className="text-muted-foreground text-sm">
+											No categories found
 										</Text>
-										<Text className="text-muted-foreground text-xs capitalize">
-											{item.type}
-										</Text>
-									</Pressable>
-								);
-							}}
-						/>
-					</View>
+									</View>
+								}
+								renderItem={({ item }) => {
+									const ItemIcon = item.icon ? ICON_MAP[item.icon] : null;
+									const isSelected = item.id === value;
+									return (
+										<Pressable
+											onPress={() => handleSelect(item.id)}
+											className={cn(
+												"flex-row items-center gap-3 px-4 py-3",
+												isSelected && "bg-accent",
+											)}
+										>
+											{ItemIcon ? (
+												<ItemIcon size={16} color={item.color ?? "#94a3b8"} />
+											) : (
+												<View
+													className="size-3 rounded-full"
+													style={{
+														backgroundColor: item.color ?? "#94a3b8",
+													}}
+												/>
+											)}
+											<Text className="flex-1 text-foreground text-sm">
+												{item.name}
+											</Text>
+											<Text className="text-muted-foreground text-xs capitalize">
+												{item.type}
+											</Text>
+										</Pressable>
+									);
+								}}
+							/>
+						</View>
 					</KeyboardAvoidingView>
 				</View>
 			</Modal>

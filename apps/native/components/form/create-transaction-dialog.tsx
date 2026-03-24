@@ -8,20 +8,24 @@ import {
 } from "@finance-tracker/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { X } from "lucide-react-native";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { ScrollView, View } from "react-native";
+import {
+	KeyboardAvoidingView,
+	Modal,
+	Platform,
+	Pressable,
+	ScrollView,
+	View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
 import { Button } from "../ui/button";
 import { Checkbox } from "../ui/checkbox";
-import {
-	Dialog,
-	DialogContent,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from "../ui/dialog";
+import { Field, FieldDescription, FieldError, FieldLabel } from "../ui/field";
+import { Icon } from "../ui/icon";
 import { Label } from "../ui/label";
 import {
 	Select,
@@ -49,6 +53,7 @@ export default function CreateTransactionDialog({
 	setIsOpen,
 }: CreateTransactionDialogProps) {
 	const { t } = useTranslation();
+	const insets = useSafeAreaInsets();
 
 	const form = useForm<TransactionInput>({
 		resolver: zodResolver(transactionSchema),
@@ -97,35 +102,50 @@ export default function CreateTransactionDialog({
 	const isTransfer = selectedCategory?.type === "transfer";
 
 	return (
-		<Dialog open={open} onOpenChange={setIsOpen}>
-			<DialogContent>
-				<DialogHeader>
-					<DialogTitle>{t("transactions.create.title")}</DialogTitle>
-				</DialogHeader>
-
-				<ScrollView
+		<Modal
+			visible={open}
+			animationType="slide"
+			presentationStyle="pageSheet"
+			onRequestClose={() => setIsOpen(false)}
+		>
+			<View
+				className="flex-1 bg-background"
+				style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
+			>
+				<KeyboardAvoidingView
+					behavior={Platform.OS === "ios" ? "padding" : "height"}
 					className="flex-1"
-					showsVerticalScrollIndicator={false}
-					keyboardShouldPersistTaps="handled"
 				>
-					<View className="gap-4">
+					{/* Header */}
+					<View className="flex-row items-center justify-between border-border border-b px-4 py-3">
+						<Text className="font-semibold text-base text-foreground">
+							{t("transactions.create.title")}
+						</Text>
+						<Pressable onPress={() => setIsOpen(false)} hitSlop={8}>
+							<Icon as={X} className="size-5 text-foreground" />
+						</Pressable>
+					</View>
+
+					<ScrollView
+						contentContainerClassName="gap-4 px-4 py-4"
+						showsVerticalScrollIndicator={false}
+						keyboardShouldPersistTaps="handled"
+					>
 						<Controller
 							control={form.control}
 							name="accountId"
 							render={({ field, fieldState }) => (
-								<View className="gap-1.5">
-									<Label>{t("common.account")}</Label>
+								<Field>
+									<FieldLabel invalid={fieldState.invalid}>
+										{t("common.account")}
+									</FieldLabel>
 									<AccountCombobox
 										value={field.value}
 										onChange={field.onChange}
 										accounts={accounts}
 									/>
-									{fieldState.invalid && (
-										<Text className="text-destructive text-sm">
-											{fieldState.error?.message}
-										</Text>
-									)}
-								</View>
+									<FieldError errors={[fieldState.error]} />
+								</Field>
 							)}
 						/>
 
@@ -133,19 +153,17 @@ export default function CreateTransactionDialog({
 							control={form.control}
 							name="categoryId"
 							render={({ field, fieldState }) => (
-								<View className="gap-1.5">
-									<Label>{t("common.category")}</Label>
+								<Field>
+									<FieldLabel invalid={fieldState.invalid}>
+										{t("common.category")}
+									</FieldLabel>
 									<CategoryCombobox
 										value={field.value}
 										onChange={field.onChange}
 										categories={categories}
 									/>
-									{fieldState.invalid && (
-										<Text className="text-destructive text-sm">
-											{fieldState.error?.message}
-										</Text>
-									)}
-								</View>
+									<FieldError errors={[fieldState.error]} />
+								</Field>
 							)}
 						/>
 
@@ -154,19 +172,17 @@ export default function CreateTransactionDialog({
 								control={form.control}
 								name="toAccountId"
 								render={({ field, fieldState }) => (
-									<View className="gap-1.5">
-										<Label>{t("common.toAccount")}</Label>
+									<Field>
+										<FieldLabel invalid={fieldState.invalid}>
+											{t("common.toAccount")}
+										</FieldLabel>
 										<AccountCombobox
 											value={field.value}
 											onChange={field.onChange}
 											accounts={accounts}
 										/>
-										{fieldState.invalid && (
-											<Text className="text-destructive text-sm">
-												{fieldState.error?.message}
-											</Text>
-										)}
-									</View>
+										<FieldError errors={[fieldState.error]} />
+									</Field>
 								)}
 							/>
 						)}
@@ -176,18 +192,16 @@ export default function CreateTransactionDialog({
 								control={form.control}
 								name="amount"
 								render={({ field, fieldState }) => (
-									<View className="flex-1 gap-1.5">
-										<Label>{t("common.amount")}</Label>
+									<Field className="flex-1">
+										<FieldLabel invalid={fieldState.invalid}>
+											{t("common.amount")}
+										</FieldLabel>
 										<CurrencyInput
 											value={field.value}
 											onChange={field.onChange}
 										/>
-										{fieldState.invalid && (
-											<Text className="text-destructive text-sm">
-												{fieldState.error?.message}
-											</Text>
-										)}
-									</View>
+										<FieldError errors={[fieldState.error]} />
+									</Field>
 								)}
 							/>
 
@@ -195,15 +209,13 @@ export default function CreateTransactionDialog({
 								control={form.control}
 								name="tags"
 								render={({ field, fieldState }) => (
-									<View className="flex-1 gap-1.5">
-										<Label>{t("common.tags")}</Label>
+									<Field className="flex-1">
+										<FieldLabel invalid={fieldState.invalid}>
+											{t("common.tags")}
+										</FieldLabel>
 										<TagsInput value={field.value} onChange={field.onChange} />
-										{fieldState.invalid && (
-											<Text className="text-destructive text-sm">
-												{fieldState.error?.message}
-											</Text>
-										)}
-									</View>
+										<FieldError errors={[fieldState.error]} />
+									</Field>
 								)}
 							/>
 						</View>
@@ -212,20 +224,18 @@ export default function CreateTransactionDialog({
 							control={form.control}
 							name="note"
 							render={({ field, fieldState }) => (
-								<View className="gap-1.5">
-									<Label>{t("common.note")}</Label>
+								<Field>
+									<FieldLabel invalid={fieldState.invalid}>
+										{t("common.note")}
+									</FieldLabel>
 									<Textarea
 										placeholder={t("transactions.notePlaceholder")}
 										value={field.value}
 										onChangeText={field.onChange}
 										onBlur={field.onBlur}
 									/>
-									{fieldState.invalid && (
-										<Text className="text-destructive text-sm">
-											{fieldState.error?.message}
-										</Text>
-									)}
-								</View>
+									<FieldError errors={[fieldState.error]} />
+								</Field>
 							)}
 						/>
 
@@ -233,15 +243,13 @@ export default function CreateTransactionDialog({
 							control={form.control}
 							name="date"
 							render={({ field, fieldState }) => (
-								<View className="gap-1.5">
-									<Label>{t("common.date")}</Label>
+								<Field>
+									<FieldLabel invalid={fieldState.invalid}>
+										{t("common.date")}
+									</FieldLabel>
 									<DatePicker value={field.value} onChange={field.onChange} />
-									{fieldState.invalid && (
-										<Text className="text-destructive text-sm">
-											{fieldState.error?.message}
-										</Text>
-									)}
-								</View>
+									<FieldError errors={[fieldState.error]} />
+								</Field>
 							)}
 						/>
 
@@ -266,8 +274,10 @@ export default function CreateTransactionDialog({
 									control={form.control}
 									name="recurrence.frequency"
 									render={({ field, fieldState }) => (
-										<View className="gap-1.5">
-											<Label>{t("transactions.frequency")}</Label>
+										<Field>
+											<FieldLabel invalid={fieldState.invalid}>
+												{t("transactions.frequency")}
+											</FieldLabel>
 											<Select
 												value={
 													field.value
@@ -294,12 +304,8 @@ export default function CreateTransactionDialog({
 													))}
 												</SelectContent>
 											</Select>
-											{fieldState.invalid && (
-												<Text className="text-destructive text-sm">
-													{fieldState.error?.message}
-												</Text>
-											)}
-										</View>
+											<FieldError errors={[fieldState.error]} />
+										</Field>
 									)}
 								/>
 
@@ -307,40 +313,38 @@ export default function CreateTransactionDialog({
 									control={form.control}
 									name="recurrence.endDate"
 									render={({ field, fieldState }) => (
-										<View className="gap-1.5">
+										<Field>
 											<View className="flex-row items-center gap-1">
-												<Label>{t("transactions.endDate")}</Label>
-												<Text className="text-muted-foreground text-xs">
+												<FieldLabel invalid={fieldState.invalid}>
+													{t("transactions.endDate")}
+												</FieldLabel>
+												<FieldDescription>
 													({t("common.optional")})
-												</Text>
+												</FieldDescription>
 											</View>
 											<DatePicker
 												value={field.value}
 												onChange={field.onChange}
 											/>
-											{fieldState.invalid && (
-												<Text className="text-destructive text-sm">
-													{fieldState.error?.message}
-												</Text>
-											)}
-										</View>
+											<FieldError errors={[fieldState.error]} />
+										</Field>
 									)}
 								/>
 							</>
 						)}
-					</View>
-				</ScrollView>
 
-				<DialogFooter>
-					<Button
-						onPress={() => form.handleSubmit(onSubmit)()}
-						disabled={createTransactionMutation.isPending}
-					>
-						{createTransactionMutation.isPending && <Spinner />}
-						<Text>{t("common.create")}</Text>
-					</Button>
-				</DialogFooter>
-			</DialogContent>
-		</Dialog>
+						{/* Footer inside scroll so button is always reachable */}
+						<Button
+							onPress={() => form.handleSubmit(onSubmit)()}
+							disabled={createTransactionMutation.isPending}
+							className="mt-2"
+						>
+							{createTransactionMutation.isPending && <Spinner />}
+							<Text>{t("common.create")}</Text>
+						</Button>
+					</ScrollView>
+				</KeyboardAvoidingView>
+			</View>
+		</Modal>
 	);
 }

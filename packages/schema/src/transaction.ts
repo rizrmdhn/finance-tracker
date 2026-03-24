@@ -15,16 +15,20 @@ export const paginatedTransactionsSchema =
 	createPaginationSchema(SORTABLE_FIELDS);
 
 export const transactionSchema = z.object({
-	amount: z.number().positive(),
+	amount: z
+		.number({ error: "Amount is required" })
+		.positive({ error: "Amount must be greater than 0" }),
 	note: z.string().optional(),
-	categoryId: z.string(),
-	accountId: z.string(),
-	toAccountId: z.string().optional(),
+	categoryId: z.string({ error: "Category is required" }),
+	accountId: z.string({ error: "Account is required" }),
+	toAccountId: z.string({ error: "Destination account is required" }).optional(),
 	tags: z.array(z.string()).optional(),
-	date: z.number(),
+	date: z.number({ error: "Date is required" }),
 	recurrence: z
 		.object({
-			frequency: z.enum(RECURRENCE_FREQUENCIES),
+			frequency: z.enum(RECURRENCE_FREQUENCIES, {
+				error: "Please select a frequency",
+			}),
 			endDate: z.number().optional(),
 		})
 		.optional(),

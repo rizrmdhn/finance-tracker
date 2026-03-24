@@ -222,7 +222,7 @@ export function AccountCombobox({
 			>
 				<View
 					className="flex-1 bg-background"
-					style={{ paddingTop: insets.top }}
+					style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
 				>
 					<KeyboardAvoidingView
 						behavior={Platform.OS === "ios" ? "padding" : "height"}

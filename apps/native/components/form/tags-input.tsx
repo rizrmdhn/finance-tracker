@@ -61,11 +61,9 @@ export function TagsInput({
 			{value.map((tag) => (
 				<View
 					key={tag}
-					className="flex-row items-center gap-1 rounded bg-accent px-1.5 py-0.5"
+					className="flex-row items-center gap-1 rounded bg-muted px-1.5 py-0.5"
 				>
-					<Text className="font-medium text-accent-foreground text-xs">
-						{tag}
-					</Text>
+					<Text className="font-medium text-foreground text-xs">{tag}</Text>
 					<Pressable onPress={() => removeTag(tag)} hitSlop={4}>
 						<Icon as={X} className="size-3 text-muted-foreground" />
 					</Pressable>

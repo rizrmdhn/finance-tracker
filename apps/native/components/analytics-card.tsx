@@ -1,8 +1,7 @@
 import type { Category, Transaction } from "@finance-tracker/types";
-import { cn, useThemeColor } from "heroui-native";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Dimensions, Text, TouchableOpacity, View } from "react-native";
+import { Dimensions, TouchableOpacity, View } from "react-native";
 import {
 	Area,
 	Bar,
@@ -11,7 +10,10 @@ import {
 	Pie,
 	PolarChart,
 } from "victory-native";
+import { useThemeColor } from "@/lib/theme";
+import { cn } from "@/lib/utils";
 import { formatCurrency, getMonthsInRange } from "@/lib/utils";
+import { Text } from "./ui/text";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CHART_WIDTH = SCREEN_WIDTH - 32;

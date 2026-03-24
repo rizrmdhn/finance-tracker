@@ -7,10 +7,7 @@ import { PortalHost } from "@rn-primitives/portal";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
 import { Stack } from "expo-router";
-import {
-	HeroUINativeProvider,
-	PortalHost as HerouiPortaHost,
-} from "heroui-native";
+import { HeroUINativeProvider } from "heroui-native";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
@@ -98,7 +95,6 @@ export default function Layout() {
 						<HeroUINativeProvider>
 							<ToastBridge />
 							<MigratedApp />
-							<HerouiPortaHost />
 							<PortalHost />
 						</HeroUINativeProvider>
 					</AppThemeProvider>
