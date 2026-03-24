@@ -1,8 +1,18 @@
 import "@/global.css";
-import { QueryClientProvider } from "@tanstack/react-query";
+import "@/lib/i18n";
+import { useReactQueryDevTools } from "@dev-plugins/react-query";
+import { APP_SETTINGS_DEFAULTS } from "@finance-tracker/constants";
+import * as schema from "@finance-tracker/db";
+import { PortalHost } from "@rn-primitives/portal";
+import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
 import { Stack } from "expo-router";
-import { HeroUINativeProvider, PortalHost } from "heroui-native";
+import {
+	HeroUINativeProvider,
+	PortalHost as HerouiPortaHost,
+} from "heroui-native";
+import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
@@ -11,7 +21,7 @@ import { ToastBridge } from "@/components/toast-bridge";
 import { AppThemeProvider } from "@/contexts/app-theme-context";
 import migrations from "@/drizzle/migrations";
 import { db } from "@/lib/db";
-import { queryClient } from "@/lib/trpc";
+import { queryClient, trpc } from "@/lib/trpc";
 
 export const unstable_settings = {
 	initialRouteName: "(drawer)",
@@ -30,12 +40,38 @@ function StackLayout() {
 }
 
 function MigratedApp() {
+	const { i18n } = useTranslation();
 	const { success, error } = useMigrations(db, migrations);
+
+	useEffect(() => {
+		if (!success) return;
+		db.insert(schema.appSettings)
+			.values(
+				Object.entries(APP_SETTINGS_DEFAULTS).map(([key, value]) => ({
+					key,
+					value,
+				})),
+			)
+			.onConflictDoNothing()
+			.execute();
+	}, [success]);
+
+	const { data: language } = useQuery(
+		trpc.appSetting.get.queryOptions({ key: "language" }),
+	);
+
+	useEffect(() => {
+		if (language?.value) {
+			i18n.changeLanguage(language.value);
+		}
+	}, [language, i18n]);
 
 	if (error) {
 		return (
-			<View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-				<Text>Migration error: {error.message}</Text>
+			<View className="flex-1 items-center justify-center p-4">
+				<Text className="mb-2 font-bold text-lg text-red-500">
+					Migration error: {error.message}
+				</Text>
 			</View>
 		);
 	}
@@ -47,15 +83,22 @@ function MigratedApp() {
 	return <StackLayout />;
 }
 
+function QueryDevTools() {
+	useReactQueryDevTools(queryClient);
+	return null;
+}
+
 export default function Layout() {
 	return (
 		<GestureHandlerRootView style={{ flex: 1 }}>
 			<KeyboardProvider>
 				<QueryClientProvider client={queryClient}>
+					<QueryDevTools />
 					<AppThemeProvider>
 						<HeroUINativeProvider>
 							<ToastBridge />
 							<MigratedApp />
+							<HerouiPortaHost />
 							<PortalHost />
 						</HeroUINativeProvider>
 					</AppThemeProvider>

@@ -1,9 +1,7 @@
-import { Ionicons } from "@expo/vector-icons";
-import { Spinner } from "heroui-native";
+import { Wallet } from "lucide-react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
-import { withUniwind } from "uniwind";
-
-const StyledIonicons = withUniwind(Ionicons);
+import { Icon } from "./ui/icon";
+import { Spinner } from "./ui/spinner";
 
 export function SplashScreen() {
 	return (
@@ -13,11 +11,7 @@ export function SplashScreen() {
 		>
 			<Animated.View className="flex-col items-center gap-4">
 				<Animated.View className="h-16 w-16 items-center justify-center rounded-2xl bg-primary shadow-lg">
-					<StyledIonicons
-						name="wallet-outline"
-						size={32}
-						className="text-primary-foreground"
-					/>
+					<Icon as={Wallet} className="size-8 text-primary-foreground" />
 				</Animated.View>
 				<Animated.View className="flex-col items-center gap-1">
 					<Animated.Text className="font-semibold text-foreground text-xl tracking-tight">
@@ -28,7 +22,7 @@ export function SplashScreen() {
 					</Animated.Text>
 				</Animated.View>
 			</Animated.View>
-			<Spinner size="sm" />
+			<Spinner className="size-8" />
 		</Animated.View>
 	);
 }

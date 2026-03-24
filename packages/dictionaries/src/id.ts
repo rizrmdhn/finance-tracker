@@ -6,6 +6,12 @@ export const id = {
 		description:
 			"Lacak keuangan Anda dengan mudah. Kelola pemasukan, pengeluaran, dan anggaran Anda dalam satu tempat.",
 	},
+	analitics: {
+		title: "Analitik",
+		incomeAndExpense: "Pemasukan & Pengeluaran",
+		byCategory: "Berdasarkan Kategori",
+		balanceOverTime: "Saldo Seiring Waktu",
+	},
 	sidebar: {
 		dashboard: "Dasbor",
 		accounts: "Akun",
@@ -49,6 +55,16 @@ export const id = {
 		seeDetails: "Lihat detail",
 		printPDF: "Cetak PDF",
 		viewAll: "Lihat semua",
+		selectStartDate: "Pilih tanggal mulai",
+		selectEndDate: "Pilih tanggal berakhir",
+		from: "Dari",
+		reset: "Atur ulang",
+		thisMonth: "Bulan ini",
+		lastMonth: "Bulan lalu",
+		thisWeek: "Minggu ini",
+		lastWeek: "Minggu lalu",
+		today: "Hari ini",
+		yesterday: "Kemarin",
 	},
 	errors: {
 		noData: "Tidak ada data",
@@ -70,7 +86,8 @@ export const id = {
 		transfer: "Transfer",
 		savings: "Tabungan",
 		budgetOverview: "Ringkasan Anggaran",
-		noBudgetsDescription: "Belum ada anggaran. Tambahkan anggaran untuk melacak batas pengeluaran Anda.",
+		noBudgetsDescription:
+			"Belum ada anggaran. Tambahkan anggaran untuk melacak batas pengeluaran Anda.",
 	},
 	accounts: {
 		title: "Akun",
@@ -201,11 +218,13 @@ export const id = {
 			backup: "Cadangkan Data",
 			backupDescription: "Simpan salinan database ke file",
 			restore: "Pulihkan Data",
-			restoreDescription: "Ganti data saat ini dari file cadangan. Aplikasi akan dimulai ulang.",
+			restoreDescription:
+				"Ganti data saat ini dari file cadangan. Aplikasi akan dimulai ulang.",
 			wipe: "Hapus Semua Data",
 			wipeDescription: "Hapus permanen semua transaksi, akun, dan kategori",
 			wipeConfirmTitle: "Hapus semua data?",
-			wipeConfirmDescription: "Ini akan menghapus permanen semua transaksi, akun, dan kategori. Tindakan ini tidak dapat dibatalkan.",
+			wipeConfirmDescription:
+				"Ini akan menghapus permanen semua transaksi, akun, dan kategori. Tindakan ini tidak dapat dibatalkan.",
 			wipeConfirmAction: "Hapus Semua Data",
 		},
 		toast: {
@@ -272,7 +291,8 @@ export const id = {
 	recurrences: {
 		title: "Transaksi Berulang",
 		ruleCount: "{{count}} aturan",
-		noRules: "Belum ada transaksi berulang. Buat transaksi dan centang \"Ulangi\" untuk memulai.",
+		noRules:
+			'Belum ada transaksi berulang. Buat transaksi dan centang "Ulangi" untuk memulai.',
 		nextRun: "Jadwal berikutnya",
 		active: "Aktif",
 		paused: "Dijeda",

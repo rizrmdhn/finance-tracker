@@ -6,6 +6,12 @@ export const en = {
 		description:
 			"Track your finances with ease. Manage your income, expenses, and budgets all in one place.",
 	},
+	analitics: {
+		title: "Analytics",
+		incomeAndExpense: "Income & Expense",
+		byCategory: "By Category",
+		balanceOverTime: "Balance Over Time",
+	},
 	sidebar: {
 		dashboard: "Dashboard",
 		accounts: "Accounts",
@@ -49,6 +55,16 @@ export const en = {
 		seeDetails: "See details",
 		printPDF: "Print PDF",
 		viewAll: "View all",
+		selectStartDate: "Select start date",
+		selectEndDate: "Select end date",
+		from: "From",
+		reset: "Reset",
+		thisMonth: "This month",
+		lastMonth: "Last month",
+		thisWeek: "This week",
+		lastWeek: "Last week",
+		today: "Today",
+		yesterday: "Yesterday",
 	},
 	errors: {
 		noData: "No data",
@@ -70,7 +86,8 @@ export const en = {
 		transfer: "Transfer",
 		savings: "Savings",
 		budgetOverview: "Budget Overview",
-		noBudgetsDescription: "No budgets set. Add budgets to track your spending limits.",
+		noBudgetsDescription:
+			"No budgets set. Add budgets to track your spending limits.",
 	},
 	accounts: {
 		title: "Accounts",
@@ -200,11 +217,14 @@ export const en = {
 			backup: "Backup Data",
 			backupDescription: "Save a copy of your database to a file",
 			restore: "Restore Data",
-			restoreDescription: "Replace current data from a backup file. The app will restart.",
+			restoreDescription:
+				"Replace current data from a backup file. The app will restart.",
 			wipe: "Wipe All Data",
-			wipeDescription: "Permanently delete all transactions, accounts, and categories",
+			wipeDescription:
+				"Permanently delete all transactions, accounts, and categories",
 			wipeConfirmTitle: "Wipe all data?",
-			wipeConfirmDescription: "This will permanently delete all transactions, accounts, and categories. This action cannot be undone.",
+			wipeConfirmDescription:
+				"This will permanently delete all transactions, accounts, and categories. This action cannot be undone.",
 			wipeConfirmAction: "Wipe All Data",
 		},
 		toast: {
@@ -271,7 +291,8 @@ export const en = {
 	recurrences: {
 		title: "Recurring Transactions",
 		ruleCount: "{{count}} rules",
-		noRules: "No recurring transactions yet. Create a transaction and check \"Repeat\" to get started.",
+		noRules:
+			'No recurring transactions yet. Create a transaction and check "Repeat" to get started.',
 		nextRun: "Next run",
 		active: "Active",
 		paused: "Paused",

@@ -45,6 +45,13 @@
 			"persistent": true
 		},
 		"dev:android": {
+			"cache": false,
+			"interactive": true,
+			"persistent": true
+		},
+		"dev:native": {
+			"interactive": true,
+			"persistent": true,
 			"cache": false
 		}
 	}

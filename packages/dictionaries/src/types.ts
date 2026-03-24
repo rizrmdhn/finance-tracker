@@ -12,6 +12,12 @@ export interface Dictionary {
 		budgets: string;
 		settings: string;
 	};
+	analitics: {
+		title: string;
+		incomeAndExpense: string;
+		byCategory: string;
+		balanceOverTime: string;
+	};
 	common: {
 		name: string;
 		icon: string;
@@ -46,6 +52,16 @@ export interface Dictionary {
 		seeDetails: string;
 		printPDF: string;
 		viewAll: string;
+		selectStartDate: string;
+		selectEndDate: string;
+		from: string;
+		reset: string;
+		thisMonth: string;
+		lastMonth: string;
+		thisWeek: string;
+		lastWeek: string;
+		today: string;
+		yesterday: string;
 	};
 	errors: {
 		noData: string;
