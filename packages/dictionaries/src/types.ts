@@ -62,6 +62,9 @@ export interface Dictionary {
 		lastWeek: string;
 		today: string;
 		yesterday: string;
+		recentTransactions: string;
+		noTransactions: string;
+		loading: string;
 	};
 	errors: {
 		noData: string;

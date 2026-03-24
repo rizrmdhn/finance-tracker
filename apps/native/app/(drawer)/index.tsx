@@ -15,6 +15,7 @@ import { Container } from "@/components/container";
 import { AccountCombobox } from "@/components/form/account-combobox";
 import CreateTransactionDialog from "@/components/form/create-transaction-dialog";
 import { DateRangePicker } from "@/components/form/date-range-picker";
+import { RecentTransactions } from "@/components/recent-transactions";
 import { SummaryCard } from "@/components/summary-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -176,6 +177,15 @@ export default function Home() {
 					categories={categories}
 					from={dateRange.from}
 					to={dateRange.to}
+				/>
+			)}
+
+			{isTransactionsPending ? (
+				<Skeleton className="h-48 w-full rounded-xl" />
+			) : (
+				<RecentTransactions
+					transactions={transactions}
+					categories={categories}
 				/>
 			)}
 

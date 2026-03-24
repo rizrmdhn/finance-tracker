@@ -65,6 +65,9 @@ export const en = {
 		lastWeek: "Last week",
 		today: "Today",
 		yesterday: "Yesterday",
+		recentTransactions: "Recent transactions",
+		noTransactions: "No transactions",
+		loading: "Loading...",
 	},
 	errors: {
 		noData: "No data",

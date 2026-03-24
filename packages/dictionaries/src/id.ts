@@ -65,6 +65,9 @@ export const id = {
 		lastWeek: "Minggu lalu",
 		today: "Hari ini",
 		yesterday: "Kemarin",
+		recentTransactions: "Transaksi Terbaru",
+		noTransactions: "Tidak ada transaksi yang ditemukan",
+		loading: "Memuat...",
 	},
 	errors: {
 		noData: "Tidak ada data",
