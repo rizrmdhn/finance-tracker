@@ -1,7 +1,7 @@
 import type { Category, Transaction } from "@finance-tracker/types";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Dimensions, TouchableOpacity, View } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 import {
 	Area,
 	Bar,
@@ -14,8 +14,6 @@ import { useThemeColor } from "@/lib/theme";
 import { cn, formatCurrency, getMonthsInRange } from "@/lib/utils";
 import { Text } from "./ui/text";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const CHART_WIDTH = SCREEN_WIDTH - 32;
 const CHART_HEIGHT = 220;
 
 type Tab = "monthly" | "category" | "balance";
@@ -36,6 +34,7 @@ export function AnalyticsCard({
 	const { t } = useTranslation();
 
 	const [activeTab, setActiveTab] = useState<Tab>("monthly");
+	const [chartWidth, setChartWidth] = useState(0);
 
 	const mutedColor = useThemeColor("muted");
 	const borderColor = useThemeColor("border");
@@ -125,7 +124,10 @@ export function AnalyticsCard({
 	};
 
 	return (
-		<View className="rounded-xl border border-border bg-card p-4">
+		<View
+			className="rounded-xl border border-border bg-card p-4"
+			onLayout={(e) => setChartWidth(e.nativeEvent.layout.width - 32)}
+		>
 			<Text className="mb-3 font-semibold text-base text-foreground">
 				{t("analitics.title")}
 			</Text>
@@ -158,7 +160,7 @@ export function AnalyticsCard({
 			{/* Bar Chart - Monthly Income & Expense */}
 			{activeTab === "monthly" && (
 				<View>
-					<View style={{ height: CHART_HEIGHT, width: CHART_WIDTH }}>
+					<View style={{ height: CHART_HEIGHT, width: chartWidth }}>
 						<CartesianChart
 							data={monthlyData}
 							xKey="month"
@@ -229,7 +231,7 @@ export function AnalyticsCard({
 							labelKey="label"
 							valueKey="value"
 							colorKey="color"
-							canvasStyle={{ height: CHART_HEIGHT, width: CHART_WIDTH }}
+							canvasStyle={{ height: CHART_HEIGHT, width: chartWidth }}
 						>
 							<Pie.Chart innerRadius="60%" />
 						</PolarChart>
@@ -254,7 +256,7 @@ export function AnalyticsCard({
 
 			{/* Area Chart - Balance History */}
 			{activeTab === "balance" && (
-				<View style={{ height: CHART_HEIGHT, width: CHART_WIDTH }}>
+				<View style={{ height: CHART_HEIGHT, width: chartWidth }}>
 					<CartesianChart
 						data={balanceData}
 						xKey="month"
