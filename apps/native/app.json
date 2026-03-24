@@ -1,25 +1,26 @@
 {
-  "expo": {
-    "scheme": "finance-tracker",
-    "userInterfaceStyle": "automatic",
-    "orientation": "default",
-    "web": {
-      "bundler": "metro"
-    },
-    "name": "finance-tracker",
-    "slug": "finance-tracker",
-    "plugins": [
-      "expo-font",
-      "expo-router",
-      "expo-secure-store",
-      "expo-web-browser"
-    ],
-    "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
-    },
-    "android": {
-      "package": "com.anonymous.financetracker"
-    }
-  }
+	"expo": {
+		"version": "1.0.0",
+		"scheme": "finance-tracker",
+		"userInterfaceStyle": "automatic",
+		"orientation": "default",
+		"web": {
+			"bundler": "metro"
+		},
+		"name": "finance-tracker",
+		"slug": "finance-tracker",
+		"plugins": [
+			"expo-font",
+			"expo-router",
+			"expo-secure-store",
+			"expo-web-browser"
+		],
+		"experiments": {
+			"typedRoutes": true,
+			"reactCompiler": true
+		},
+		"android": {
+			"package": "com.anonymous.financetracker"
+		}
+	}
 }
