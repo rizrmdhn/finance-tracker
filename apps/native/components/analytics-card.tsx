@@ -11,8 +11,7 @@ import {
 	PolarChart,
 } from "victory-native";
 import { useThemeColor } from "@/lib/theme";
-import { cn } from "@/lib/utils";
-import { formatCurrency, getMonthsInRange } from "@/lib/utils";
+import { cn, formatCurrency, getMonthsInRange } from "@/lib/utils";
 import { Text } from "./ui/text";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
