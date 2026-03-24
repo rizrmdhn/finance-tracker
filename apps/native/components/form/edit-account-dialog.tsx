@@ -3,9 +3,14 @@ import {
 	ACCOUNT_TYPES,
 	SUPPORTED_CURRENCIES,
 } from "@finance-tracker/constants";
-import { type AccountInput, accountSchema } from "@finance-tracker/schema";
+import {
+	type AccountUpdateInput,
+	accountUpdateSchema,
+} from "@finance-tracker/schema";
+import type { Account } from "@finance-tracker/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { View } from "react-native";
@@ -27,23 +32,39 @@ import { ColorPicker } from "./color-picker";
 import { CurrencyInput } from "./currency-input";
 import { IconPicker } from "./icon-picker";
 
-interface CreateAccountDialogProps {
+interface EditAccountDialogProps {
 	open: boolean;
 	setIsOpen: (open: boolean) => void;
+	account: Account | null;
 }
 
-export default function CreateAccountDialog({
+export default function EditAccountDialog({
 	open,
 	setIsOpen,
-}: CreateAccountDialogProps) {
+	account,
+}: EditAccountDialogProps) {
 	const { t } = useTranslation();
 
-	const form = useForm<AccountInput>({
-		resolver: zodResolver(accountSchema),
+	const form = useForm<AccountUpdateInput>({
+		resolver: zodResolver(accountUpdateSchema),
 	});
 
-	const createAccountMutation = useMutation(
-		trpc.account.create.mutationOptions({
+	useEffect(() => {
+		if (account) {
+			form.reset({
+				name: account.name,
+				type: account.type,
+				color: account.color ?? undefined,
+				icon: account.icon ?? undefined,
+				initialBalance: account.initialBalance,
+				currency: account.currency,
+				id: account.id,
+			});
+		}
+	}, [account, form]);
+
+	const updateAccountMutation = useMutation(
+		trpc.account.update.mutationOptions({
 			onSuccess: async () => {
 				await Promise.all([
 					queryClient.invalidateQueries(trpc.account.list.queryOptions()),
@@ -51,27 +72,27 @@ export default function CreateAccountDialog({
 						trpc.account.listWithBalance.queryOptions(),
 					),
 				]);
-				globalSuccessToast(t("accounts.toast.created"));
+				globalSuccessToast(t("accounts.toast.updated"));
 				form.reset();
 				setIsOpen(false);
 			},
 			onError: (error) => {
 				globalErrorToast(
-					t("accounts.toast.createFailed", { message: error.message }),
+					t("accounts.toast.updateFailed", { message: error.message }),
 				);
 			},
 		}),
 	);
 
-	function onSubmit(data: AccountInput) {
-		createAccountMutation.mutate(data);
+	function onSubmit(data: AccountUpdateInput) {
+		updateAccountMutation.mutate(data);
 	}
 
 	return (
 		<ModalSheet
 			open={open}
 			onClose={() => setIsOpen(false)}
-			title={t("transactions.create.title")}
+			title={t("accounts.edit.title")}
 		>
 			<Controller
 				control={form.control}
@@ -204,11 +225,11 @@ export default function CreateAccountDialog({
 			/>
 
 			<Button
-				disabled={createAccountMutation.isPending}
+				disabled={updateAccountMutation.isPending}
 				onPress={() => form.handleSubmit(onSubmit)()}
 			>
-				{createAccountMutation.isPending && <Spinner />}
-				{t("common.create")}
+				{updateAccountMutation.isPending && <Spinner />}
+				{t("common.saveChanges")}
 			</Button>
 		</ModalSheet>
 	);
