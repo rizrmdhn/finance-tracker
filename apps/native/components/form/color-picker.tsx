@@ -63,8 +63,7 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
 						data={SUPPORTED_COLORS}
 						keyExtractor={(item) => item.value}
 						numColumns={5}
-						contentContainerStyle={{ padding: 16, gap: 8 }}
-						// columnWrapperStyle={{ gap: 8 }}
+						contentContainerStyle={{ padding: 12 }}
 						renderItem={({ item }) => (
 							<Pressable
 								onPress={() => handleSelect(item.value)}
@@ -73,7 +72,7 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
 									"h-12 flex-1 rounded-md border-2 border-transparent",
 									value === item.value && "scale-110 border-foreground/50",
 								)}
-								style={{ backgroundColor: item.value }}
+								style={{ backgroundColor: item.value, margin: 4 }}
 							/>
 						)}
 					/>
