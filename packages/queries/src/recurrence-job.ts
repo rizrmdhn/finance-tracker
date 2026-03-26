@@ -1,10 +1,17 @@
-import { type AnyDatabase, recurrences, transactions } from "@finance-tracker/db";
 import type { RecurrenceFrequency } from "@finance-tracker/constants";
+import {
+	type AnyDatabase,
+	recurrences,
+	transactions,
+} from "@finance-tracker/db";
 import { addDays, addMonths, addWeeks, addYears } from "date-fns";
 import { eq } from "drizzle-orm";
 import { getDueRecurrences } from "./recurrence";
 
-function advanceNextRunAt(frequency: RecurrenceFrequency, from: number): number {
+function advanceNextRunAt(
+	frequency: RecurrenceFrequency,
+	from: number,
+): number {
 	const date = new Date(from);
 	switch (frequency) {
 		case "daily":

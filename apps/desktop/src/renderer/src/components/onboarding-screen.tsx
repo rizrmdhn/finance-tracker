@@ -111,7 +111,10 @@ export function OnboardingScreen() {
 								render={({ field, fieldState }) => (
 									<Field data-invalid={fieldState.invalid}>
 										<FieldLabel>{t("onboarding.accountName")}</FieldLabel>
-										<Input placeholder={t("onboarding.accountNamePlaceholder")} {...field} />
+										<Input
+											placeholder={t("onboarding.accountNamePlaceholder")}
+											{...field}
+										/>
 										{fieldState.invalid && (
 											<FieldError errors={[fieldState.error]} />
 										)}
@@ -161,13 +164,16 @@ export function OnboardingScreen() {
 								render={({ field, fieldState }) => (
 									<Field data-invalid={fieldState.invalid}>
 										<FieldLabel>{t("onboarding.accountType")}</FieldLabel>
-										<Select
-											onValueChange={field.onChange}
-											value={field.value}
-										>
+										<Select onValueChange={field.onChange} value={field.value}>
 											<SelectTrigger className="w-full">
-												<SelectValue placeholder={t("common.selectAccountType")}>
-													{field.value ? ACCOUNT_TYPE_LABELS[field.value as (typeof ACCOUNT_TYPES)[number]] : null}
+												<SelectValue
+													placeholder={t("common.selectAccountType")}
+												>
+													{field.value
+														? ACCOUNT_TYPE_LABELS[
+																field.value as (typeof ACCOUNT_TYPES)[number]
+															]
+														: null}
 												</SelectValue>
 											</SelectTrigger>
 											<SelectContent>

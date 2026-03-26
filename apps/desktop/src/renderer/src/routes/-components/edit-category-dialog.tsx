@@ -145,7 +145,10 @@ export default function EditCategoryDialog({
 							render={({ field, fieldState }) => (
 								<Field data-invalid={fieldState.invalid}>
 									<FieldLabel>{t("common.name")}</FieldLabel>
-									<Input placeholder={t("categories.edit.namePlaceholder")} {...field} />
+									<Input
+										placeholder={t("categories.edit.namePlaceholder")}
+										{...field}
+									/>
 									{fieldState.invalid && (
 										<FieldError errors={[fieldState.error]} />
 									)}

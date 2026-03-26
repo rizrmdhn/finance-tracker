@@ -117,8 +117,7 @@ function BudgetsComponent() {
 									<div
 										className="size-3 shrink-0 rounded-full"
 										style={{
-											backgroundColor:
-												budget.category?.color ?? "#94a3b8",
+											backgroundColor: budget.category?.color ?? "#94a3b8",
 										}}
 									/>
 								)}
@@ -179,9 +178,7 @@ function BudgetsComponent() {
 								>
 									{budget.isOverBudget
 										? t("budgets.overBy", {
-												amount: formatCurrency(
-													Math.abs(budget.remaining),
-												),
+												amount: formatCurrency(Math.abs(budget.remaining)),
 											})
 										: t("budgets.remaining", {
 												amount: formatCurrency(budget.remaining),

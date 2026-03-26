@@ -82,7 +82,9 @@ function RouteComponent() {
 						</p>
 					)}
 				</div>
-				<Button onClick={() => openModal("create")}>{t("accounts.addAccount")}</Button>
+				<Button onClick={() => openModal("create")}>
+					{t("accounts.addAccount")}
+				</Button>
 			</div>
 
 			<div className="flex flex-col gap-2">

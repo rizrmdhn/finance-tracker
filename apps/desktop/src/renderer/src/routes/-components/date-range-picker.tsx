@@ -71,7 +71,12 @@ export function DateRangePicker({ from, to, onChange }: DateRangePickerProps) {
 					numberOfMonths={2}
 				/>
 				<div className="border-t p-3">
-					<Button variant="outline" size="sm" className="w-full" onClick={handleReset}>
+					<Button
+						variant="outline"
+						size="sm"
+						className="w-full"
+						onClick={handleReset}
+					>
 						Bulan Ini
 					</Button>
 				</div>

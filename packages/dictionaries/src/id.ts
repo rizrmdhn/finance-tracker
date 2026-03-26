@@ -173,6 +173,7 @@ export const id = {
 		noTransactionsDescription:
 			"Coba sesuaikan filter atau kata kunci pencarian Anda.",
 		notePlaceholder: "mis. Kopi dengan teman",
+		searchPlaceholder: "Cari transaksi...",
 		repeat: "Ulangi",
 		frequency: "Frekuensi",
 		endDate: "Tanggal Berakhir",

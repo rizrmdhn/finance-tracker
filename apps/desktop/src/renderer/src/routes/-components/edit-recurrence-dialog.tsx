@@ -1,4 +1,8 @@
 import {
+	RECURRENCE_FREQUENCIES,
+	REUCRRENCE_FREQUENCY_LABELS,
+} from "@finance-tracker/constants";
+import {
 	type UpdateRecurrenceInput,
 	updateRecurrenceSchema,
 } from "@finance-tracker/schema";
@@ -25,7 +29,6 @@ import {
 	SelectValue,
 } from "@finance-tracker/ui/components/select";
 import { Spinner } from "@finance-tracker/ui/components/spinner";
-import { RECURRENCE_FREQUENCIES, REUCRRENCE_FREQUENCY_LABELS } from "@finance-tracker/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { useEffect } from "react";
@@ -70,7 +73,9 @@ export default function EditRecurrenceDialog({
 	const updateMutation = useMutation(
 		trpc.recurrence.update.mutationOptions({
 			onSuccess: async () => {
-				await queryClient.invalidateQueries(trpc.recurrence.list.queryOptions());
+				await queryClient.invalidateQueries(
+					trpc.recurrence.list.queryOptions(),
+				);
 				globalSuccessToast(t("recurrences.toast.updated"));
 				setIsOpen(false);
 			},
@@ -104,10 +109,7 @@ export default function EditRecurrenceDialog({
 							render={({ field, fieldState }) => (
 								<Field data-invalid={fieldState.invalid}>
 									<FieldLabel>{t("transactions.frequency")}</FieldLabel>
-									<Select
-										value={field.value}
-										onValueChange={field.onChange}
-									>
+									<Select value={field.value} onValueChange={field.onChange}>
 										<SelectTrigger className="w-full">
 											<SelectValue />
 										</SelectTrigger>
@@ -137,10 +139,7 @@ export default function EditRecurrenceDialog({
 											({t("common.optional")})
 										</span>
 									</FieldLabel>
-									<DatePicker
-										value={field.value}
-										onChange={field.onChange}
-									/>
+									<DatePicker value={field.value} onChange={field.onChange} />
 									{fieldState.invalid && (
 										<FieldError errors={[fieldState.error]} />
 									)}

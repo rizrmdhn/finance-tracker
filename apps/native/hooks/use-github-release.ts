@@ -39,7 +39,9 @@ export function useGithubRelease(repo: string) {
 				if (!release) throw new Error("No release found");
 
 				const latestVersion = release.tag_name.replace(/^mobile\/v/, "");
-				const apkAsset = release.assets.find((a) => a.name.endsWith(".apk"));
+				const apkAsset =
+					release.assets.find((a) => a.name.includes("arm64-v8a")) ??
+					release.assets.find((a) => a.name.endsWith(".apk"));
 
 				// If current version is unknown, assume up to date to avoid false positives
 				const isUpToDate =

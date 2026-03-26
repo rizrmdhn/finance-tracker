@@ -53,6 +53,12 @@
 			"interactive": true,
 			"persistent": true,
 			"cache": false
+		},
+		"prebuild": {
+			"cache": false
+		},
+		"native:prebuild": {
+			"cache": false
 		}
 	}
 }

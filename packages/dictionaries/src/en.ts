@@ -172,6 +172,7 @@ export const en = {
 		noTransactions: "No transactions found",
 		noTransactionsDescription: "Try adjusting your filters or search query.",
 		notePlaceholder: "e.g. Coffee with friends",
+		searchPlaceholder: "Search transactions...",
 		repeat: "Repeat",
 		frequency: "Frequency",
 		endDate: "End Date",

@@ -53,9 +53,7 @@ export default function EditBudgetDialog({
 }: EditBudgetDialogProps) {
 	const { t } = useTranslation();
 
-	const { data: categories = [] } = useQuery(
-		trpc.category.list.queryOptions(),
-	);
+	const { data: categories = [] } = useQuery(trpc.category.list.queryOptions());
 
 	const expenseCategories = categories.filter((c) => c.type === "expense");
 
@@ -159,14 +157,9 @@ export default function EditBudgetDialog({
 							render={({ field, fieldState }) => (
 								<Field data-invalid={fieldState.invalid}>
 									<FieldLabel>{t("budgets.period")}</FieldLabel>
-									<Select
-										value={field.value}
-										onValueChange={field.onChange}
-									>
+									<Select value={field.value} onValueChange={field.onChange}>
 										<SelectTrigger className="w-full">
-											<SelectValue
-												placeholder={t("budgets.selectPeriod")}
-											>
+											<SelectValue placeholder={t("budgets.selectPeriod")}>
 												{field.value === "monthly"
 													? t("budgets.monthly")
 													: field.value === "weekly"
@@ -196,10 +189,7 @@ export default function EditBudgetDialog({
 							render={({ field, fieldState }) => (
 								<Field data-invalid={fieldState.invalid}>
 									<FieldLabel>{t("budgets.startDate")}</FieldLabel>
-									<DatePicker
-										value={field.value}
-										onChange={field.onChange}
-									/>
+									<DatePicker value={field.value} onChange={field.onChange} />
 									{fieldState.invalid && (
 										<FieldError errors={[fieldState.error]} />
 									)}

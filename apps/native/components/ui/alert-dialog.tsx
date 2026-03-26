@@ -129,7 +129,9 @@ function AlertDialogAction({
 		variant?: "default" | "destructive";
 	}) {
 	return (
-		<TextClassContext.Provider value={buttonTextVariants({ variant, className })}>
+		<TextClassContext.Provider
+			value={buttonTextVariants({ variant, className })}
+		>
 			<AlertDialogPrimitive.Action
 				className={cn(buttonVariants({ variant }), className)}
 				{...props}

@@ -10,7 +10,15 @@ import {
 	SidebarMenuItem,
 } from "@finance-tracker/ui/components/sidebar";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ArrowLeftRight, Home, Repeat2, Settings, Tag, Target, Wallet } from "lucide-react";
+import {
+	ArrowLeftRight,
+	Home,
+	Repeat2,
+	Settings,
+	Tag,
+	Target,
+	Wallet,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
@@ -20,7 +28,11 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
 	const navItems = [
 		{ to: "/", label: t("sidebar.dashboard"), icon: Home },
 		{ to: "/accounts", label: t("sidebar.accounts"), icon: Wallet },
-		{ to: "/transactions", label: t("sidebar.transactions"), icon: ArrowLeftRight },
+		{
+			to: "/transactions",
+			label: t("sidebar.transactions"),
+			icon: ArrowLeftRight,
+		},
 		{ to: "/recurring", label: t("sidebar.recurring"), icon: Repeat2 },
 		{ to: "/categories", label: t("sidebar.categories"), icon: Tag },
 		{ to: "/budgets", label: t("sidebar.budgets"), icon: Target },

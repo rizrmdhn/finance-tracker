@@ -28,9 +28,12 @@ export default function Accounts() {
 
 	const [selected, setSelected] = useState<AccountWithBalance | null>(null);
 
-	const { data: accounts = [], isLoading, isRefetching, refetch } = useQuery(
-		trpc.account.listWithBalance.queryOptions(),
-	);
+	const {
+		data: accounts = [],
+		isLoading,
+		isRefetching,
+		refetch,
+	} = useQuery(trpc.account.listWithBalance.queryOptions());
 
 	const deleteMutation = useMutation(
 		trpc.account.delete.mutationOptions({

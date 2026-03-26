@@ -78,7 +78,9 @@ interface UseOptimisticMutationOptions<
 	TQueryData,
 > {
 	/** The query whose cache will be optimistically updated. Can be a static options object or a function that receives mutation variables. */
-	queryOptions: { queryKey: QueryKey } | ((variables: TInput) => { queryKey: QueryKey });
+	queryOptions:
+		| { queryKey: QueryKey }
+		| ((variables: TInput) => { queryKey: QueryKey });
 	/** What kind of optimistic change to apply */
 	operation: OptimisticOperation<TInput, InferItem<TQueryData>>;
 	/** Called after the server confirms success (after optimistic) */
@@ -140,7 +142,12 @@ export function useOptimisticMutation<
 			? queryOptions(variables).queryKey
 			: queryOptions.queryKey;
 
-	return useMutation<TMutationData, TError, TInput, { previous: TQueryData; queryKey: QueryKey }>({
+	return useMutation<
+		TMutationData,
+		TError,
+		TInput,
+		{ previous: TQueryData; queryKey: QueryKey }
+	>({
 		...mutationOpts,
 
 		async onMutate(input: TInput) {
@@ -166,7 +173,10 @@ export function useOptimisticMutation<
 		async onError(error, _input, context) {
 			// 4. Roll back to the snapshot
 			if (context?.previous !== undefined && context.queryKey !== undefined) {
-				queryClient.setQueryData<TQueryData>(context.queryKey, context.previous);
+				queryClient.setQueryData<TQueryData>(
+					context.queryKey,
+					context.previous,
+				);
 			}
 			await onError?.(error);
 		},

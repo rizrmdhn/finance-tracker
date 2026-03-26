@@ -49,7 +49,9 @@ export function getMonthsInRange(from: number, to: number) {
 	const result = [];
 	while (current <= end) {
 		result.push({
-			label: new Intl.DateTimeFormat("id-ID", { month: "short" }).format(current),
+			label: new Intl.DateTimeFormat("id-ID", { month: "short" }).format(
+				current,
+			),
 			from: startOfMonth(current).getTime(),
 			to: endOfMonth(current).getTime(),
 		});

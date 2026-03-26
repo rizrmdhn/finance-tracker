@@ -31,9 +31,12 @@ export default function Budgets() {
 	const [selected, setSelected] = useState<BudgetWithSpent | null>(null);
 	const { from, to } = getCurrentMonthRange();
 
-	const { data: budgets = [], isLoading, isRefetching, refetch } = useQuery(
-		trpc.budget.listWithSpent.queryOptions({ from, to }),
-	);
+	const {
+		data: budgets = [],
+		isLoading,
+		isRefetching,
+		refetch,
+	} = useQuery(trpc.budget.listWithSpent.queryOptions({ from, to }));
 
 	const deleteMutation = useMutation(
 		trpc.budget.delete.mutationOptions({

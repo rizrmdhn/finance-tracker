@@ -115,7 +115,10 @@ export default function EditAccountDialog({
 							render={({ field, fieldState }) => (
 								<Field data-invalid={fieldState.invalid}>
 									<FieldLabel>{t("common.name")}</FieldLabel>
-									<Input placeholder={t("accounts.edit.namePlaceholder")} {...field} />
+									<Input
+										placeholder={t("accounts.edit.namePlaceholder")}
+										{...field}
+									/>
 									{fieldState.invalid && (
 										<FieldError errors={[fieldState.error]} />
 									)}

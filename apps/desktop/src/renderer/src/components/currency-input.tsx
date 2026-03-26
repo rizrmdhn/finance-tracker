@@ -27,7 +27,9 @@ export function CurrencyInput({
 	placeholder = "0",
 	className,
 }: CurrencyInputProps) {
-	const [display, setDisplay] = useState(value !== undefined ? format(value) : "");
+	const [display, setDisplay] = useState(
+		value !== undefined ? format(value) : "",
+	);
 	const isFocused = useRef(false);
 
 	useEffect(() => {
@@ -53,7 +55,9 @@ export function CurrencyInput({
 				inputMode="numeric"
 				value={display}
 				onChange={handleChange}
-				onFocus={() => { isFocused.current = true; }}
+				onFocus={() => {
+					isFocused.current = true;
+				}}
 				onBlur={handleBlur}
 				placeholder={placeholder}
 			/>

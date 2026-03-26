@@ -41,7 +41,9 @@ function RecurringComponent() {
 	const toggleMutation = useMutation(
 		trpc.recurrence.toggle.mutationOptions({
 			onSuccess: async (data) => {
-				await queryClient.invalidateQueries(trpc.recurrence.list.queryOptions());
+				await queryClient.invalidateQueries(
+					trpc.recurrence.list.queryOptions(),
+				);
 				globalSuccessToast(
 					data.isActive
 						? t("recurrences.toast.resumed")
@@ -59,7 +61,9 @@ function RecurringComponent() {
 	const deleteMutation = useMutation(
 		trpc.recurrence.delete.mutationOptions({
 			onSuccess: async () => {
-				await queryClient.invalidateQueries(trpc.recurrence.list.queryOptions());
+				await queryClient.invalidateQueries(
+					trpc.recurrence.list.queryOptions(),
+				);
 				globalSuccessToast(t("recurrences.toast.deleted"));
 				closeModal("deleteRecurrence");
 				setSelected(null);
@@ -144,7 +148,11 @@ function RecurringComponent() {
 
 							{/* Frequency badge */}
 							<span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-muted-foreground text-xs capitalize">
-								{REUCRRENCE_FREQUENCY_LABELS[rule.frequency as keyof typeof REUCRRENCE_FREQUENCY_LABELS]}
+								{
+									REUCRRENCE_FREQUENCY_LABELS[
+										rule.frequency as keyof typeof REUCRRENCE_FREQUENCY_LABELS
+									]
+								}
 							</span>
 
 							{/* Next run */}
@@ -178,7 +186,11 @@ function RecurringComponent() {
 									size="icon-sm"
 									onClick={() => toggleMutation.mutate({ id: rule.id })}
 									disabled={toggleMutation.isPending}
-									title={rule.isActive ? t("recurrences.pause") : t("recurrences.resume")}
+									title={
+										rule.isActive
+											? t("recurrences.pause")
+											: t("recurrences.resume")
+									}
 								>
 									{rule.isActive ? (
 										<PauseIcon className="size-3.5" />

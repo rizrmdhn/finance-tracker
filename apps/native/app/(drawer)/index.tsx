@@ -39,9 +39,15 @@ export default function Home() {
 		string | undefined
 	>(undefined);
 
-	const { data: accounts = [], refetch: refetchAccounts } = useQuery(trpc.account.list.queryOptions());
+	const { data: accounts = [], refetch: refetchAccounts } = useQuery(
+		trpc.account.list.queryOptions(),
+	);
 
-	const { data: summary, isPending: isSummaryPending, refetch: refetchSummary } = useQuery(
+	const {
+		data: summary,
+		isPending: isSummaryPending,
+		refetch: refetchSummary,
+	} = useQuery(
 		trpc.transaction.summary.queryOptions({
 			accountId: selectedAccountId,
 			from: dateRange.from,
@@ -49,16 +55,21 @@ export default function Home() {
 		}),
 	);
 
-	const { data: transactions = [], isPending: isTransactionsPending, refetch: refetchTransactions } =
-		useQuery(
-			trpc.transaction.list.queryOptions({
-				accountId: selectedAccountId,
-				from: dateRange.from,
-				to: dateRange.to,
-			}),
-		);
+	const {
+		data: transactions = [],
+		isPending: isTransactionsPending,
+		refetch: refetchTransactions,
+	} = useQuery(
+		trpc.transaction.list.queryOptions({
+			accountId: selectedAccountId,
+			from: dateRange.from,
+			to: dateRange.to,
+		}),
+	);
 
-	const { data: categories = [], refetch: refetchCategories } = useQuery(trpc.category.list.queryOptions());
+	const { data: categories = [], refetch: refetchCategories } = useQuery(
+		trpc.category.list.queryOptions(),
+	);
 
 	const [refreshing, setRefreshing] = useState(false);
 	const handleRefresh = useCallback(async () => {
@@ -79,7 +90,11 @@ export default function Home() {
 	const savings = summary?.savings ?? 0;
 
 	return (
-		<Container contentContainerClassName="gap-6 px-6 py-3" onRefresh={handleRefresh} refreshing={refreshing}>
+		<Container
+			contentContainerClassName="gap-6 px-6 py-3"
+			onRefresh={handleRefresh}
+			refreshing={refreshing}
+		>
 			<View className="gap-2">
 				<AccountCombobox
 					value={selectedAccountId}
