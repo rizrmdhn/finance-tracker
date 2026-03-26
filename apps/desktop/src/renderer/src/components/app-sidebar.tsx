@@ -17,6 +17,7 @@ import {
 	Settings,
 	Tag,
 	Target,
+	Trash,
 	Wallet,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -36,6 +37,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
 		{ to: "/recurring", label: t("sidebar.recurring"), icon: Repeat2 },
 		{ to: "/categories", label: t("sidebar.categories"), icon: Tag },
 		{ to: "/budgets", label: t("sidebar.budgets"), icon: Target },
+		{ to: "/trash", label: t("sidebar.trash"), icon: Trash },
 	] as const;
 
 	return (

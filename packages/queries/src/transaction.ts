@@ -20,6 +20,8 @@ import {
 	eq,
 	gt,
 	gte,
+	isNotNull,
+	isNull,
 	like,
 	lt,
 	lte,
@@ -45,14 +47,27 @@ export async function getTransactions(
 			: undefined;
 
 	return await db.query.transactions.findMany({
-		where: and(accountFilter, dateFilter),
+		where: and(isNull(transactions.deletedAt), accountFilter, dateFilter),
+		orderBy: desc(transactions.date),
+	});
+}
+
+export async function getDeletedTransactions(db: AnyDatabase) {
+	return await db.query.transactions.findMany({
+		where: isNotNull(transactions.deletedAt),
 		orderBy: desc(transactions.date),
 	});
 }
 
 export async function getTransactionById(db: AnyDatabase, id: string) {
 	return await db.query.transactions.findFirst({
-		where: eq(transactions.id, id),
+		where: and(eq(transactions.id, id), isNull(transactions.deletedAt)),
+	});
+}
+
+export async function getDeletedTransactionById(db: AnyDatabase, id: string) {
+	return await db.query.transactions.findFirst({
+		where: and(eq(transactions.id, id), isNotNull(transactions.deletedAt)),
 	});
 }
 
@@ -120,7 +135,8 @@ export async function deleteTransaction(db: AnyDatabase, id: string) {
 	}
 
 	const [result] = await db
-		.delete(transactions)
+		.update(transactions)
+		.set({ deletedAt: new Date().toISOString() })
 		.where(eq(transactions.id, id))
 		.returning();
 
@@ -129,6 +145,52 @@ export async function deleteTransaction(db: AnyDatabase, id: string) {
 	}
 
 	return result;
+}
+
+export async function restoreTransaction(db: AnyDatabase, id: string) {
+	const isExist = await getDeletedTransactionById(db, id);
+
+	if (!isExist) {
+		throw new NotFoundError("Transaction", id);
+	}
+
+	const [result] = await db
+		.update(transactions)
+		.set({ deletedAt: null })
+		.where(eq(transactions.id, id))
+		.returning();
+
+	if (!result) {
+		throw new Error("Failed to restore transaction");
+	}
+
+	return result;
+}
+
+export async function permanentDeleteTransaction(db: AnyDatabase, id: string) {
+	const isExist = await getDeletedTransactionById(db, id);
+
+	if (!isExist) {
+		throw new NotFoundError("Transaction", id);
+	}
+
+	const [result] = await db
+		.delete(transactions)
+		.where(eq(transactions.id, id))
+		.returning();
+
+	if (!result) {
+		throw new Error("Failed to permanently delete transaction");
+	}
+
+	return result;
+}
+
+export async function permanentDeleteAllTransactions(db: AnyDatabase) {
+	return await db
+		.delete(transactions)
+		.where(isNotNull(transactions.deletedAt))
+		.returning();
 }
 
 export async function getAllFilteredTransactions(
@@ -160,6 +222,7 @@ export async function getTransactionSummary(
 			where: and(
 				accountFilter,
 				between(transactions.date, input.from, input.to),
+				isNull(transactions.deletedAt),
 			),
 			with: { category: true },
 			orderBy: desc(transactions.date),
@@ -227,10 +290,13 @@ export async function searchTransactions(
 		.from(transactions)
 		.leftJoin(categories, eq(transactions.categoryId, categories.id))
 		.where(
-			or(
-				like(transactions.note, term),
-				like(categories.name, term),
-				...(isNumeric ? [eq(transactions.amount, numericQuery)] : []),
+			and(
+				or(
+					like(transactions.note, term),
+					like(categories.name, term),
+					...(isNumeric ? [eq(transactions.amount, numericQuery)] : []),
+				),
+				isNull(transactions.deletedAt),
 			),
 		)
 		.orderBy(desc(transactions.date))
@@ -307,6 +373,7 @@ export async function getInfiniteTransactions(
 				dateRangeCondition,
 				accountCondition,
 				searchCondition,
+				isNull(transactions.deletedAt),
 			),
 		)
 		.orderBy(desc(transactions.date), asc(transactions.id))

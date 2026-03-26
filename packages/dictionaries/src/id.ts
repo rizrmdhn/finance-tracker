@@ -19,6 +19,7 @@ export const id = {
 		transactions: "Transaksi",
 		recurring: "Berulang",
 		budgets: "Anggaran",
+		trash: "Sampah",
 		settings: "Pengaturan",
 	},
 	common: {
@@ -177,6 +178,7 @@ export const id = {
 		repeat: "Ulangi",
 		frequency: "Frekuensi",
 		endDate: "Tanggal Berakhir",
+		showDeleted: "Tampilkan transaksi yang dihapus",
 		create: {
 			title: "Buat Transaksi",
 		},
@@ -338,6 +340,29 @@ export const id = {
 			paused: "Aturan berulang dijeda",
 			resumed: "Aturan berulang dilanjutkan",
 			toggleFailed: "Gagal mengubah status aturan berulang: {{message}}",
+		},
+	},
+	trash: {
+		title: "Sampah",
+		description:
+			"Kelola item yang dihapus. Pulihkan atau hapus permanen transaksi, kategori, dan akun yang telah dihapus.",
+		transactions: "Transaksi",
+		categories: "Kategori",
+		accounts: "Akun",
+		emptyTrash: "Kosongkan Sampah",
+		restore: "Pulihkan",
+		permanentDelete: "Hapus Permanen",
+		noItems: "Sampah kosong",
+		noItemsDescription: "Item yang dihapus akan muncul di sini.",
+		toast: {
+			restored: "{{name}} berhasil dipulihkan",
+			restoreFailed: "Gagal memulihkan {{name}}: {{message}}",
+			permanentlyDeleted: "{{name}} berhasil dihapus permanen",
+			permanentDeleteFailed: "Gagal menghapus {{name}} permanen: {{message}}",
+			confirmPermanentDelete:
+				"Apakah Anda yakin ingin menghapus {{name}} secara permanen? Tindakan ini tidak dapat dibatalkan.",
+			confirmEmptyTrash:
+				"Ini akan menghapus semua item di sampah secara permanen. Tindakan ini tidak dapat dibatalkan.",
 		},
 	},
 	update: {

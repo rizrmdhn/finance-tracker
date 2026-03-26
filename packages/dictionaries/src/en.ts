@@ -19,6 +19,7 @@ export const en = {
 		transactions: "Transactions",
 		recurring: "Recurring",
 		budgets: "Budgets",
+		trash: "Trash",
 		settings: "Settings",
 	},
 	common: {
@@ -176,6 +177,7 @@ export const en = {
 		repeat: "Repeat",
 		frequency: "Frequency",
 		endDate: "End Date",
+		showDeleted: "Show deleted transactions",
 		create: {
 			title: "Create Transaction",
 		},
@@ -338,6 +340,30 @@ export const en = {
 			paused: "Recurring rule paused",
 			resumed: "Recurring rule resumed",
 			toggleFailed: "Failed to toggle recurring rule: {{message}}",
+		},
+	},
+	trash: {
+		title: "Trash",
+		description:
+			"Manage deleted items. Restore or permanently delete trashed transactions, categories, and accounts.",
+		transactions: "Transactions",
+		categories: "Categories",
+		accounts: "Accounts",
+		emptyTrash: "Empty Trash",
+		restore: "Restore",
+		permanentDelete: "Delete Permanently",
+		noItems: "Trash is empty",
+		noItemsDescription: "Deleted items will appear here.",
+		toast: {
+			restored: "{{name}} restored successfully",
+			restoreFailed: "Failed to restore {{name}}: {{message}}",
+			permanentlyDeleted: "{{name}} permanently deleted",
+			permanentDeleteFailed:
+				"Failed to permanently delete {{name}}: {{message}}",
+			confirmPermanentDelete:
+				'Are you sure you want to permanently delete "{{name}}"? This cannot be undone.',
+			confirmEmptyTrash:
+				"This will permanently delete all items in the trash. This cannot be undone.",
 		},
 	},
 	update: {
