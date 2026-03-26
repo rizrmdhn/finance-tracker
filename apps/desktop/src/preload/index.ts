@@ -12,10 +12,16 @@ if (!("electronApp" in window)) {
 // Guard against double-registration during HMR
 if (!("electronDataManager" in window)) {
 	contextBridge.exposeInMainWorld("electronDataManager", {
-		backup: (): Promise<{ success: boolean; cancelled?: boolean; error?: string }> =>
-			ipcRenderer.invoke("backup-database"),
-		restore: (): Promise<{ success: boolean; cancelled?: boolean; error?: string }> =>
-			ipcRenderer.invoke("restore-database"),
+		backup: (): Promise<{
+			success: boolean;
+			cancelled?: boolean;
+			error?: string;
+		}> => ipcRenderer.invoke("backup-database"),
+		restore: (): Promise<{
+			success: boolean;
+			cancelled?: boolean;
+			error?: string;
+		}> => ipcRenderer.invoke("restore-database"),
 		wipe: (): Promise<{ success: boolean; error?: string }> =>
 			ipcRenderer.invoke("wipe-database"),
 		exportFile: (payload: {
@@ -40,7 +46,10 @@ if (!("electronUpdater" in window)) {
 			ipcRenderer.send("check-for-updates");
 		},
 		onUpdateAvailable: (
-			callback: (info: { version: string; releaseNotes: string | null }) => void,
+			callback: (info: {
+				version: string;
+				releaseNotes: string | null;
+			}) => void,
 		) => {
 			ipcRenderer.on("update-available", (_event, info) => callback(info));
 		},
@@ -54,7 +63,9 @@ if (!("electronUpdater" in window)) {
 				total: number;
 			}) => void,
 		) => {
-			ipcRenderer.on("download-progress", (_event, progress) => callback(progress));
+			ipcRenderer.on("download-progress", (_event, progress) =>
+				callback(progress),
+			);
 		},
 		onUpdateDownloaded: (callback: () => void) => {
 			ipcRenderer.on("update-downloaded", () => callback());

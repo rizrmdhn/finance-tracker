@@ -47,9 +47,7 @@ export default function CreateBudgetDialog({
 }: CreateBudgetDialogProps) {
 	const { t } = useTranslation();
 
-	const { data: categories = [] } = useQuery(
-		trpc.category.list.queryOptions(),
-	);
+	const { data: categories = [] } = useQuery(trpc.category.list.queryOptions());
 
 	const expenseCategories = categories.filter((c) => c.type === "expense");
 
@@ -145,9 +143,7 @@ export default function CreateBudgetDialog({
 										defaultValue={field.value}
 									>
 										<SelectTrigger className="w-full">
-											<SelectValue
-												placeholder={t("budgets.selectPeriod")}
-											>
+											<SelectValue placeholder={t("budgets.selectPeriod")}>
 												{field.value === "monthly"
 													? t("budgets.monthly")
 													: field.value === "weekly"
@@ -177,10 +173,7 @@ export default function CreateBudgetDialog({
 							render={({ field, fieldState }) => (
 								<Field data-invalid={fieldState.invalid}>
 									<FieldLabel>{t("budgets.startDate")}</FieldLabel>
-									<DatePicker
-										value={field.value}
-										onChange={field.onChange}
-									/>
+									<DatePicker value={field.value} onChange={field.onChange} />
 									{fieldState.invalid && (
 										<FieldError errors={[fieldState.error]} />
 									)}

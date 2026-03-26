@@ -34,9 +34,12 @@ export default function Recurring() {
 
 	const [selected, setSelected] = useState<RecurrenceWithTemplate | null>(null);
 
-	const { data: recurrences = [], isLoading, isRefetching, refetch } = useQuery(
-		trpc.recurrence.list.queryOptions(),
-	);
+	const {
+		data: recurrences = [],
+		isLoading,
+		isRefetching,
+		refetch,
+	} = useQuery(trpc.recurrence.list.queryOptions());
 
 	const toggleMutation = useMutation(
 		trpc.recurrence.toggle.mutationOptions({

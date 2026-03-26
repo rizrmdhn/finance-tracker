@@ -1,15 +1,15 @@
 {
-  "version": 1,
-  "skills": {
-    "heroui-native": {
-      "source": "heroui-inc/heroui",
-      "sourceType": "github",
-      "computedHash": "069f389f0965aef6f1863306bcfdd011987a1323e756d66e85b781859a769df8"
-    },
-    "shadcn": {
-      "source": "shadcn/ui",
-      "sourceType": "github",
-      "computedHash": "77faba608ea949351d1757e29e6cb726f6ec5937f7595be0593038a7d2d76bb9"
-    }
-  }
+	"version": 1,
+	"skills": {
+		"heroui-native": {
+			"source": "heroui-inc/heroui",
+			"sourceType": "github",
+			"computedHash": "069f389f0965aef6f1863306bcfdd011987a1323e756d66e85b781859a769df8"
+		},
+		"shadcn": {
+			"source": "shadcn/ui",
+			"sourceType": "github",
+			"computedHash": "77faba608ea949351d1757e29e6cb726f6ec5937f7595be0593038a7d2d76bb9"
+		}
+	}
 }

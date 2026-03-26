@@ -196,7 +196,9 @@ function CategoriesComponent() {
 					open ? openModal("deleteCategory") : closeModal("deleteCategory")
 				}
 				title={t("categories.delete.title")}
-				description={t("categories.delete.description", { name: selected?.name })}
+				description={t("categories.delete.description", {
+					name: selected?.name,
+				})}
 				confirmText={t("categories.delete.confirm")}
 				variant="destructive"
 				isLoading={deleteMutation.isPending}

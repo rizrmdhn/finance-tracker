@@ -388,9 +388,7 @@ export function createTagsColumn<T extends RowData>(
 							{tag}
 						</Badge>
 					))}
-					{overflow > 0 && (
-						<Badge variant="outline">+{overflow}</Badge>
-					)}
+					{overflow > 0 && <Badge variant="outline">+{overflow}</Badge>}
 				</div>
 			);
 		},

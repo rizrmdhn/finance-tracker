@@ -6,7 +6,13 @@ import {
 	CardTitle,
 } from "@finance-tracker/ui/components/card";
 import { Link } from "@tanstack/react-router";
-import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Minus, PiggyBank } from "lucide-react";
+import {
+	ArrowDownLeft,
+	ArrowLeftRight,
+	ArrowUpRight,
+	Minus,
+	PiggyBank,
+} from "lucide-react";
 import { useMemo } from "react";
 import { formatCurrency, formatDate } from "./utils";
 
@@ -67,8 +73,11 @@ export function RecentTransactions({
 			<CardContent className="p-0">
 				<div className="flex flex-col gap-px">
 					{recent.map((tx) => {
-						const type = categoryMap.get(tx.categoryId ?? "")?.type ?? "transfer";
-						const config = typeConfig[type as keyof typeof typeConfig] ?? typeConfig.transfer;
+						const type =
+							categoryMap.get(tx.categoryId ?? "")?.type ?? "transfer";
+						const config =
+							typeConfig[type as keyof typeof typeConfig] ??
+							typeConfig.transfer;
 						const { Icon, iconClass, amountClass, prefix } = config;
 						const category = categoryMap.get(tx.categoryId ?? "");
 
@@ -93,7 +102,11 @@ export function RecentTransactions({
 								<span
 									className={`font-medium text-sm tabular-nums ${amountClass}`}
 								>
-									{prefix === "-" ? <Minus className="inline size-3" /> : prefix}
+									{prefix === "-" ? (
+										<Minus className="inline size-3" />
+									) : (
+										prefix
+									)}
 									{formatCurrency(tx.amount)}
 								</span>
 							</div>

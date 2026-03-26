@@ -9,9 +9,10 @@ import {
 	PencilIcon,
 	PiggyBank,
 	PlusCircle,
+	Search,
 	Trash2Icon,
 } from "lucide-react-native";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, View } from "react-native";
 import { ConfirmationDialog } from "@/components/confirmation-dialog";
@@ -21,6 +22,7 @@ import EditTransactionDialog from "@/components/form/edit-transaction-dialog";
 import { ICON_MAP } from "@/components/form/icon-picker";
 import { Button } from "@/components/ui/button";
 import { Icon as IconComp } from "@/components/ui/icon";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Text } from "@/components/ui/text";
 import useModalState from "@/hooks/use-modal-state";
@@ -67,17 +69,31 @@ export default function Transactions() {
 	});
 
 	const [selected, setSelected] = useState<Transaction | null>(null);
+	const [rawQuery, setRawQuery] = useState("");
+	const [query, setQuery] = useState("");
 
-	const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage, isRefetching, refetch } =
-		useInfiniteQuery(
-			trpc.transaction.infiniteList.infiniteQueryOptions(
-				{ limit: 25 },
-				{
-					getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-					initialCursor: undefined as string | undefined,
-				},
-			),
-		);
+	useEffect(() => {
+		const timer = setTimeout(() => setQuery(rawQuery), 300);
+		return () => clearTimeout(timer);
+	}, [rawQuery]);
+
+	const {
+		data,
+		isLoading,
+		isFetchingNextPage,
+		hasNextPage,
+		fetchNextPage,
+		isRefetching,
+		refetch,
+	} = useInfiniteQuery(
+		trpc.transaction.infiniteList.infiniteQueryOptions(
+			{ limit: 25, query: query || undefined },
+			{
+				getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+				initialCursor: undefined as string | undefined,
+			},
+		),
+	);
 
 	const { data: accounts = [] } = useQuery(trpc.account.list.queryOptions());
 
@@ -128,27 +144,45 @@ export default function Transactions() {
 	}
 
 	const ListHeader = (
-		<View className="flex flex-row items-center justify-between py-3">
-			<View>
-				<Text className="font-semibold text-xl">{t("transactions.title")}</Text>
-				{isLoading ? (
-					<Skeleton className="mt-1 h-4 w-24" />
-				) : (
-					<Text className="text-muted-foreground text-sm">
-						{items.length}{" "}
-						{t("transactions.transactionCount", { count: items.length })}
+		<View className="flex flex-col gap-3 py-3">
+			<View className="flex flex-row items-center justify-between">
+				<View>
+					<Text className="font-semibold text-xl">
+						{t("transactions.title")}
 					</Text>
-				)}
+					{isLoading ? (
+						<Skeleton className="mt-1 h-4 w-24" />
+					) : (
+						<Text className="text-muted-foreground text-sm">
+							{t("transactions.transactionCount", { count: items.length })}
+						</Text>
+					)}
+				</View>
+				<Button size="sm" onPress={() => openModal("create")}>
+					<IconComp as={PlusCircle} className="size-4" />
+					<Text>{t("transactions.addTransaction")}</Text>
+				</Button>
 			</View>
-			<Button size="sm" onPress={() => openModal("create")}>
-				<IconComp as={PlusCircle} className="size-4" />
-				<Text>{t("transactions.addTransaction")}</Text>
-			</Button>
+			<View className="flex-row items-center gap-2 rounded-md border border-input bg-background px-3 shadow-black/5 shadow-sm dark:bg-input/30">
+				<IconComp
+					as={Search}
+					className="size-4 shrink-0 text-muted-foreground"
+				/>
+				<Input
+					value={rawQuery}
+					onChangeText={setRawQuery}
+					placeholder={t("transactions.searchPlaceholder")}
+					className="flex-1 border-0 px-0 shadow-none"
+					autoCorrect={false}
+					autoCapitalize="none"
+					clearButtonMode="while-editing"
+				/>
+			</View>
 		</View>
 	);
 
 	const ListEmpty = isLoading ? (
-		<View className="flex flex-col gap-3 px-6">
+		<View className="flex flex-col gap-3">
 			{[...Array(8)].map((_) => (
 				<View
 					key={createId()}

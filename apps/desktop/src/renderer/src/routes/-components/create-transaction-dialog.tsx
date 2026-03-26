@@ -1,4 +1,8 @@
 import {
+	RECURRENCE_FREQUENCIES,
+	REUCRRENCE_FREQUENCY_LABELS,
+} from "@finance-tracker/constants";
+import {
 	type TransactionInput,
 	transactionSchema,
 } from "@finance-tracker/schema";
@@ -26,7 +30,6 @@ import {
 } from "@finance-tracker/ui/components/select";
 import { Spinner } from "@finance-tracker/ui/components/spinner";
 import { Textarea } from "@finance-tracker/ui/components/textarea";
-import { RECURRENCE_FREQUENCIES, REUCRRENCE_FREQUENCY_LABELS } from "@finance-tracker/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
@@ -243,7 +246,10 @@ export default function CreateTransactionDialog({
 										}
 									}}
 								/>
-								<FieldLabel htmlFor="repeat-checkbox" className="cursor-pointer">
+								<FieldLabel
+									htmlFor="repeat-checkbox"
+									className="cursor-pointer"
+								>
 									{t("transactions.repeat")}
 								</FieldLabel>
 							</div>

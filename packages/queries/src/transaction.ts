@@ -1,4 +1,9 @@
-import { type AnyDatabase, accounts, categories, transactions } from "@finance-tracker/db";
+import {
+	type AnyDatabase,
+	accounts,
+	categories,
+	transactions,
+} from "@finance-tracker/db";
 import type {
 	ExportTransactionsInput,
 	InfiniteTransactionsInput,
@@ -7,7 +12,19 @@ import type {
 	TransactionInput,
 	UpdateTransactionInput,
 } from "@finance-tracker/schema";
-import { and, asc, between, desc, eq, gt, gte, like, lt, lte, or } from "drizzle-orm";
+import {
+	and,
+	asc,
+	between,
+	desc,
+	eq,
+	gt,
+	gte,
+	like,
+	lt,
+	lte,
+	or,
+} from "drizzle-orm";
 import { NotFoundError } from "./errors";
 import { getOffsetPaginated } from "./utils/get-offset-paginated";
 
@@ -219,7 +236,10 @@ export async function searchTransactions(
 		.orderBy(desc(transactions.date))
 		.limit(limit);
 
-	return rows.map((row) => ({ ...row.transaction, category: row.category ?? null }));
+	return rows.map((row) => ({
+		...row.transaction,
+		category: row.category ?? null,
+	}));
 }
 
 export async function getInfiniteTransactions(
@@ -265,14 +285,37 @@ export async function getInfiniteTransactions(
 				)
 			: undefined;
 
-	const result = await db.query.transactions.findMany({
-		where: and(cursorCondition, dateRangeCondition, accountCondition),
-		orderBy: [desc(transactions.date), asc(transactions.id)],
-		limit: fetchLimit,
-		with: {
-			category: true,
-		},
-	});
+	let searchCondition: ReturnType<typeof or> | undefined;
+	if (input.query) {
+		const term = `%${input.query}%`;
+		const numericQuery = Number(input.query);
+		const isNumeric = input.query.trim() !== "" && !Number.isNaN(numericQuery);
+		searchCondition = or(
+			like(transactions.note, term),
+			like(categories.name, term),
+			...(isNumeric ? [eq(transactions.amount, numericQuery)] : []),
+		);
+	}
+
+	const rows = await db
+		.select({ transaction: transactions, category: categories })
+		.from(transactions)
+		.leftJoin(categories, eq(transactions.categoryId, categories.id))
+		.where(
+			and(
+				cursorCondition,
+				dateRangeCondition,
+				accountCondition,
+				searchCondition,
+			),
+		)
+		.orderBy(desc(transactions.date), asc(transactions.id))
+		.limit(fetchLimit);
+
+	const result = rows.map((row) => ({
+		...row.transaction,
+		category: row.category ?? null,
+	}));
 
 	const hasMore = result.length > input.limit;
 	const items = hasMore ? result.slice(0, input.limit) : result;

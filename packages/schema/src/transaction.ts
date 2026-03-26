@@ -21,7 +21,9 @@ export const transactionSchema = z.object({
 	note: z.string().optional(),
 	categoryId: z.string({ error: "Category is required" }),
 	accountId: z.string({ error: "Account is required" }),
-	toAccountId: z.string({ error: "Destination account is required" }).optional(),
+	toAccountId: z
+		.string({ error: "Destination account is required" })
+		.optional(),
 	tags: z.array(z.string()).optional(),
 	date: z.number({ error: "Date is required" }),
 	recurrence: z
@@ -77,6 +79,7 @@ export const infiniteTransactionsSchema = z.object({
 	from: z.number().optional(),
 	to: z.number().optional(),
 	accountId: z.string().optional(),
+	query: z.string().optional(),
 });
 
 export const searchTransactionsSchema = z.object({

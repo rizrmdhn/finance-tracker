@@ -30,9 +30,12 @@ export default function Categories() {
 
 	const [selected, setSelected] = useState<Category | null>(null);
 
-	const { data: categories = [], isLoading, isRefetching, refetch } = useQuery(
-		trpc.category.list.queryOptions(),
-	);
+	const {
+		data: categories = [],
+		isLoading,
+		isRefetching,
+		refetch,
+	} = useQuery(trpc.category.list.queryOptions());
 
 	const seedDefaultsMutation = useMutation(
 		trpc.category.seedDefaults.mutationOptions({

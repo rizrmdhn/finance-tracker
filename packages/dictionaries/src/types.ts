@@ -161,6 +161,7 @@ export interface Dictionary {
 		noTransactions: string;
 		noTransactionsDescription: string;
 		notePlaceholder: string;
+		searchPlaceholder: string;
 		repeat: string;
 		frequency: string;
 		endDate: string;

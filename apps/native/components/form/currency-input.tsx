@@ -65,7 +65,11 @@ export function CurrencyInput({
 		>
 			<TextInput
 				className="flex-1 px-3 text-base text-foreground"
-				style={{ height: 40, textAlignVertical: "center", lineHeight: undefined }}
+				style={{
+					height: 40,
+					textAlignVertical: "center",
+					lineHeight: undefined,
+				}}
 				keyboardType="numeric"
 				value={display}
 				onChangeText={handleChangeText}

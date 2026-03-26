@@ -109,13 +109,15 @@ export function createCrudActionCell<T extends { id: string }, TParams>(
 				editText={t("common.edit")}
 				triggerText={t("common.delete")}
 				dialogTitle={t("common.deleteTitle", { name: resourceName })}
-				dialogDescription={t("common.deleteDescription", { name: resourceName })}
+				dialogDescription={t("common.deleteDescription", {
+					name: resourceName,
+				})}
 				btnClassName="bg-red-600 text-white hover:bg-red-500"
 				onEditAction={
-				onEdit
-					? () => onEdit(row.original)
-					: `${nestedPathRoute ?? ""}${row.original.id}/edit`
-			}
+					onEdit
+						? () => onEdit(row.original)
+						: `${nestedPathRoute ?? ""}${row.original.id}/edit`
+				}
 				onHoverEdit={() => onHoverEdit?.(row.original.id)}
 				showEdit={true}
 				showDelete={hasCrudActions}

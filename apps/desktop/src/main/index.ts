@@ -139,11 +139,14 @@ app.whenReady().then(() => {
 	});
 
 	// Re-check every hour for same-day recurring transactions (e.g. daily frequency)
-	setInterval(() => {
-		processRecurrences(db).catch((err: unknown) => {
-			console.error("[recurrence] interval pass failed:", err);
-		});
-	}, 60 * 60 * 1000);
+	setInterval(
+		() => {
+			processRecurrences(db).catch((err: unknown) => {
+				console.error("[recurrence] interval pass failed:", err);
+			});
+		},
+		60 * 60 * 1000,
+	);
 
 	createWindow();
 	setupAutoUpdater();
@@ -171,7 +174,8 @@ app.whenReady().then(() => {
 			defaultPath: "finance-backup.db",
 			filters: [{ name: "SQLite Database", extensions: ["db"] }],
 		});
-		if (result.canceled || !result.filePath) return { success: false, cancelled: true };
+		if (result.canceled || !result.filePath)
+			return { success: false, cancelled: true };
 		try {
 			await fs.promises.copyFile(dbPath, result.filePath);
 			return { success: true };
@@ -186,7 +190,8 @@ app.whenReady().then(() => {
 			filters: [{ name: "SQLite Database", extensions: ["db"] }],
 			properties: ["openFile"],
 		});
-		if (result.canceled || !result.filePaths[0]) return { success: false, cancelled: true };
+		if (result.canceled || !result.filePaths[0])
+			return { success: false, cancelled: true };
 		try {
 			sqlite.close();
 			await fs.promises.copyFile(result.filePaths[0], dbPath);
@@ -237,10 +242,7 @@ app.whenReady().then(() => {
 		if (result.canceled || !result.filePaths[0])
 			return { success: false, cancelled: true };
 		try {
-			const content = await fs.promises.readFile(
-				result.filePaths[0],
-				"utf-8",
-			);
+			const content = await fs.promises.readFile(result.filePaths[0], "utf-8");
 			return {
 				success: true,
 				content,

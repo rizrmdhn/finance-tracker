@@ -20,7 +20,14 @@ export async function seedDatabase(db: AnyDatabase) {
 	const appSettings = await seedDefaultAppSettings(db);
 
 	if (!isDev) {
-		return { appSettings, categories: [], accounts: [], budgets: [], transactions: [], recurrences: [] };
+		return {
+			appSettings,
+			categories: [],
+			accounts: [],
+			budgets: [],
+			transactions: [],
+			recurrences: [],
+		};
 	}
 
 	// Seed categories and accounts in parallel (no dependencies between them)
@@ -38,5 +45,12 @@ export async function seedDatabase(db: AnyDatabase) {
 	// Recurrences depend on transactions (FK: templateTransactionId)
 	const recurrences = await seedDefaultRecurrences(db);
 
-	return { appSettings, categories, accounts, budgets, transactions, recurrences };
+	return {
+		appSettings,
+		categories,
+		accounts,
+		budgets,
+		transactions,
+		recurrences,
+	};
 }

@@ -18,8 +18,7 @@ export const globalWarningToast = (message: string) =>
 export const globalInfoToast = (message: string) =>
 	toast.info(message, { duration: WARNING_DURATION });
 
-export const globalLoadingToast = (message: string) =>
-	toast.loading(message);
+export const globalLoadingToast = (message: string) => toast.loading(message);
 
 export const dismissLoadingToast = (toastId: string | number) =>
 	toast.dismiss(toastId);
