@@ -49,7 +49,7 @@
 		"build": "turbo build",
 		"lint": "biome check .",
 		"check-types": "turbo check-types",
-		"dev:native": "bun --filter @finance-tracker/native run dev",
+		"dev:native": "turbo -F @finance-tracker/native dev",
 		"dev:android": "cd apps/native && expo run:android",
 		"dev:web": "turbo -F @finance-tracker/web dev",
 		"dev:desktop": "turbo -F @finance-tracker/desktop dev",

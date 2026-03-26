@@ -10,6 +10,7 @@
 		"android": "expo run:android",
 		"ios": "expo run:ios",
 		"prebuild": "expo prebuild",
+		"postprebuild": "bun scripts/fix-main-activity.mjs",
 		"web": "expo start --web",
 		"doctor": "bunx expo-doctor",
 		"db:generate": "drizzle-kit generate",
