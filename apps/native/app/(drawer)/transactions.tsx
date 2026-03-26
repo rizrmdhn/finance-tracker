@@ -68,7 +68,7 @@ export default function Transactions() {
 
 	const [selected, setSelected] = useState<Transaction | null>(null);
 
-	const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
+	const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage, isRefetching, refetch } =
 		useInfiniteQuery(
 			trpc.transaction.infiniteList.infiniteQueryOptions(
 				{ limit: 25 },
@@ -199,6 +199,8 @@ export default function Transactions() {
 					if (hasNextPage && !isFetchingNextPage) fetchNextPage();
 				}}
 				onEndReachedThreshold={0.5}
+				refreshing={isRefetching && !isFetchingNextPage}
+				onRefresh={refetch}
 				renderItem={({ item }) => {
 					const categoryType =
 						(item.category?.type as CategoryType | undefined) ?? "transfer";

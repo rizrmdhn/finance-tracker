@@ -28,7 +28,7 @@ export default function Accounts() {
 
 	const [selected, setSelected] = useState<AccountWithBalance | null>(null);
 
-	const { data: accounts = [], isLoading } = useQuery(
+	const { data: accounts = [], isLoading, isRefetching, refetch } = useQuery(
 		trpc.account.listWithBalance.queryOptions(),
 	);
 
@@ -61,7 +61,7 @@ export default function Accounts() {
 	}
 
 	return (
-		<Container>
+		<Container onRefresh={refetch} refreshing={isRefetching}>
 			<View className="flex flex-col gap-6 px-6 py-3">
 				<View className="flex flex-row items-center justify-between">
 					<View>

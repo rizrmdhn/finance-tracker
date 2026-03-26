@@ -30,7 +30,7 @@ export default function Categories() {
 
 	const [selected, setSelected] = useState<Category | null>(null);
 
-	const { data: categories = [], isLoading } = useQuery(
+	const { data: categories = [], isLoading, isRefetching, refetch } = useQuery(
 		trpc.category.list.queryOptions(),
 	);
 
@@ -75,7 +75,7 @@ export default function Categories() {
 	}
 
 	return (
-		<Container>
+		<Container onRefresh={refetch} refreshing={isRefetching}>
 			<View className="flex flex-col gap-6 px-6 py-3">
 				<View className="flex flex-row items-center justify-between">
 					<View>

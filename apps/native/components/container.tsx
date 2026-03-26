@@ -1,5 +1,6 @@
 import type { PropsWithChildren } from "react";
 import {
+	RefreshControl,
 	ScrollView,
 	type ScrollViewProps,
 	View,
@@ -16,6 +17,8 @@ type Props = AnimatedProps<ViewProps> & {
 	contentContainerClassName?: string;
 	isScrollable?: boolean;
 	scrollViewProps?: Omit<ScrollViewProps, "contentContainerStyle">;
+	onRefresh?: () => void;
+	refreshing?: boolean;
 };
 
 export function Container({
@@ -24,6 +27,8 @@ export function Container({
 	contentContainerClassName,
 	isScrollable = true,
 	scrollViewProps,
+	onRefresh,
+	refreshing = false,
 	...props
 }: PropsWithChildren<Props>) {
 	const insets = useSafeAreaInsets();
@@ -41,6 +46,11 @@ export function Container({
 					contentContainerStyle={{ flexGrow: 1 }}
 					keyboardShouldPersistTaps="handled"
 					contentInsetAdjustmentBehavior="automatic"
+					refreshControl={
+						onRefresh ? (
+							<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+						) : undefined
+					}
 					{...scrollViewProps}
 				>
 					<View className={cn("flex-1", contentContainerClassName)}>

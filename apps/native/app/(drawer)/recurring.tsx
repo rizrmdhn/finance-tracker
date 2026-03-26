@@ -34,7 +34,7 @@ export default function Recurring() {
 
 	const [selected, setSelected] = useState<RecurrenceWithTemplate | null>(null);
 
-	const { data: recurrences = [], isLoading } = useQuery(
+	const { data: recurrences = [], isLoading, isRefetching, refetch } = useQuery(
 		trpc.recurrence.list.queryOptions(),
 	);
 
@@ -83,7 +83,7 @@ export default function Recurring() {
 	}
 
 	return (
-		<Container>
+		<Container onRefresh={refetch} refreshing={isRefetching}>
 			<View className="flex flex-col gap-6 px-6 py-3">
 				<View className="flex flex-row items-center justify-between">
 					<View>

@@ -31,7 +31,7 @@ export default function Budgets() {
 	const [selected, setSelected] = useState<BudgetWithSpent | null>(null);
 	const { from, to } = getCurrentMonthRange();
 
-	const { data: budgets = [], isLoading } = useQuery(
+	const { data: budgets = [], isLoading, isRefetching, refetch } = useQuery(
 		trpc.budget.listWithSpent.queryOptions({ from, to }),
 	);
 
@@ -67,7 +67,7 @@ export default function Budgets() {
 	}
 
 	return (
-		<Container>
+		<Container onRefresh={refetch} refreshing={isRefetching}>
 			<View className="flex flex-col gap-6 px-6 py-3">
 				<View className="flex flex-row items-center justify-between">
 					<View>
