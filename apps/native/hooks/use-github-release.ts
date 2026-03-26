@@ -25,15 +25,21 @@ export function useGithubRelease(repo: string) {
 			queryKey: ["github-release", repo],
 			queryFn: async () => {
 				const res = await fetch(
-					`https://api.github.com/repos/${repo}/releases/latest`,
+					`https://api.github.com/repos/${repo}/releases?per_page=20`,
 				);
 				if (!res.ok) throw new Error(`HTTP ${res.status}`);
-				const json = await res.json();
+				const json = (await res.json()) as {
+					tag_name: string;
+					html_url: string;
+					body: string | null;
+					assets: { name: string; browser_download_url: string }[];
+				}[];
 
-				const latestVersion = (json.tag_name as string)?.replace(/^v/, "");
-				const apkAsset = (
-					json.assets as { name: string; browser_download_url: string }[]
-				)?.find((a) => a.name.endsWith(".apk"));
+				const release = json.find((r) => r.tag_name.startsWith("mobile/v"));
+				if (!release) throw new Error("No mobile release found");
+
+				const latestVersion = release.tag_name.replace(/^mobile\/v/, "");
+				const apkAsset = release.assets.find((a) => a.name.endsWith(".apk"));
 
 				// If current version is unknown, assume up to date to avoid false positives
 				const isUpToDate =
@@ -41,10 +47,9 @@ export function useGithubRelease(repo: string) {
 
 				return {
 					isUpToDate,
-					version: json.tag_name as string,
-					downloadUrl:
-						apkAsset?.browser_download_url ?? (json.html_url as string),
-					body: (json.body as string) ?? null,
+					version: latestVersion,
+					downloadUrl: apkAsset?.browser_download_url ?? release.html_url,
+					body: release.body ?? null,
 				};
 			},
 			enabled: false,
