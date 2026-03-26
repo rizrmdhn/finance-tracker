@@ -1,6 +1,7 @@
-import { Text, View } from "react-native";
+import { View } from "react-native";
 import { formatCurrency } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Text } from "./ui/text";
 
 export function SummaryCard({
 	title,

@@ -10,7 +10,7 @@ import {
 } from "lucide-react-native";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { Container } from "@/components/container";
 import EditRecurrenceDialog from "@/components/form/edit-recurrence-dialog";
@@ -18,6 +18,7 @@ import { ICON_MAP } from "@/components/form/icon-picker";
 import { Button } from "@/components/ui/button";
 import { Icon as IconComp } from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Text } from "@/components/ui/text";
 import useModalState from "@/hooks/use-modal-state";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
