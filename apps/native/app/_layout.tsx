@@ -1,8 +1,7 @@
 import "@/global.css";
 import "@/lib/i18n";
 import { useReactQueryDevTools } from "@dev-plugins/react-query";
-import { APP_SETTINGS_DEFAULTS } from "@finance-tracker/constants";
-import * as schema from "@finance-tracker/db";
+import { seedDatabase } from "@finance-tracker/db";
 import { PortalHost } from "@rn-primitives/portal";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
@@ -45,17 +44,8 @@ function MigratedApp() {
 
 	useEffect(() => {
 		if (!success) return;
-		db.insert(schema.appSettings)
-			.values(
-				Object.entries(APP_SETTINGS_DEFAULTS).map(([key, value]) => ({
-					key,
-					value,
-				})),
-			)
-			.onConflictDoNothing()
-			.execute();
+		seedDatabase(db); // replaces the manual db.insert(schema.appSettings)... block
 	}, [success]);
-
 	const { data: onboarding, isLoading } = useQuery(
 		trpc.appSetting.get.queryOptions({ key: "onboarding" }),
 	);
