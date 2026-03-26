@@ -54,7 +54,10 @@ export default function Categories() {
 	const deleteMutation = useMutation(
 		trpc.category.delete.mutationOptions({
 			onSuccess: async () => {
-				await queryClient.invalidateQueries(trpc.category.list.queryOptions());
+				await Promise.all([
+				queryClient.invalidateQueries(trpc.category.list.queryOptions()),
+				queryClient.invalidateQueries(trpc.category.listDeleted.queryOptions()),
+			]);
 				globalSuccessToast(t("categories.toast.deleted"));
 				closeModal("deleteCategory");
 				setSelected(null);

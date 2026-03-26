@@ -96,6 +96,7 @@ function DrawerLayout() {
 			icon: "pricetag-outline",
 		},
 		{ name: "budgets", title: t("sidebar.budgets"), icon: "flag-outline" },
+		{ name: "trash", title: t("sidebar.trash"), icon: "trash-outline" },
 		{
 			name: "settings",
 			title: t("sidebar.settings"),
