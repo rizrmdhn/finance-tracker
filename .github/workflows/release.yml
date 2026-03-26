@@ -78,6 +78,14 @@ jobs:
       - name: Setup bun
         uses: oven-sh/setup-bun@v2
 
+      - name: Cache bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
@@ -110,14 +118,31 @@ jobs:
         with:
           java-version: "17"
           distribution: "temurin"
+          cache: "gradle"
 
       - name: Setup bun
         uses: oven-sh/setup-bun@v2
 
+      - name: Cache bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Cache Skia binaries
+        uses: actions/cache@v4
+        id: skia-cache
+        with:
+          path: apps/native/node_modules/@shopify/react-native-skia/libs
+          key: skia-${{ hashFiles('apps/native/node_modules/@shopify/react-native-skia/package.json') }}
+
       - name: Install Skia binaries
+        if: steps.skia-cache.outputs.cache-hit != 'true'
         run: bunx install-skia
         working-directory: apps/native
 
