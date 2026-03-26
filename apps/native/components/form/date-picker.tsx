@@ -130,9 +130,11 @@ export function DatePicker({ value, onChange, placeholder }: DatePickerProps) {
 							{Array.from({ length: leadingBlanks }).map(() => (
 								<View
 									key={`blank-${createId()}`}
-									className="aspect-square"
+									className="items-center py-1"
 									style={{ width: `${100 / 7}%` }}
-								/>
+								>
+									<View className="size-9" />
+								</View>
 							))}
 
 							{days.map((day) => {
@@ -142,22 +144,26 @@ export function DatePicker({ value, onChange, placeholder }: DatePickerProps) {
 									<Pressable
 										key={day.toISOString()}
 										onPress={() => handleSelect(day)}
-										className={cn(
-											"aspect-square items-center justify-center rounded-full",
-											isSelected && "bg-primary",
-											!isSelected && todayDay && "border border-primary",
-										)}
+										className="items-center py-1"
 										style={{ width: `${100 / 7}%` }}
 									>
-										<Text
+										<View
 											className={cn(
-												"text-foreground text-sm",
-												isSelected && "font-semibold text-primary-foreground",
-												!isSelected && todayDay && "font-medium text-primary",
+												"size-9 items-center justify-center rounded-full",
+												isSelected && "bg-primary",
+												!isSelected && todayDay && "border border-primary",
 											)}
 										>
-											{format(day, "d")}
-										</Text>
+											<Text
+												className={cn(
+													"text-foreground text-sm",
+													isSelected && "font-semibold text-primary-foreground",
+													!isSelected && todayDay && "font-medium text-primary",
+												)}
+											>
+												{format(day, "d")}
+											</Text>
+										</View>
 									</Pressable>
 								);
 							})}
