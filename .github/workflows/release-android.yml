@@ -108,11 +108,14 @@ jobs:
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
-      - name: Rename APK
+      - name: Rename APKs
         run: |
           TAG="${GITHUB_REF#refs/tags/mobile/v}"
-          mv apps/native/android/app/build/outputs/apk/release/app-arm64-v8a-release.apk \
-             apps/native/android/app/build/outputs/apk/release/Finance-Tracker-${TAG}.apk
+          OUT=apps/native/android/app/build/outputs/apk/release
+          mv "$OUT/app-arm64-v8a-release.apk"   "$OUT/Finance-Tracker-${TAG}-arm64-v8a.apk"
+          mv "$OUT/app-armeabi-v7a-release.apk"  "$OUT/Finance-Tracker-${TAG}-armeabi-v7a.apk"
+          mv "$OUT/app-x86_64-release.apk"       "$OUT/Finance-Tracker-${TAG}-x86_64.apk"
+          mv "$OUT/app-universal-release.apk"    "$OUT/Finance-Tracker-${TAG}-universal.apk"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
