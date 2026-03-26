@@ -1,9 +1,9 @@
-name: Release
+name: Release Desktop
 
 on:
   push:
     tags:
-      - "v*"
+      - "desktop/v*"
 
 permissions:
   contents: write
@@ -24,7 +24,7 @@ jobs:
       - name: Generate changelog
         uses: orhun/git-cliff-action@v4
         with:
-          args: --latest --strip header
+          args: --latest --strip header --tag-pattern "desktop/v.*"
         env:
           OUTPUT: RELEASE_NOTES.md
 
@@ -32,7 +32,7 @@ jobs:
         id: prerelease
         shell: bash
         run: |
-          TAG="${GITHUB_REF#refs/tags/}"
+          TAG="${GITHUB_REF#refs/tags/desktop/}"
           if [[ "$TAG" =~ -(alpha|beta|rc) ]]; then
             echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
           else
@@ -102,80 +102,9 @@ jobs:
           name: desktop-${{ matrix.os }}
           path: ${{ matrix.artifact }}
 
-  build-android:
-    name: Build Android
-    needs: prepare
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          java-version: "17"
-          distribution: "temurin"
-          cache: "gradle"
-
-      - name: Setup bun
-        uses: oven-sh/setup-bun@v2
-
-      - name: Cache bun dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-bun-
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Cache Skia binaries
-        uses: actions/cache@v4
-        id: skia-cache
-        with:
-          path: apps/native/node_modules/@shopify/react-native-skia/libs
-          key: skia-${{ hashFiles('apps/native/node_modules/@shopify/react-native-skia/package.json') }}
-
-      - name: Install Skia binaries
-        if: steps.skia-cache.outputs.cache-hit != 'true'
-        run: bunx install-skia
-        working-directory: apps/native
-
-      - name: Decode keystore
-        run: |
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > apps/native/android/app/release.keystore
-
-      - name: Build release APK
-        working-directory: apps/native/android
-        run: |
-          chmod +x gradlew
-          ./gradlew assembleRelease
-        env:
-          ANDROID_KEYSTORE_PATH: release.keystore
-          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-
-      - name: Rename APK
-        run: |
-          TAG="${GITHUB_REF#refs/tags/v}"
-          mv apps/native/android/app/build/outputs/apk/release/app-arm64-v8a-release.apk \
-             apps/native/android/app/build/outputs/apk/release/Finance-Tracker-${TAG}.apk
-
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-release
-          path: apps/native/android/app/build/outputs/apk/release/Finance-Tracker-*.apk
-
   release:
     name: Create GitHub Release
-    needs: [prepare, build, build-android]
+    needs: [prepare, build]
     runs-on: ubuntu-latest
 
     steps:
@@ -187,7 +116,7 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: "{desktop-*,android-release}"
+          pattern: "desktop-*"
           merge-multiple: true
           path: artifacts
 
