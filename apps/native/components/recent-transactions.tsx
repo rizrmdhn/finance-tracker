@@ -91,15 +91,15 @@ export function RecentTransactions({
 								>
 									<IconComp as={Icon} className="size-4" />
 								</View>
-								<div className="flex min-w-0 flex-1 flex-col">
-									<span className="truncate font-medium text-sm">
+								<View className="flex min-w-0 flex-1 flex-col">
+									<Text className="truncate font-medium text-sm">
 										{tx.note ?? category?.name ?? "—"}
-									</span>
-									<span className="text-muted-foreground text-xs">
+									</Text>
+									<Text className="text-muted-foreground text-xs">
 										{formatDate(tx.date)}
-									</span>
-								</div>
-								<span
+									</Text>
+								</View>
+								<Text
 									className={`font-medium text-sm tabular-nums ${amountClass}`}
 								>
 									{prefix === "-" ? (
@@ -108,7 +108,7 @@ export function RecentTransactions({
 										prefix
 									)}
 									{formatCurrency(tx.amount)}
-								</span>
+								</Text>
 							</View>
 						);
 					})}
