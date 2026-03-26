@@ -4,27 +4,26 @@ A personal finance tracking application built as a TypeScript monorepo, availabl
 
 ## Apps
 
-| App | Description |
-|-----|-------------|
-| `apps/web` | Web frontend (React + TanStack Router) |
-| `apps/desktop` | Desktop app (Electron, v0.3.3) — Windows/macOS/Linux |
-| `apps/native` | Mobile app (React Native + Expo) |
+| App            | Description                                                                                                                                               |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/desktop` | Desktop app (Electron) — Windows/macOS/Linux — releases at [rizrmdhn/finance-tracker](https://github.com/rizrmdhn/finance-tracker/releases)               |
+| `apps/native`  | Mobile app (React Native + Expo) — Android APK releases at [rizrmdhn/finance-tracker-mobile](https://github.com/rizrmdhn/finance-tracker-mobile/releases) |
 
 ## Packages
 
-| Package | Description |
-|---------|-------------|
-| `packages/api` | tRPC router and API handlers |
-| `packages/db` | Drizzle ORM setup, migrations, and SQLite database |
-| `packages/schema` | Shared Zod schemas |
-| `packages/queries` | Shared TanStack Query hooks |
-| `packages/ui` | Shared shadcn/ui components and styles |
-| `packages/types` | Shared TypeScript types |
-| `packages/constants` | Shared constants |
-| `packages/dictionaries` | i18n dictionaries |
-| `packages/env` | Environment variable validation |
-| `packages/utils` | Shared utility functions |
-| `packages/config` | Shared tooling config (TypeScript, Biome, Tailwind) |
+| Package                 | Description                                         |
+| ----------------------- | --------------------------------------------------- |
+| `packages/api`          | tRPC router and API handlers                        |
+| `packages/db`           | Drizzle ORM setup, migrations, and SQLite database  |
+| `packages/schema`       | Shared Zod schemas                                  |
+| `packages/queries`      | Shared TanStack Query hooks                         |
+| `packages/ui`           | Shared shadcn/ui components and styles              |
+| `packages/types`        | Shared TypeScript types                             |
+| `packages/constants`    | Shared constants                                    |
+| `packages/dictionaries` | i18n dictionaries                                   |
+| `packages/env`          | Environment variable validation                     |
+| `packages/utils`        | Shared utility functions                            |
+| `packages/config`       | Shared tooling config (TypeScript, Biome, Tailwind) |
 
 ## Getting Started
 
@@ -46,20 +45,20 @@ bun run dev
 
 ## Available Scripts
 
-| Script | Description |
-|--------|-------------|
-| `bun run dev` | Start all apps in development mode |
-| `bun run dev:web` | Start only the web app |
-| `bun run dev:desktop` | Start only the desktop app |
-| `bun run dev:native` | Start the Expo/React Native dev server |
-| `bun run build` | Build all apps |
-| `bun run desktop:build` | Build the desktop app |
-| `bun run desktop:pack` | Package the desktop app as an installer |
-| `bun run db:migrate` | Run database migrations |
-| `bun run db:generate` | Generate Drizzle migration files |
-| `bun run db:studio` | Open Drizzle Studio |
-| `bun run check-types` | Type-check all apps and packages |
-| `bun run check` | Run Biome formatting and linting (with auto-fix) |
+| Script                  | Description                                      |
+| ----------------------- | ------------------------------------------------ |
+| `bun run dev`           | Start all apps in development mode               |
+| `bun run dev:web`       | Start only the web app                           |
+| `bun run dev:desktop`   | Start only the desktop app                       |
+| `bun run dev:native`    | Start the Expo/React Native dev server           |
+| `bun run build`         | Build all apps                                   |
+| `bun run desktop:build` | Build the desktop app                            |
+| `bun run desktop:pack`  | Package the desktop app as an installer          |
+| `bun run db:migrate`    | Run database migrations                          |
+| `bun run db:generate`   | Generate Drizzle migration files                 |
+| `bun run db:studio`     | Open Drizzle Studio                              |
+| `bun run check-types`   | Type-check all apps and packages                 |
+| `bun run check`         | Run Biome formatting and linting (with auto-fix) |
 
 ## Tech Stack
 
