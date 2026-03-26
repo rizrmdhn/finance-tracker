@@ -119,7 +119,6 @@ function DropdownMenuContent({
 			<FullWindowOverlay>
 				<DropdownMenuPrimitive.Overlay
 					style={Platform.select({
-						// @ts-expect-error - dunno
 						web: overlayStyle ?? undefined,
 						native: overlayStyle
 							? StyleSheet.flatten([

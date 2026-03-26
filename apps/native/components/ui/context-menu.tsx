@@ -113,7 +113,6 @@ function ContextMenuContent({
 			<FullWindowOverlay>
 				<ContextMenuPrimitive.Overlay
 					style={Platform.select({
-						// @ts-expect-error - dunno
 						web: overlayStyle ?? undefined,
 						native: overlayStyle
 							? StyleSheet.flatten([
