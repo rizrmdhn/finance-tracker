@@ -20,6 +20,7 @@ import {
 	TabsTrigger,
 } from "@finance-tracker/ui/components/tabs";
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
 	Area,
 	AreaChart,
@@ -66,6 +67,8 @@ export function AnalyticsCard({
 	from,
 	to,
 }: AnalyticsCardProps) {
+	const { t } = useTranslation();
+
 	const categoryMap = useMemo(
 		() => new Map(categories.map((c) => [c.id, c])),
 		[categories],
@@ -142,14 +145,20 @@ export function AnalyticsCard({
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle>Analitik</CardTitle>
+				<CardTitle>{t("analitics.title")}</CardTitle>
 			</CardHeader>
 			<CardContent>
 				<Tabs defaultValue="monthly">
 					<TabsList>
-						<TabsTrigger value="monthly">Pendapatan & Pengeluaran</TabsTrigger>
-						<TabsTrigger value="category">Distribusi Kategori</TabsTrigger>
-						<TabsTrigger value="balance">Riwayat Saldo</TabsTrigger>
+						<TabsTrigger value="monthly">
+							{t("analitics.incomeAndExpense")}
+						</TabsTrigger>
+						<TabsTrigger value="category">
+							{t("analitics.byCategory")}
+						</TabsTrigger>
+						<TabsTrigger value="balance">
+							{t("analitics.balanceOverTime")}
+						</TabsTrigger>
 					</TabsList>
 
 					<TabsContent value="monthly">
