@@ -1,7 +1,8 @@
 import { SUPPORTED_COLORS } from "@finance-tracker/constants";
+import { FlashList } from "@shopify/flash-list";
 import { Palette, X } from "lucide-react-native";
 import { useState } from "react";
-import { FlatList, Modal, Pressable, View } from "react-native";
+import { Modal, Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
@@ -58,12 +59,12 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
 						</Pressable>
 					</View>
 
-					<FlatList
+					<FlashList
 						data={SUPPORTED_COLORS}
 						keyExtractor={(item) => item.value}
 						numColumns={5}
 						contentContainerStyle={{ padding: 16, gap: 8 }}
-						columnWrapperStyle={{ gap: 8 }}
+						// columnWrapperStyle={{ gap: 8 }}
 						renderItem={({ item }) => (
 							<Pressable
 								onPress={() => handleSelect(item.value)}

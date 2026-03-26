@@ -1,4 +1,5 @@
 import type { Account } from "@finance-tracker/types";
+import { FlashList } from "@shopify/flash-list";
 import {
 	Activity,
 	Apple,
@@ -64,7 +65,6 @@ import {
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-	FlatList,
 	KeyboardAvoidingView,
 	Modal,
 	Platform,
@@ -265,7 +265,7 @@ export function AccountCombobox({
 
 						{/* List */}
 						<View style={{ flex: 1 }}>
-							<FlatList
+							<FlashList
 								data={filtered}
 								keyExtractor={(item) => item.id}
 								keyboardShouldPersistTaps="handled"
