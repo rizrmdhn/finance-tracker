@@ -1,6 +1,7 @@
 import type { QueryKey, UseMutationOptions } from "@tanstack/react-query";
 import type { Row } from "@tanstack/react-table";
 import { Trash } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import DataTableActionCell, {
 	type CustomAction,
 } from "@/components/data-table-action-cell";
@@ -74,6 +75,7 @@ export function createCrudActionCell<T extends { id: string }, TParams>(
 	const hasCrudActions = !!deleteMutation;
 
 	return function ActionCell({ row }: { row: Row<T> }) {
+		const { t } = useTranslation();
 		const params = useSearchParams();
 
 		const queryOptions = getQueryOptions(params);
@@ -87,11 +89,14 @@ export function createCrudActionCell<T extends { id: string }, TParams>(
 					getId: (input) => input.id,
 				},
 				onSuccess: () => {
-					globalSuccessToast(`Berhasil menghapus ${resourceName}`);
+					globalSuccessToast(t("common.deleteSuccess", { name: resourceName }));
 				},
 				onError: (error) => {
 					globalErrorToast(
-						`Gagal menghapus ${resourceName}. ${error.message ?? "Silahkan coba lagi."}`,
+						t("common.deleteFailed", {
+							name: resourceName,
+							message: error.message,
+						}),
 					);
 				},
 			},
@@ -101,10 +106,10 @@ export function createCrudActionCell<T extends { id: string }, TParams>(
 			<DataTableActionCell
 				icon={<Trash className="mr-4 size-4" />}
 				isLoading={deleteMut.isPending}
-				editText="Edit"
-				triggerText={"Hapus"}
-				dialogTitle={`Hapus data ${resourceName}`}
-				dialogDescription={`Apakah anda yakin ingin menghapus data ${resourceName} ini? Data yang sudah dihapus tidak dapat dikembalikan.`}
+				editText={t("common.edit")}
+				triggerText={t("common.delete")}
+				dialogTitle={t("common.deleteTitle", { name: resourceName })}
+				dialogDescription={t("common.deleteDescription", { name: resourceName })}
 				btnClassName="bg-red-600 text-white hover:bg-red-500"
 				onEditAction={
 				onEdit

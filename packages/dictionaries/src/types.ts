@@ -51,6 +51,10 @@ export interface Dictionary {
 		edit: string;
 		seeDetails: string;
 		printPDF: string;
+		deleteTitle: string;
+		deleteDescription: string;
+		deleteSuccess: string;
+		deleteFailed: string;
 		viewAll: string;
 		selectStartDate: string;
 		selectEndDate: string;

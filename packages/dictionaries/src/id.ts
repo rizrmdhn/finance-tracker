@@ -54,6 +54,11 @@ export const id = {
 		edit: "Edit",
 		seeDetails: "Lihat detail",
 		printPDF: "Cetak PDF",
+		deleteTitle: "Hapus {{name}}",
+		deleteDescription:
+			"Apakah Anda yakin ingin menghapus {{name}} ini? Tindakan ini tidak dapat dibatalkan.",
+		deleteSuccess: "{{name}} berhasil dihapus",
+		deleteFailed: "Gagal menghapus {{name}}: {{message}}",
 		viewAll: "Lihat semua",
 		selectStartDate: "Pilih tanggal mulai",
 		selectEndDate: "Pilih tanggal berakhir",

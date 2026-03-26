@@ -54,6 +54,11 @@ export const en = {
 		edit: "Edit",
 		seeDetails: "See details",
 		printPDF: "Print PDF",
+		deleteTitle: "Delete {{name}}",
+		deleteDescription:
+			"Are you sure you want to delete this {{name}}? This action cannot be undone.",
+		deleteSuccess: "{{name}} deleted successfully",
+		deleteFailed: "Failed to delete {{name}}: {{message}}",
 		viewAll: "View all",
 		selectStartDate: "Select start date",
 		selectEndDate: "Select end date",
