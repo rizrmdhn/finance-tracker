@@ -59,7 +59,8 @@
 		"db:migrate": "turbo -F @finance-tracker/db db:migrate",
 		"db:generate": "turbo -F @finance-tracker/db db:generate && turbo -F @finance-tracker/native db:generate",
 		"check": "biome check --write .",
-		"native:doctor": "turbo -F @finance-tracker/native doctor"
+		"native:doctor": "turbo -F @finance-tracker/native doctor",
+		"tag": "bun scripts/tag.ts"
 	},
 	"dependencies": {
 		"@finance-tracker/env": "workspace:*",
