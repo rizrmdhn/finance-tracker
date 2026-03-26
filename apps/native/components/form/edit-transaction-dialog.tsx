@@ -83,6 +83,9 @@ export default function EditTransactionDialog({
 					queryClient.invalidateQueries({
 						queryKey: trpc.transaction.paginated.queryKey(),
 					}),
+					queryClient.invalidateQueries({
+						queryKey: trpc.transaction.infiniteList.queryKey(),
+					}),
 				]);
 				globalSuccessToast(t("transactions.toast.updated"));
 				setIsOpen(false);

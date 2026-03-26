@@ -150,6 +150,7 @@ export interface Dictionary {
 	};
 	transactions: {
 		title: string;
+		transactionCount: string;
 		description: string;
 		addTransaction: string;
 		noTransactions: string;
@@ -164,9 +165,20 @@ export interface Dictionary {
 		edit: {
 			title: string;
 		};
+		delete: {
+			title: string;
+			description: string;
+			confirm: string;
+		};
 		toast: {
 			created: string;
 			updated: string;
+			deleted: string;
+			createFailed: string;
+			updateFailed: string;
+			deleteFailed: string;
+			validationFailed: string;
+			insufficientFunds: string;
 		};
 	};
 	settings: {

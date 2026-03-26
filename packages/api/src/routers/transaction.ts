@@ -4,6 +4,7 @@ import {
 	createTransaction,
 	deleteTransaction,
 	getAllFilteredTransactions,
+	getInfiniteTransactions,
 	getOffsetPaginatedTransactions,
 	getRecurrenceByTemplateId,
 	getTransactionSummary,
@@ -12,6 +13,7 @@ import {
 } from "@finance-tracker/queries";
 import {
 	exportTransactionsSchema,
+	infiniteTransactionsSchema,
 	paginatedTransactionsSchema,
 	summaryFiltersSchema,
 	transactionFiltersSchema,
@@ -39,6 +41,16 @@ export const transactionRouter = createTRPCRouter({
 		.query(async ({ ctx, input }) => {
 			const [data, err] = await tryCatchAsync(() =>
 				getOffsetPaginatedTransactions(ctx.db, input),
+			);
+			if (err) throw toTRPCError(err);
+			return data;
+		}),
+
+	infiniteList: publicProcedure
+		.input(infiniteTransactionsSchema)
+		.query(async ({ ctx, input }) => {
+			const [data, err] = await tryCatchAsync(() =>
+				getInfiniteTransactions(ctx.db, input),
 			);
 			if (err) throw toTRPCError(err);
 			return data;

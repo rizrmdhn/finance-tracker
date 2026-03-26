@@ -70,3 +70,15 @@ export type ExportTransactionsInput = Omit<
 	PaginatedTransactionsInput,
 	"page" | "limit"
 >;
+
+export const infiniteTransactionsSchema = z.object({
+	cursor: z.string().optional(),
+	limit: z.number().int().min(1).max(100).default(25),
+	from: z.number().optional(),
+	to: z.number().optional(),
+	accountId: z.string().optional(),
+});
+
+export type InfiniteTransactionsInput = z.infer<
+	typeof infiniteTransactionsSchema
+>;

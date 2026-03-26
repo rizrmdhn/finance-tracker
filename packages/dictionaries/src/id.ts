@@ -159,6 +159,7 @@ export const id = {
 	},
 	transactions: {
 		title: "Transaksi",
+		transactionCount: "{{count}} transaksi",
 		description:
 			"Kelola semua transaksi keuangan Anda di sini. Tambah, edit, atau hapus transaksi sesuai kebutuhan untuk menjaga catatan keuangan Anda tetap akurat dan terorganisir.",
 		addTransaction: "Tambah Transaksi",
@@ -175,9 +176,21 @@ export const id = {
 		edit: {
 			title: "Edit Transaksi",
 		},
+		delete: {
+			title: "Hapus Transaksi",
+			description:
+				"Apakah Anda yakin ingin menghapus transaksi ini? Tindakan ini tidak dapat dibatalkan.",
+			confirm: "Hapus",
+		},
 		toast: {
 			created: "Transaksi berhasil dibuat",
 			updated: "Transaksi berhasil diperbarui",
+			deleted: "Transaksi dihapus",
+			createFailed: "Gagal membuat transaksi: {{message}}",
+			updateFailed: "Gagal memperbarui transaksi: {{message}}",
+			deleteFailed: "Gagal menghapus transaksi: {{message}}",
+			validationFailed: "Validasi transaksi gagal: {{message}}",
+			insufficientFunds: "Saldo tidak mencukupi untuk transaksi ini",
 		},
 	},
 	settings: {

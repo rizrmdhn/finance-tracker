@@ -1,11 +1,12 @@
 import { type AnyDatabase, accounts, transactions } from "@finance-tracker/db";
 import type {
 	ExportTransactionsInput,
+	InfiniteTransactionsInput,
 	PaginatedTransactionsInput,
 	TransactionInput,
 	UpdateTransactionInput,
 } from "@finance-tracker/schema";
-import { and, between, desc, eq, or } from "drizzle-orm";
+import { and, asc, between, desc, eq, gt, gte, lt, lte, or } from "drizzle-orm";
 import { NotFoundError } from "./errors";
 import { getOffsetPaginated } from "./utils/get-offset-paginated";
 
@@ -191,4 +192,65 @@ export async function getTransactionSummary(
 	});
 
 	return summary;
+}
+
+export async function getInfiniteTransactions(
+	db: AnyDatabase,
+	input: InfiniteTransactionsInput,
+) {
+	const fetchLimit = input.limit + 1;
+
+	// Decode compound cursor: "date|id"
+	let cursorDate: number | undefined;
+	let cursorId: string | undefined;
+	if (input.cursor) {
+		const separatorIdx = input.cursor.indexOf("|");
+		if (separatorIdx !== -1) {
+			cursorDate = Number(input.cursor.slice(0, separatorIdx));
+			cursorId = input.cursor.slice(separatorIdx + 1);
+		}
+	}
+
+	const accountCondition = input.accountId
+		? or(
+				eq(transactions.accountId, input.accountId),
+				eq(transactions.toAccountId, input.accountId),
+			)
+		: undefined;
+
+	const dateRangeCondition =
+		input.from !== undefined && input.to !== undefined
+			? between(transactions.date, input.from, input.to)
+			: input.from !== undefined
+				? gte(transactions.date, input.from)
+				: input.to !== undefined
+					? lte(transactions.date, input.to)
+					: undefined;
+
+	// Compound cursor: (date < cursorDate) OR (date = cursorDate AND id > cursorId)
+	// This correctly handles pagination when sorted by date DESC, id ASC
+	const cursorCondition =
+		cursorDate !== undefined && cursorId !== undefined
+			? or(
+					lt(transactions.date, cursorDate),
+					and(eq(transactions.date, cursorDate), gt(transactions.id, cursorId)),
+				)
+			: undefined;
+
+	const result = await db.query.transactions.findMany({
+		where: and(cursorCondition, dateRangeCondition, accountCondition),
+		orderBy: [desc(transactions.date), asc(transactions.id)],
+		limit: fetchLimit,
+		with: {
+			category: true,
+		},
+	});
+
+	const hasMore = result.length > input.limit;
+	const items = hasMore ? result.slice(0, input.limit) : result;
+	const lastItem = items[items.length - 1];
+	const nextCursor =
+		hasMore && lastItem ? `${lastItem.date}|${lastItem.id}` : null;
+
+	return { data: items, nextCursor, hasMore };
 }

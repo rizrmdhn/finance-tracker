@@ -62,6 +62,9 @@ export default function CreateTransactionDialog({
 					queryClient.invalidateQueries({
 						queryKey: trpc.transaction.paginated.queryKey(),
 					}),
+					queryClient.invalidateQueries({
+						queryKey: trpc.transaction.infiniteList.queryKey(),
+					}),
 					...(variables.recurrence
 						? [
 								queryClient.invalidateQueries({

@@ -159,6 +159,7 @@ export const en = {
 	},
 	transactions: {
 		title: "Transactions",
+		transactionCount: "{{count}} transactions",
 		description:
 			"Manage all your financial transactions here. Add, edit, or delete transactions as needed to keep your financial records accurate and organized.",
 		addTransaction: "Add Transaction",
@@ -174,9 +175,21 @@ export const en = {
 		edit: {
 			title: "Edit Transaction",
 		},
+		delete: {
+			title: "Delete Transaction",
+			description:
+				"Are you sure you want to delete this transaction? This cannot be undone.",
+			confirm: "Delete",
+		},
 		toast: {
 			created: "Transaction created successfully",
 			updated: "Transaction updated successfully",
+			deleted: "Transaction deleted successfully",
+			createFailed: "Failed to create transaction: {{message}}",
+			updateFailed: "Failed to update transaction: {{message}}",
+			deleteFailed: "Failed to delete transaction: {{message}}",
+			validationFailed: "Transaction validation failed: {{message}}",
+			insufficientFunds: "Insufficient funds for this transaction",
 		},
 	},
 	settings: {
