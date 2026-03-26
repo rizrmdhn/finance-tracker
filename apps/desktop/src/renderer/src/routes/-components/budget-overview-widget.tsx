@@ -91,10 +91,7 @@ export function BudgetOverviewWidget({ from, to }: BudgetOverviewWidgetProps) {
 								: null;
 							const percent =
 								budget.amount > 0
-									? Math.min(
-											(budget.spent / budget.amount) * 100,
-											100,
-										)
+									? Math.min((budget.spent / budget.amount) * 100, 100)
 									: 0;
 
 							return (
@@ -105,8 +102,7 @@ export function BudgetOverviewWidget({ from, to }: BudgetOverviewWidgetProps) {
 												<Icon
 													className="size-3.5 shrink-0"
 													style={{
-														color:
-															budget.category?.color ?? "#94a3b8",
+														color: budget.category?.color ?? "#94a3b8",
 													}}
 												/>
 											) : (
@@ -135,9 +131,7 @@ export function BudgetOverviewWidget({ from, to }: BudgetOverviewWidgetProps) {
 									<div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
 										<div
 											className={`h-full rounded-full transition-all ${
-												budget.isOverBudget
-													? "bg-destructive"
-													: "bg-primary"
+												budget.isOverBudget ? "bg-destructive" : "bg-primary"
 											}`}
 											style={{ width: `${percent}%` }}
 										/>
@@ -151,7 +145,7 @@ export function BudgetOverviewWidget({ from, to }: BudgetOverviewWidgetProps) {
 								to="/budgets"
 								className="pt-1 text-center text-muted-foreground text-xs transition-colors hover:text-foreground"
 							>
-								+{budgets.length - 5} more · {t("common.viewAll")}
+								+{budgets.length - 5} {t("common.more")} · {t("common.viewAll")}
 							</Link>
 						)}
 					</div>

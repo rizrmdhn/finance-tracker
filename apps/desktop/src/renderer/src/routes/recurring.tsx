@@ -49,7 +49,9 @@ function RecurringComponent() {
 				);
 			},
 			onError: (error) => {
-				globalErrorToast(error.message);
+				globalErrorToast(
+					t("recurrences.toast.toggleFailed", { message: error.message }),
+				);
 			},
 		}),
 	);
@@ -63,7 +65,9 @@ function RecurringComponent() {
 				setSelected(null);
 			},
 			onError: (error) => {
-				globalErrorToast(error.message);
+				globalErrorToast(
+					t("recurrences.toast.deleteFailed", { message: error.message }),
+				);
 			},
 		}),
 	);

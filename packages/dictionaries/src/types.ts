@@ -12,6 +12,12 @@ export interface Dictionary {
 		budgets: string;
 		settings: string;
 	};
+	analitics: {
+		title: string;
+		incomeAndExpense: string;
+		byCategory: string;
+		balanceOverTime: string;
+	};
 	common: {
 		name: string;
 		icon: string;
@@ -45,7 +51,25 @@ export interface Dictionary {
 		edit: string;
 		seeDetails: string;
 		printPDF: string;
+		deleteTitle: string;
+		deleteDescription: string;
+		deleteSuccess: string;
+		deleteFailed: string;
 		viewAll: string;
+		selectStartDate: string;
+		selectEndDate: string;
+		from: string;
+		reset: string;
+		thisMonth: string;
+		lastMonth: string;
+		thisWeek: string;
+		lastWeek: string;
+		today: string;
+		yesterday: string;
+		recentTransactions: string;
+		noTransactions: string;
+		loading: string;
+		more: string;
 	};
 	errors: {
 		noData: string;
@@ -131,6 +155,7 @@ export interface Dictionary {
 	};
 	transactions: {
 		title: string;
+		transactionCount: string;
 		description: string;
 		addTransaction: string;
 		noTransactions: string;
@@ -145,9 +170,20 @@ export interface Dictionary {
 		edit: {
 			title: string;
 		};
+		delete: {
+			title: string;
+			description: string;
+			confirm: string;
+		};
 		toast: {
 			created: string;
 			updated: string;
+			deleted: string;
+			createFailed: string;
+			updateFailed: string;
+			deleteFailed: string;
+			validationFailed: string;
+			insufficientFunds: string;
 		};
 	};
 	settings: {
@@ -275,9 +311,12 @@ export interface Dictionary {
 		};
 		toast: {
 			updated: string;
+			updateFailed: string;
 			deleted: string;
+			deleteFailed: string;
 			paused: string;
 			resumed: string;
+			toggleFailed: string;
 		};
 	};
 	update: {

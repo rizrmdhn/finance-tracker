@@ -1,17 +1,36 @@
 {
 	"expo": {
+		"version": "1.0.0",
 		"scheme": "finance-tracker",
 		"userInterfaceStyle": "automatic",
 		"orientation": "default",
 		"web": {
-			"bundler": "metro"
+			"bundler": "metro",
+			"favicon": "./assets/images/web/favicon.ico"
 		},
 		"name": "finance-tracker",
 		"slug": "finance-tracker",
-		"plugins": ["expo-font"],
+		"plugins": [
+			"expo-font",
+			"expo-router",
+			"expo-secure-store",
+			"expo-web-browser"
+		],
 		"experiments": {
 			"typedRoutes": true,
 			"reactCompiler": true
+		},
+		"icon": "./assets/images/icon.png",
+		"android": {
+			"package": "com.rizrmdhn.finance_tracker",
+			"adaptiveIcon": {
+				"foregroundImage": "./assets/images/android-icon-foreground.png",
+				"backgroundImage": "./assets/images/android-icon-background.png",
+				"monochromeImage": "./assets/images/android-icon-monochrome.png"
+			}
+		},
+		"ios": {
+			"icon": "./assets/images/icon.png"
 		}
 	}
 }

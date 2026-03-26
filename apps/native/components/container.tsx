@@ -1,6 +1,6 @@
-import { cn } from "heroui-native";
 import type { PropsWithChildren } from "react";
 import {
+	RefreshControl,
 	ScrollView,
 	type ScrollViewProps,
 	View,
@@ -8,20 +8,27 @@ import {
 } from "react-native";
 import Animated, { type AnimatedProps } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { cn } from "@/lib/utils";
 
 const AnimatedView = Animated.createAnimatedComponent(View);
 
 type Props = AnimatedProps<ViewProps> & {
 	className?: string;
+	contentContainerClassName?: string;
 	isScrollable?: boolean;
 	scrollViewProps?: Omit<ScrollViewProps, "contentContainerStyle">;
+	onRefresh?: () => void;
+	refreshing?: boolean;
 };
 
 export function Container({
 	children,
 	className,
+	contentContainerClassName,
 	isScrollable = true,
 	scrollViewProps,
+	onRefresh,
+	refreshing = false,
 	...props
 }: PropsWithChildren<Props>) {
 	const insets = useSafeAreaInsets();
@@ -39,12 +46,21 @@ export function Container({
 					contentContainerStyle={{ flexGrow: 1 }}
 					keyboardShouldPersistTaps="handled"
 					contentInsetAdjustmentBehavior="automatic"
+					refreshControl={
+						onRefresh ? (
+							<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+						) : undefined
+					}
 					{...scrollViewProps}
 				>
-					{children}
+					<View className={cn("flex-1", contentContainerClassName)}>
+						{children}
+					</View>
 				</ScrollView>
 			) : (
-				<View className="flex-1">{children}</View>
+				<View className={cn("flex-1", contentContainerClassName)}>
+					{children}
+				</View>
 			)}
 		</AnimatedView>
 	);

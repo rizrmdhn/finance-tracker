@@ -6,6 +6,12 @@ export const en = {
 		description:
 			"Track your finances with ease. Manage your income, expenses, and budgets all in one place.",
 	},
+	analitics: {
+		title: "Analytics",
+		incomeAndExpense: "Income & Expense",
+		byCategory: "By Category",
+		balanceOverTime: "Balance Over Time",
+	},
 	sidebar: {
 		dashboard: "Dashboard",
 		accounts: "Accounts",
@@ -48,7 +54,26 @@ export const en = {
 		edit: "Edit",
 		seeDetails: "See details",
 		printPDF: "Print PDF",
+		deleteTitle: "Delete {{name}}",
+		deleteDescription:
+			"Are you sure you want to delete this {{name}}? This action cannot be undone.",
+		deleteSuccess: "{{name}} deleted successfully",
+		deleteFailed: "Failed to delete {{name}}: {{message}}",
 		viewAll: "View all",
+		selectStartDate: "Select start date",
+		selectEndDate: "Select end date",
+		from: "From",
+		reset: "Reset",
+		thisMonth: "This month",
+		lastMonth: "Last month",
+		thisWeek: "This week",
+		lastWeek: "Last week",
+		today: "Today",
+		yesterday: "Yesterday",
+		recentTransactions: "Recent transactions",
+		noTransactions: "No transactions",
+		loading: "Loading...",
+		more: "More",
 	},
 	errors: {
 		noData: "No data",
@@ -70,7 +95,8 @@ export const en = {
 		transfer: "Transfer",
 		savings: "Savings",
 		budgetOverview: "Budget Overview",
-		noBudgetsDescription: "No budgets set. Add budgets to track your spending limits.",
+		noBudgetsDescription:
+			"No budgets set. Add budgets to track your spending limits.",
 	},
 	accounts: {
 		title: "Accounts",
@@ -139,6 +165,7 @@ export const en = {
 	},
 	transactions: {
 		title: "Transactions",
+		transactionCount: "{{count}} transactions",
 		description:
 			"Manage all your financial transactions here. Add, edit, or delete transactions as needed to keep your financial records accurate and organized.",
 		addTransaction: "Add Transaction",
@@ -154,9 +181,21 @@ export const en = {
 		edit: {
 			title: "Edit Transaction",
 		},
+		delete: {
+			title: "Delete Transaction",
+			description:
+				"Are you sure you want to delete this transaction? This cannot be undone.",
+			confirm: "Delete",
+		},
 		toast: {
 			created: "Transaction created successfully",
 			updated: "Transaction updated successfully",
+			deleted: "Transaction deleted successfully",
+			createFailed: "Failed to create transaction: {{message}}",
+			updateFailed: "Failed to update transaction: {{message}}",
+			deleteFailed: "Failed to delete transaction: {{message}}",
+			validationFailed: "Transaction validation failed: {{message}}",
+			insufficientFunds: "Insufficient funds for this transaction",
 		},
 	},
 	settings: {
@@ -200,11 +239,14 @@ export const en = {
 			backup: "Backup Data",
 			backupDescription: "Save a copy of your database to a file",
 			restore: "Restore Data",
-			restoreDescription: "Replace current data from a backup file. The app will restart.",
+			restoreDescription:
+				"Replace current data from a backup file. The app will restart.",
 			wipe: "Wipe All Data",
-			wipeDescription: "Permanently delete all transactions, accounts, and categories",
+			wipeDescription:
+				"Permanently delete all transactions, accounts, and categories",
 			wipeConfirmTitle: "Wipe all data?",
-			wipeConfirmDescription: "This will permanently delete all transactions, accounts, and categories. This action cannot be undone.",
+			wipeConfirmDescription:
+				"This will permanently delete all transactions, accounts, and categories. This action cannot be undone.",
 			wipeConfirmAction: "Wipe All Data",
 		},
 		toast: {
@@ -271,7 +313,8 @@ export const en = {
 	recurrences: {
 		title: "Recurring Transactions",
 		ruleCount: "{{count}} rules",
-		noRules: "No recurring transactions yet. Create a transaction and check \"Repeat\" to get started.",
+		noRules:
+			'No recurring transactions yet. Create a transaction and check "Repeat" to get started.',
 		nextRun: "Next run",
 		active: "Active",
 		paused: "Paused",
@@ -288,9 +331,12 @@ export const en = {
 		},
 		toast: {
 			updated: "Recurring rule updated",
+			updateFailed: "Failed to update recurring rule: {{message}}",
 			deleted: "Recurring rule deleted",
+			deleteFailed: "Failed to delete recurring rule: {{message}}",
 			paused: "Recurring rule paused",
 			resumed: "Recurring rule resumed",
+			toggleFailed: "Failed to toggle recurring rule: {{message}}",
 		},
 	},
 	update: {

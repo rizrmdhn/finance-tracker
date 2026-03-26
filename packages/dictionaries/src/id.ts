@@ -6,6 +6,12 @@ export const id = {
 		description:
 			"Lacak keuangan Anda dengan mudah. Kelola pemasukan, pengeluaran, dan anggaran Anda dalam satu tempat.",
 	},
+	analitics: {
+		title: "Analitik",
+		incomeAndExpense: "Pemasukan & Pengeluaran",
+		byCategory: "Berdasarkan Kategori",
+		balanceOverTime: "Saldo Seiring Waktu",
+	},
 	sidebar: {
 		dashboard: "Dasbor",
 		accounts: "Akun",
@@ -48,7 +54,26 @@ export const id = {
 		edit: "Edit",
 		seeDetails: "Lihat detail",
 		printPDF: "Cetak PDF",
+		deleteTitle: "Hapus {{name}}",
+		deleteDescription:
+			"Apakah Anda yakin ingin menghapus {{name}} ini? Tindakan ini tidak dapat dibatalkan.",
+		deleteSuccess: "{{name}} berhasil dihapus",
+		deleteFailed: "Gagal menghapus {{name}}: {{message}}",
 		viewAll: "Lihat semua",
+		selectStartDate: "Pilih tanggal mulai",
+		selectEndDate: "Pilih tanggal berakhir",
+		from: "Dari",
+		reset: "Atur ulang",
+		thisMonth: "Bulan ini",
+		lastMonth: "Bulan lalu",
+		thisWeek: "Minggu ini",
+		lastWeek: "Minggu lalu",
+		today: "Hari ini",
+		yesterday: "Kemarin",
+		recentTransactions: "Transaksi Terbaru",
+		noTransactions: "Tidak ada transaksi yang ditemukan",
+		loading: "Memuat...",
+		more: "Lainnya",
 	},
 	errors: {
 		noData: "Tidak ada data",
@@ -70,7 +95,8 @@ export const id = {
 		transfer: "Transfer",
 		savings: "Tabungan",
 		budgetOverview: "Ringkasan Anggaran",
-		noBudgetsDescription: "Belum ada anggaran. Tambahkan anggaran untuk melacak batas pengeluaran Anda.",
+		noBudgetsDescription:
+			"Belum ada anggaran. Tambahkan anggaran untuk melacak batas pengeluaran Anda.",
 	},
 	accounts: {
 		title: "Akun",
@@ -139,6 +165,7 @@ export const id = {
 	},
 	transactions: {
 		title: "Transaksi",
+		transactionCount: "{{count}} transaksi",
 		description:
 			"Kelola semua transaksi keuangan Anda di sini. Tambah, edit, atau hapus transaksi sesuai kebutuhan untuk menjaga catatan keuangan Anda tetap akurat dan terorganisir.",
 		addTransaction: "Tambah Transaksi",
@@ -155,9 +182,21 @@ export const id = {
 		edit: {
 			title: "Edit Transaksi",
 		},
+		delete: {
+			title: "Hapus Transaksi",
+			description:
+				"Apakah Anda yakin ingin menghapus transaksi ini? Tindakan ini tidak dapat dibatalkan.",
+			confirm: "Hapus",
+		},
 		toast: {
 			created: "Transaksi berhasil dibuat",
 			updated: "Transaksi berhasil diperbarui",
+			deleted: "Transaksi dihapus",
+			createFailed: "Gagal membuat transaksi: {{message}}",
+			updateFailed: "Gagal memperbarui transaksi: {{message}}",
+			deleteFailed: "Gagal menghapus transaksi: {{message}}",
+			validationFailed: "Validasi transaksi gagal: {{message}}",
+			insufficientFunds: "Saldo tidak mencukupi untuk transaksi ini",
 		},
 	},
 	settings: {
@@ -201,11 +240,13 @@ export const id = {
 			backup: "Cadangkan Data",
 			backupDescription: "Simpan salinan database ke file",
 			restore: "Pulihkan Data",
-			restoreDescription: "Ganti data saat ini dari file cadangan. Aplikasi akan dimulai ulang.",
+			restoreDescription:
+				"Ganti data saat ini dari file cadangan. Aplikasi akan dimulai ulang.",
 			wipe: "Hapus Semua Data",
 			wipeDescription: "Hapus permanen semua transaksi, akun, dan kategori",
 			wipeConfirmTitle: "Hapus semua data?",
-			wipeConfirmDescription: "Ini akan menghapus permanen semua transaksi, akun, dan kategori. Tindakan ini tidak dapat dibatalkan.",
+			wipeConfirmDescription:
+				"Ini akan menghapus permanen semua transaksi, akun, dan kategori. Tindakan ini tidak dapat dibatalkan.",
 			wipeConfirmAction: "Hapus Semua Data",
 		},
 		toast: {
@@ -272,7 +313,8 @@ export const id = {
 	recurrences: {
 		title: "Transaksi Berulang",
 		ruleCount: "{{count}} aturan",
-		noRules: "Belum ada transaksi berulang. Buat transaksi dan centang \"Ulangi\" untuk memulai.",
+		noRules:
+			'Belum ada transaksi berulang. Buat transaksi dan centang "Ulangi" untuk memulai.',
 		nextRun: "Jadwal berikutnya",
 		active: "Aktif",
 		paused: "Dijeda",
@@ -289,9 +331,12 @@ export const id = {
 		},
 		toast: {
 			updated: "Aturan berulang diperbarui",
+			updateFailed: "Gagal memperbarui aturan berulang: {{message}}",
 			deleted: "Aturan berulang dihapus",
+			deleteFailed: "Gagal menghapus aturan berulang: {{message}}",
 			paused: "Aturan berulang dijeda",
 			resumed: "Aturan berulang dilanjutkan",
+			toggleFailed: "Gagal mengubah status aturan berulang: {{message}}",
 		},
 	},
 	update: {

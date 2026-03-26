@@ -78,6 +78,14 @@ jobs:
       - name: Setup bun
         uses: oven-sh/setup-bun@v2
 
+      - name: Cache bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
@@ -86,6 +94,7 @@ jobs:
         working-directory: apps/desktop
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ELECTRON_OVERRIDE_DIST_PATH: ${{ github.workspace }}/node_modules/electron/dist
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -93,9 +102,74 @@ jobs:
           name: desktop-${{ matrix.os }}
           path: ${{ matrix.artifact }}
 
+  build-android:
+    name: Build Android
+    needs: prepare
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+          cache: "gradle"
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Cache bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Cache Skia binaries
+        uses: actions/cache@v4
+        id: skia-cache
+        with:
+          path: apps/native/node_modules/@shopify/react-native-skia/libs
+          key: skia-${{ hashFiles('apps/native/node_modules/@shopify/react-native-skia/package.json') }}
+
+      - name: Install Skia binaries
+        if: steps.skia-cache.outputs.cache-hit != 'true'
+        run: bunx install-skia
+        working-directory: apps/native
+
+      - name: Decode keystore
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > apps/native/android/app/release.keystore
+
+      - name: Build release APK
+        working-directory: apps/native/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease
+        env:
+          ANDROID_KEYSTORE_PATH: release.keystore
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-release
+          path: apps/native/android/app/build/outputs/apk/release/*.apk
+
   release:
     name: Create GitHub Release
-    needs: [prepare, build]
+    needs: [prepare, build, build-android]
     runs-on: ubuntu-latest
 
     steps:
@@ -107,7 +181,7 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: desktop-*
+          pattern: "{desktop-*,android-release}"
           merge-multiple: true
           path: artifacts
 
