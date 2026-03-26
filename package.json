@@ -60,6 +60,7 @@
 		"db:generate": "turbo -F @finance-tracker/db db:generate && turbo -F @finance-tracker/native db:generate",
 		"check": "biome check --write .",
 		"native:doctor": "turbo -F @finance-tracker/native doctor",
+		"native:prebuild": "turbo -F @finance-tracker/native prebuild",
 		"tag": "bun scripts/tag.ts"
 	},
 	"dependencies": {
