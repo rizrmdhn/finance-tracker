@@ -28,6 +28,7 @@ import {
 	SelectValue,
 } from "../ui/select";
 import { Spinner } from "../ui/spinner";
+import { Text } from "../ui/text";
 import { ColorPicker } from "./color-picker";
 import { CurrencyInput } from "./currency-input";
 import { IconPicker } from "./icon-picker";
@@ -109,12 +110,12 @@ export default function EditAccountDialog({
 				)}
 			/>
 
-			<View className="grid grid-cols-2 gap-3">
+			<View className="flex flex-row gap-3">
 				<Controller
 					control={form.control}
 					name="icon"
 					render={({ field, fieldState }) => (
-						<Field data-invalid={fieldState.invalid}>
+						<Field data-invalid={fieldState.invalid} className="flex-1">
 							<FieldLabel>{t("common.icon")}</FieldLabel>
 							<IconPicker value={field.value} onChange={field.onChange} />
 							{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -126,7 +127,7 @@ export default function EditAccountDialog({
 					control={form.control}
 					name="color"
 					render={({ field, fieldState }) => (
-						<Field data-invalid={fieldState.invalid}>
+						<Field data-invalid={fieldState.invalid} className="flex-1">
 							<FieldLabel>{t("common.color")}</FieldLabel>
 							<ColorPicker value={field.value} onChange={field.onChange} />
 							{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -229,7 +230,7 @@ export default function EditAccountDialog({
 				onPress={() => form.handleSubmit(onSubmit)()}
 			>
 				{updateAccountMutation.isPending && <Spinner />}
-				{t("common.saveChanges")}
+				<Text>{t("common.saveChanges")}</Text>
 			</Button>
 		</ModalSheet>
 	);
