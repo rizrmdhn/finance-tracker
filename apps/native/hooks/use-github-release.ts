@@ -35,8 +35,8 @@ export function useGithubRelease(repo: string) {
 					assets: { name: string; browser_download_url: string }[];
 				}[];
 
-				const release = json.find((r) => r.tag_name.startsWith("mobile/v"));
-				if (!release) throw new Error("No mobile release found");
+				const release = json[0];
+				if (!release) throw new Error("No release found");
 
 				const latestVersion = release.tag_name.replace(/^mobile\/v/, "");
 				const apkAsset = release.assets.find((a) => a.name.endsWith(".apk"));

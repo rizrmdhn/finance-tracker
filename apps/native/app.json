@@ -1,6 +1,6 @@
 {
 	"expo": {
-		"version": "1.0.0",
+		"version": "1.0.1",
 		"scheme": "finance-tracker",
 		"userInterfaceStyle": "automatic",
 		"orientation": "default",
@@ -14,7 +14,19 @@
 			"expo-font",
 			"expo-router",
 			"expo-secure-store",
-			"expo-web-browser"
+			"expo-web-browser",
+			[
+				"expo-splash-screen",
+				{
+					"backgroundColor": "#ffffff",
+					"image": "./assets/images/splash-icon.png",
+					"imageWidth": 200,
+					"dark": {
+						"backgroundColor": "#09090b",
+						"image": "./assets/images/splash-icon-dark.png"
+					}
+				}
+			]
 		],
 		"experiments": {
 			"typedRoutes": true,

@@ -32,8 +32,7 @@ import { useThemeColor } from "@/lib/theme";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
 
-// Replace with your actual GitHub repo (e.g. "username/finance-tracker")
-const GITHUB_REPO = "rizrmdhn/finance-tracker";
+const GITHUB_REPO = "rizrmdhn/finance-tracker-mobile";
 
 export default function Settings() {
 	const { t } = useTranslation();
