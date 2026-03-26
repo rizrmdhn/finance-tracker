@@ -1,4 +1,4 @@
-package com.financetracker
+package com.rizrmdhn.finance_tracker
 
 import android.app.Application
 import android.content.res.Configuration
