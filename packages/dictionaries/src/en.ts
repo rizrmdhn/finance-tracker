@@ -325,9 +325,12 @@ export const en = {
 		},
 		toast: {
 			updated: "Recurring rule updated",
+			updateFailed: "Failed to update recurring rule: {{message}}",
 			deleted: "Recurring rule deleted",
+			deleteFailed: "Failed to delete recurring rule: {{message}}",
 			paused: "Recurring rule paused",
 			resumed: "Recurring rule resumed",
+			toggleFailed: "Failed to toggle recurring rule: {{message}}",
 		},
 	},
 	update: {

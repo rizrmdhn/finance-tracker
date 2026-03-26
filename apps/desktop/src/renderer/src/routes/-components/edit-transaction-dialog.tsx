@@ -84,7 +84,9 @@ export default function EditTransactionDialog({
 				setIsOpen(false);
 			},
 			onError: (error) => {
-				globalErrorToast(error.message);
+				globalErrorToast(
+					t("transactions.toast.updateFailed", { message: error.message }),
+				);
 			},
 		}),
 	);

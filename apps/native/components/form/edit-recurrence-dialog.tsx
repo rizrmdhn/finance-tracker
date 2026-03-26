@@ -72,7 +72,9 @@ export default function EditRecurrenceDialog({
 				setIsOpen(false);
 			},
 			onError: (error) => {
-				globalErrorToast(error.message);
+				globalErrorToast(
+					t("recurrences.toast.updateFailed", { message: error.message }),
+				);
 			},
 		}),
 	);

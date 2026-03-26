@@ -110,7 +110,9 @@ export default function Transactions() {
 				setSelected(null);
 			},
 			onError: (error) => {
-				globalErrorToast(error.message);
+				globalErrorToast(
+					t("transactions.toast.deleteFailed", { message: error.message }),
+				);
 			},
 		}),
 	);

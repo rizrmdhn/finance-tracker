@@ -51,7 +51,9 @@ export default function Recurring() {
 				);
 			},
 			onError: (error) => {
-				globalErrorToast(error.message);
+				globalErrorToast(
+					t("recurrences.toast.toggleFailed", { message: error.message }),
+				);
 			},
 		}),
 	);
@@ -67,7 +69,9 @@ export default function Recurring() {
 				setSelected(null);
 			},
 			onError: (error) => {
-				globalErrorToast(error.message);
+				globalErrorToast(
+					t("recurrences.toast.deleteFailed", { message: error.message }),
+				);
 			},
 		}),
 	);

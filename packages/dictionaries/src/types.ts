@@ -306,9 +306,12 @@ export interface Dictionary {
 		};
 		toast: {
 			updated: string;
+			updateFailed: string;
 			deleted: string;
+			deleteFailed: string;
 			paused: string;
 			resumed: string;
+			toggleFailed: string;
 		};
 	};
 	update: {

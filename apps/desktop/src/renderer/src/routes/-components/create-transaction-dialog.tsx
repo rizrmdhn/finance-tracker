@@ -80,7 +80,9 @@ export default function CreateTransactionDialog({
 				setIsOpen(false);
 			},
 			onError: (error) => {
-				globalErrorToast(error.message);
+				globalErrorToast(
+					t("transactions.toast.createFailed", { message: error.message }),
+				);
 			},
 		}),
 	);

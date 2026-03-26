@@ -41,9 +41,12 @@ function RouteComponent() {
 	const deleteMutation = useMutation(
 		trpc.account.delete.mutationOptions({
 			onSuccess: async () => {
-				await queryClient.invalidateQueries(
-					trpc.account.listWithBalance.queryOptions(),
-				);
+				await Promise.all([
+					queryClient.invalidateQueries(trpc.account.list.queryOptions()),
+					queryClient.invalidateQueries(
+						trpc.account.listWithBalance.queryOptions(),
+					),
+				]);
 				globalSuccessToast(t("accounts.toast.deleted"));
 				closeModal("delete");
 				setSelected(null);

@@ -325,9 +325,12 @@ export const id = {
 		},
 		toast: {
 			updated: "Aturan berulang diperbarui",
+			updateFailed: "Gagal memperbarui aturan berulang: {{message}}",
 			deleted: "Aturan berulang dihapus",
+			deleteFailed: "Gagal menghapus aturan berulang: {{message}}",
 			paused: "Aturan berulang dijeda",
 			resumed: "Aturan berulang dilanjutkan",
+			toggleFailed: "Gagal mengubah status aturan berulang: {{message}}",
 		},
 	},
 	update: {
