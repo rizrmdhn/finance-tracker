@@ -30,6 +30,7 @@ import {
 	getDefaultFilterOperator,
 	getFilterOperators,
 } from "@finance-tracker/utils";
+import { createId } from "@paralleldrive/cuid2";
 import type { Column, Table } from "@tanstack/react-table";
 import {
 	BadgeCheck,
@@ -43,7 +44,6 @@ import * as React from "react";
 import { DataTableRangeFilter } from "@/components/data-table/data-table-range-filter";
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
 import { formatDate } from "@/lib/format-date";
-import { generateId } from "@/lib/id";
 
 const DEBOUNCE_MS = 300;
 const FILTER_SHORTCUT_KEY = "f";
@@ -148,7 +148,7 @@ export function DataTableFilterMenu<TData>({
 				operator: getDefaultFilterOperator(
 					column.columnDef.meta?.variant ?? "text",
 				),
-				filterId: generateId({ length: 8 }),
+				filterId: createId(),
 			};
 
 			debouncedSetFilters([...filters, newFilter]);

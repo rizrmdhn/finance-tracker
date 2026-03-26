@@ -136,6 +136,9 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          repository: rizrmdhn/finance-tracker-mobile
+          token: ${{ secrets.MOBILE_RELEASE_TOKEN }}
+          tag_name: ${{ github.ref_name }}
           body_path: RELEASE_NOTES.md
           prerelease: ${{ needs.prepare.outputs.is_prerelease == 'true' }}
           generate_release_notes: false
