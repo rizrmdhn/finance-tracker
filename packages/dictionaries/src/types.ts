@@ -326,4 +326,13 @@ export interface Dictionary {
 			action: string;
 		};
 	};
+	search: {
+		title: string;
+		description: string;
+		placeholder: string;
+		hint: string;
+		noResults: string;
+		navigateHint: string;
+		heading: string;
+	};
 }

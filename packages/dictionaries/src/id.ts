@@ -346,4 +346,13 @@ export const id = {
 			action: "Restart & Pasang",
 		},
 	},
+	search: {
+		title: "Cari transaksi",
+		description: "Cari transaksi berdasarkan catatan, jumlah, atau kategori",
+		placeholder: "Cari transaksi...",
+		hint: "Ketik untuk mencari berdasarkan catatan, jumlah, atau kategori",
+		noResults: "Transaksi tidak ditemukan.",
+		navigateHint: "Buka halaman Transaksi saat dipilih",
+		heading: "Transaksi",
+	},
 } satisfies Dictionary;

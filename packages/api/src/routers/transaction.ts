@@ -9,12 +9,14 @@ import {
 	getRecurrenceByTemplateId,
 	getTransactionSummary,
 	getTransactions,
+	searchTransactions,
 	updateTransaction,
 } from "@finance-tracker/queries";
 import {
 	exportTransactionsSchema,
 	infiniteTransactionsSchema,
 	paginatedTransactionsSchema,
+	searchTransactionsSchema,
 	summaryFiltersSchema,
 	transactionFiltersSchema,
 	transactionSchema,
@@ -133,6 +135,16 @@ export const transactionRouter = createTRPCRouter({
 		.query(async ({ ctx, input }) => {
 			const [data, err] = await tryCatchAsync(() =>
 				getTransactionSummary(ctx.db, input),
+			);
+			if (err) throw toTRPCError(err);
+			return data;
+		}),
+
+	search: publicProcedure
+		.input(searchTransactionsSchema)
+		.query(async ({ ctx, input }) => {
+			const [data, err] = await tryCatchAsync(() =>
+				searchTransactions(ctx.db, input),
 			);
 			if (err) throw toTRPCError(err);
 			return data;

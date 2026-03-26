@@ -1,12 +1,13 @@
-import { type AnyDatabase, accounts, transactions } from "@finance-tracker/db";
+import { type AnyDatabase, accounts, categories, transactions } from "@finance-tracker/db";
 import type {
 	ExportTransactionsInput,
 	InfiniteTransactionsInput,
 	PaginatedTransactionsInput,
+	SearchTransactionsInput,
 	TransactionInput,
 	UpdateTransactionInput,
 } from "@finance-tracker/schema";
-import { and, asc, between, desc, eq, gt, gte, lt, lte, or } from "drizzle-orm";
+import { and, asc, between, desc, eq, gt, gte, like, lt, lte, or } from "drizzle-orm";
 import { NotFoundError } from "./errors";
 import { getOffsetPaginated } from "./utils/get-offset-paginated";
 
@@ -192,6 +193,33 @@ export async function getTransactionSummary(
 	});
 
 	return summary;
+}
+
+export async function searchTransactions(
+	db: AnyDatabase,
+	input: SearchTransactionsInput,
+) {
+	const { query, limit } = input;
+	const term = `%${query}%`;
+
+	const numericQuery = Number(query);
+	const isNumeric = query.trim() !== "" && !Number.isNaN(numericQuery);
+
+	const rows = await db
+		.select({ transaction: transactions, category: categories })
+		.from(transactions)
+		.leftJoin(categories, eq(transactions.categoryId, categories.id))
+		.where(
+			or(
+				like(transactions.note, term),
+				like(categories.name, term),
+				...(isNumeric ? [eq(transactions.amount, numericQuery)] : []),
+			),
+		)
+		.orderBy(desc(transactions.date))
+		.limit(limit);
+
+	return rows.map((row) => ({ ...row.transaction, category: row.category ?? null }));
 }
 
 export async function getInfiniteTransactions(

@@ -20,9 +20,10 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Toaster } from "sonner";
 import { AppSidebar } from "@/components/app-sidebar";
-import { SplashScreen } from "@/components/splash-screen";
+import { GlobalSearch, SearchTrigger } from "@/components/global-search";
 import { NotFoundComponent } from "@/components/not-found";
 import { OnboardingScreen } from "@/components/onboarding-screen";
+import { SplashScreen } from "@/components/splash-screen";
 import { ThemeProvider } from "@/components/theme-provider";
 import { UpdateNotifier } from "@/components/update-notifier";
 import { pageHead } from "../lib/page-head";
@@ -107,6 +108,7 @@ function RootComponent() {
 									orientation="vertical"
 									className="mx-2 data-[orientation=vertical]:h-4"
 								/>
+								<SearchTrigger />
 							</div>
 						</header>
 						<div className="overflow-y-auto p-4">
@@ -115,6 +117,7 @@ function RootComponent() {
 						<UpdateNotifier />
 					</SidebarInset>
 				</SidebarProvider>
+				<GlobalSearch />
 				<Toaster position="top-right" richColors />
 			</ThemeProvider>
 			<TanStackRouterDevtools position="bottom-left" />
