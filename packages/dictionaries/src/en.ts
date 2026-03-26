@@ -346,4 +346,13 @@ export const en = {
 			action: "Restart & Install",
 		},
 	},
+	search: {
+		title: "Search transactions",
+		description: "Search transactions by note, amount, or category",
+		placeholder: "Search transactions...",
+		hint: "Type to search by note, amount, or category",
+		noResults: "No transactions found.",
+		navigateHint: "Navigate to Transactions on select",
+		heading: "Transactions",
+	},
 } satisfies Dictionary;

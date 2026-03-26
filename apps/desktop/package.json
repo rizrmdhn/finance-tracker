@@ -1,6 +1,6 @@
 {
 	"name": "@finance-tracker/desktop",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"main": "out/main/index.js",
 	"scripts": {
 		"dev": "electron-vite dev",
@@ -86,12 +86,13 @@
 	"dependencies": {
 		"@finance-tracker/api": "workspace:*",
 		"@finance-tracker/db": "workspace:*",
+		"@finance-tracker/queries": "workspace:*",
 		"@finance-tracker/schema": "workspace:*",
+		"@tanstack/react-hotkeys": "0.7.0",
 		"better-sqlite3": "catalog:",
 		"drizzle-orm": "catalog:",
 		"electron-updater": "^6.8.3",
-		"trpc-electron": "^0.1.2",
-		"@finance-tracker/queries": "workspace:*"
+		"trpc-electron": "^0.1.2"
 	},
 	"devDependencies": {
 		"@finance-tracker/constants": "workspace:*",
