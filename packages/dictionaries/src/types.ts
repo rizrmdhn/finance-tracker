@@ -10,6 +10,7 @@ export interface Dictionary {
 		transactions: string;
 		recurring: string;
 		budgets: string;
+		trash: string;
 		settings: string;
 	};
 	analitics: {
@@ -165,6 +166,7 @@ export interface Dictionary {
 		repeat: string;
 		frequency: string;
 		endDate: string;
+		showDeleted: string;
 		create: {
 			title: string;
 		};
@@ -318,6 +320,26 @@ export interface Dictionary {
 			paused: string;
 			resumed: string;
 			toggleFailed: string;
+		};
+	};
+	trash: {
+		title: string;
+		description: string;
+		transactions: string;
+		categories: string;
+		accounts: string;
+		emptyTrash: string;
+		restore: string;
+		permanentDelete: string;
+		noItems: string;
+		noItemsDescription: string;
+		toast: {
+			restored: string;
+			restoreFailed: string;
+			permanentlyDeleted: string;
+			permanentDeleteFailed: string;
+			confirmPermanentDelete: string;
+			confirmEmptyTrash: string;
 		};
 	};
 	update: {

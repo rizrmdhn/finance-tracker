@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TrashRouteImport } from './routes/trash'
 import { Route as TransactionsRouteImport } from './routes/transactions'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as RecurringRouteImport } from './routes/recurring'
@@ -16,7 +17,14 @@ import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as BudgetsRouteImport } from './routes/budgets'
 import { Route as AccountsRouteImport } from './routes/accounts'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TrashTransactionsRouteImport } from './routes/trash/transactions'
+import { Route as TrashCategoriesRouteImport } from './routes/trash/categories'
 
+const TrashRoute = TrashRouteImport.update({
+  id: '/trash',
+  path: '/trash',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TransactionsRoute = TransactionsRouteImport.update({
   id: '/transactions',
   path: '/transactions',
@@ -52,6 +60,16 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TrashTransactionsRoute = TrashTransactionsRouteImport.update({
+  id: '/transactions',
+  path: '/transactions',
+  getParentRoute: () => TrashRoute,
+} as any)
+const TrashCategoriesRoute = TrashCategoriesRouteImport.update({
+  id: '/categories',
+  path: '/categories',
+  getParentRoute: () => TrashRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -61,6 +79,9 @@ export interface FileRoutesByFullPath {
   '/recurring': typeof RecurringRoute
   '/settings': typeof SettingsRoute
   '/transactions': typeof TransactionsRoute
+  '/trash': typeof TrashRouteWithChildren
+  '/trash/categories': typeof TrashCategoriesRoute
+  '/trash/transactions': typeof TrashTransactionsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -70,6 +91,9 @@ export interface FileRoutesByTo {
   '/recurring': typeof RecurringRoute
   '/settings': typeof SettingsRoute
   '/transactions': typeof TransactionsRoute
+  '/trash': typeof TrashRouteWithChildren
+  '/trash/categories': typeof TrashCategoriesRoute
+  '/trash/transactions': typeof TrashTransactionsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -80,6 +104,9 @@ export interface FileRoutesById {
   '/recurring': typeof RecurringRoute
   '/settings': typeof SettingsRoute
   '/transactions': typeof TransactionsRoute
+  '/trash': typeof TrashRouteWithChildren
+  '/trash/categories': typeof TrashCategoriesRoute
+  '/trash/transactions': typeof TrashTransactionsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -91,6 +118,9 @@ export interface FileRouteTypes {
     | '/recurring'
     | '/settings'
     | '/transactions'
+    | '/trash'
+    | '/trash/categories'
+    | '/trash/transactions'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -100,6 +130,9 @@ export interface FileRouteTypes {
     | '/recurring'
     | '/settings'
     | '/transactions'
+    | '/trash'
+    | '/trash/categories'
+    | '/trash/transactions'
   id:
     | '__root__'
     | '/'
@@ -109,6 +142,9 @@ export interface FileRouteTypes {
     | '/recurring'
     | '/settings'
     | '/transactions'
+    | '/trash'
+    | '/trash/categories'
+    | '/trash/transactions'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -119,10 +155,18 @@ export interface RootRouteChildren {
   RecurringRoute: typeof RecurringRoute
   SettingsRoute: typeof SettingsRoute
   TransactionsRoute: typeof TransactionsRoute
+  TrashRoute: typeof TrashRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/trash': {
+      id: '/trash'
+      path: '/trash'
+      fullPath: '/trash'
+      preLoaderRoute: typeof TrashRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/transactions': {
       id: '/transactions'
       path: '/transactions'
@@ -172,8 +216,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/trash/transactions': {
+      id: '/trash/transactions'
+      path: '/transactions'
+      fullPath: '/trash/transactions'
+      preLoaderRoute: typeof TrashTransactionsRouteImport
+      parentRoute: typeof TrashRoute
+    }
+    '/trash/categories': {
+      id: '/trash/categories'
+      path: '/categories'
+      fullPath: '/trash/categories'
+      preLoaderRoute: typeof TrashCategoriesRouteImport
+      parentRoute: typeof TrashRoute
+    }
   }
 }
+
+interface TrashRouteChildren {
+  TrashCategoriesRoute: typeof TrashCategoriesRoute
+  TrashTransactionsRoute: typeof TrashTransactionsRoute
+}
+
+const TrashRouteChildren: TrashRouteChildren = {
+  TrashCategoriesRoute: TrashCategoriesRoute,
+  TrashTransactionsRoute: TrashTransactionsRoute,
+}
+
+const TrashRouteWithChildren = TrashRoute._addFileChildren(TrashRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -183,6 +253,7 @@ const rootRouteChildren: RootRouteChildren = {
   RecurringRoute: RecurringRoute,
   SettingsRoute: SettingsRoute,
   TransactionsRoute: TransactionsRoute,
+  TrashRoute: TrashRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

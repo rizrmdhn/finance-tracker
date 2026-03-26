@@ -120,6 +120,9 @@ export default function Transactions() {
 					queryClient.invalidateQueries({
 						queryKey: trpc.transaction.infiniteList.queryKey(),
 					}),
+					queryClient.invalidateQueries(
+						trpc.transaction.listDeleted.queryOptions(),
+					),
 				]);
 				globalSuccessToast(t("transactions.toast.deleted"));
 				closeModal("delete");

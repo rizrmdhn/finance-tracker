@@ -1,6 +1,6 @@
 {
 	"name": "@finance-tracker/native",
-	"version": "1.0.2",
+	"version": "1.1.0",
 	"private": true,
 	"main": "expo-router/entry",
 	"scripts": {
@@ -65,8 +65,10 @@
 		"drizzle-orm": "catalog:",
 		"expo": "^55.0.0",
 		"expo-constants": "~55.0.9",
+		"expo-file-system": "^55.0.11",
 		"expo-font": "~55.0.4",
 		"expo-haptics": "~55.0.9",
+		"expo-intent-launcher": "^55.0.9",
 		"expo-linking": "~55.0.8",
 		"expo-network": "~55.0.9",
 		"expo-router": "~55.0.7",

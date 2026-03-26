@@ -6,10 +6,10 @@ import {
 } from "@finance-tracker/constants";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import Constants from "expo-constants";
-import * as Linking from "expo-linking";
 import { useTranslation } from "react-i18next";
 import {
 	ActivityIndicator,
+	Platform,
 	Switch,
 	TouchableOpacity,
 	View,
@@ -31,6 +31,9 @@ import i18n from "@/lib/i18n";
 import { useThemeColor } from "@/lib/theme";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
+import { Directory, File, Paths } from 'expo-file-system';
+import * as IntentLauncher from 'expo-intent-launcher';
+
 
 const GITHUB_REPO = "rizrmdhn/finance-tracker-mobile";
 
@@ -69,6 +72,21 @@ export default function Settings() {
 			},
 		}),
 	);
+
+	const downloadAndInstall = async (downloadUrl: string) => {
+		const destination = new Directory(Paths.cache, "apk");
+		destination.create({ idempotent: true });
+
+		const downloaded = await File.downloadFileAsync(downloadUrl, destination);
+
+		if (Platform.OS === "android") {
+			await IntentLauncher.startActivityAsync("android.intent.action.VIEW", {
+				data: downloaded.contentUri,
+				flags: 1,
+				type: "application/vnd.android.package-archive",
+			});
+		}
+	};
 
 	return (
 		<Container contentContainerClassName="gap-6 p-4 pb-8">
@@ -222,7 +240,7 @@ export default function Settings() {
 							</Markdown>
 						)}
 						<TouchableOpacity
-							onPress={() => Linking.openURL(release.downloadUrl)}
+							onPress={() => downloadAndInstall(release.downloadUrl)}
 							className="items-center rounded-lg bg-foreground px-3 py-2"
 						>
 							<Text className="font-medium text-background text-sm">

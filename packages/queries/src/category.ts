@@ -3,17 +3,33 @@ import { categories } from "@finance-tracker/db";
 import type {
 	CategoryInput,
 	CategoryUpdateInput,
+	PaginatedCategoriesInput,
 } from "@finance-tracker/schema";
-import { eq } from "drizzle-orm";
+import { and, eq, isNotNull, isNull } from "drizzle-orm";
 import { NotFoundError } from "./errors";
+import { getOffsetPaginated } from "./utils/get-offset-paginated";
 
 export async function getCategories(db: AnyDatabase) {
-	return await db.query.categories.findMany();
+	return await db.query.categories.findMany({
+		where: isNull(categories.deletedAt),
+	});
+}
+
+export async function getDeletedCategories(db: AnyDatabase) {
+	return await db.query.categories.findMany({
+		where: isNotNull(categories.deletedAt),
+	});
 }
 
 export async function getCategoryById(db: AnyDatabase, id: string) {
 	return await db.query.categories.findFirst({
-		where: eq(categories.id, id),
+		where: and(eq(categories.id, id), isNull(categories.deletedAt)),
+	});
+}
+
+export async function getDeletedCategoryById(db: AnyDatabase, id: string) {
+	return await db.query.categories.findFirst({
+		where: and(eq(categories.id, id), isNotNull(categories.deletedAt)),
 	});
 }
 
@@ -169,7 +185,8 @@ export async function deleteCategory(db: AnyDatabase, id: string) {
 	}
 
 	const [result] = await db
-		.delete(categories)
+		.update(categories)
+		.set({ deletedAt: new Date().toISOString() })
 		.where(eq(categories.id, id))
 		.returning();
 
@@ -178,4 +195,62 @@ export async function deleteCategory(db: AnyDatabase, id: string) {
 	}
 
 	return result;
+}
+
+export async function restoreCategory(db: AnyDatabase, id: string) {
+	const isExist = await getDeletedCategoryById(db, id);
+
+	if (!isExist) {
+		throw new NotFoundError("Category", id);
+	}
+
+	const [result] = await db
+		.update(categories)
+		.set({ deletedAt: null })
+		.where(eq(categories.id, id))
+		.returning();
+
+	if (!result) {
+		throw new Error("Failed to restore category");
+	}
+
+	return result;
+}
+
+export async function permanentDeleteCategory(db: AnyDatabase, id: string) {
+	const isExist = await getDeletedCategoryById(db, id);
+
+	if (!isExist) {
+		throw new NotFoundError("Category", id);
+	}
+
+	const [result] = await db
+		.delete(categories)
+		.where(eq(categories.id, id))
+		.returning();
+
+	if (!result) {
+		throw new Error("Failed to permanently delete category");
+	}
+
+	return result;
+}
+
+export async function permanentDeleteAllCategories(db: AnyDatabase) {
+	return await db
+		.delete(categories)
+		.where(isNotNull(categories.deletedAt))
+		.returning();
+}
+
+export async function getOffsetPaginatedCategories(
+	db: AnyDatabase,
+	input: PaginatedCategoriesInput,
+) {
+	return await getOffsetPaginated({
+		db,
+		table: categories,
+		input,
+		conditions: [],
+	});
 }

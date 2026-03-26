@@ -21,5 +21,10 @@
   "editor.codeActionsOnSave": {
     "quickfix.biome": "explicit",
     "source.organizeImports.biome": "explicit"
-  }
+  },
+  "github.copilot.chat.commitMessageGeneration.instructions": [
+    {
+      "text": "Generate exactly 1 commit message following Conventional Commits: format `<type>(<scope>): <subject>`, allowed types: feat, fix, chore, docs, style, refactor, perf, test, ci, build, wip, revert, improvement. Rules: lowercase, no period, imperative mood, subject under 72 chars, never generate multiple commit messages. Scope rules for this monorepo — derive scope from the changed paths: use `desktop` for changes under `apps/desktop/`, `native` for `apps/native/`, `api` for `packages/api/`, `db` for `packages/db/`, `schema` for `packages/schema/`, `queries` for `packages/queries/`, `types` for `packages/types/`, `ui` for `packages/ui/`, `i18n` for `packages/dictionaries/`, `constants` for `packages/constants/`, `utils` for `packages/utils/`; if changes span multiple apps use the dominant app or omit scope; if changes span multiple packages use the dominant package or omit scope; if changes span both apps/ and packages/ omit scope. If multiple files changed, summarize into 1 subject using dominant type and shared scope, then use body (blank line after subject, each line prefixed with `-`) to detail individual changes. For breaking changes append `!` after type and add `BREAKING CHANGE:` in footer."
+    }
+  ]
 }

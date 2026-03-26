@@ -4,11 +4,15 @@ import {
 	createTransaction,
 	deleteTransaction,
 	getAllFilteredTransactions,
+	getDeletedTransactions,
 	getInfiniteTransactions,
 	getOffsetPaginatedTransactions,
 	getRecurrenceByTemplateId,
 	getTransactionSummary,
 	getTransactions,
+	permanentDeleteAllTransactions,
+	permanentDeleteTransaction,
+	restoreTransaction,
 	searchTransactions,
 	updateTransaction,
 } from "@finance-tracker/queries";
@@ -149,4 +153,40 @@ export const transactionRouter = createTRPCRouter({
 			if (err) throw toTRPCError(err);
 			return data;
 		}),
+
+	listDeleted: publicProcedure.query(async ({ ctx }) => {
+		const [data, err] = await tryCatchAsync(() =>
+			getDeletedTransactions(ctx.db),
+		);
+		if (err) throw toTRPCError(err);
+		return data;
+	}),
+
+	restore: publicProcedure
+		.input(updateTransactionSchema.pick({ id: true }))
+		.mutation(async ({ ctx, input }) => {
+			const [data, err] = await tryCatchAsync(() =>
+				restoreTransaction(ctx.db, input.id),
+			);
+			if (err) throw toTRPCError(err);
+			return data;
+		}),
+
+	permanentDelete: publicProcedure
+		.input(updateTransactionSchema.pick({ id: true }))
+		.mutation(async ({ ctx, input }) => {
+			const [data, err] = await tryCatchAsync(() =>
+				permanentDeleteTransaction(ctx.db, input.id),
+			);
+			if (err) throw toTRPCError(err);
+			return data;
+		}),
+
+	emptyTrash: publicProcedure.mutation(async ({ ctx }) => {
+		const [data, err] = await tryCatchAsync(() =>
+			permanentDeleteAllTransactions(ctx.db),
+		);
+		if (err) throw toTRPCError(err);
+		return data;
+	}),
 });
