@@ -5,7 +5,6 @@ import { PencilIcon, Trash2Icon } from "lucide-react-native";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { Container } from "@/components/container";
 import CreateCategoryDialog from "@/components/form/create-category-dialog";
@@ -22,7 +21,6 @@ import { queryClient, trpc } from "@/lib/trpc";
 
 export default function Categories() {
 	const { t } = useTranslation();
-	const insets = useSafeAreaInsets();
 
 	const { state, openModal, closeModal } = useModalState({
 		createCategory: false,
@@ -97,54 +95,58 @@ export default function Categories() {
 					</Button>
 				</View>
 
-				<View
-					className="flex flex-col gap-2"
-					style={{ paddingBottom: insets.bottom }}
-				>
+				<View className="flex flex-col gap-3">
 					{categories.map((category) => {
 						const Icon = category.icon ? ICON_MAP[category.icon] : null;
 						return (
 							<View
 								key={category.id}
-								className="flex flex-row items-center gap-3 rounded-lg border border-border px-4 py-3"
+								className="flex flex-col gap-3 rounded-lg border border-border px-4 py-3"
 							>
-								{Icon ? (
-									<IconComp
-										as={Icon}
-										className="size-4 shrink-0"
-										color={category.color ?? "#94a3b8"}
-									/>
-								) : (
-									<View
-										className="size-3 shrink-0 rounded-full"
-										style={{ backgroundColor: category.color ?? "#94a3b8" }}
-									/>
-								)}
-								<Text className="flex-1 font-medium text-sm">
-									{category.name}
-								</Text>
-								<Text className="text-muted-foreground text-xs capitalize">
-									{category.type}
-								</Text>
-								<View className="flex items-center gap-1">
-									<Button
-										variant="ghost"
-										size="sm"
-										onPress={() => handleEdit(category)}
-									>
-										<IconComp as={PencilIcon} className="size-3.5" />
-									</Button>
-									<Button
-										variant="ghost"
-										size="sm"
-										className="text-destructive hover:text-destructive"
-										onPress={() => handleDelete(category)}
-									>
+								{/* Top row: icon + name + actions */}
+								<View className="flex flex-row items-center gap-3">
+									{Icon ? (
 										<IconComp
-											as={Trash2Icon}
-											className="size-3.5 text-destructive"
+											as={Icon}
+											className="size-4 shrink-0"
+											color={category.color ?? "#94a3b8"}
 										/>
-									</Button>
+									) : (
+										<View
+											className="size-3 shrink-0 rounded-full"
+											style={{ backgroundColor: category.color ?? "#94a3b8" }}
+										/>
+									)}
+									<Text className="flex-1 font-medium text-sm">
+										{category.name}
+									</Text>
+									<View className="flex shrink-0 flex-row items-center gap-1">
+										<Button
+											variant="ghost"
+											size="sm"
+											onPress={() => handleEdit(category)}
+										>
+											<IconComp as={PencilIcon} className="size-3.5" />
+										</Button>
+										<Button
+											variant="ghost"
+											size="sm"
+											className="text-destructive hover:text-destructive"
+											onPress={() => handleDelete(category)}
+										>
+											<IconComp
+												as={Trash2Icon}
+												className="size-3.5 text-destructive"
+											/>
+										</Button>
+									</View>
+								</View>
+
+								{/* Second row: category description */}
+								<View className="flex flex-row items-center gap-2">
+									<Text className="rounded-full bg-muted px-2 py-0.5 text-muted-foreground text-xs capitalize">
+										{category.type}
+									</Text>
 								</View>
 							</View>
 						);
@@ -153,16 +155,20 @@ export default function Categories() {
 						[...Array(3)].map((_, _i) => (
 							<View
 								key={createId()}
-								className="flex h-12.5 items-center gap-3 rounded-lg border px-4 py-3"
+								className="flex flex-col justify-between gap-3 rounded-lg border border-border px-4 py-3"
 							>
-								<Skeleton className="size-4 shrink-0 rounded-full" />
-								<View className="flex flex-1 flex-col gap-1">
-									<Skeleton className="h-4 w-32" />
+								<View className="flex flex-row items-center gap-3">
+									<Skeleton className="size-4 shrink-0 rounded-full" />
+									<Skeleton className="h-4 w-32 flex-1" />
+									<View className="flex shrink-0 flex-row items-center gap-1">
+										<Skeleton className="size-3.5" />
+										<Skeleton className="size-3.5" />
+									</View>
 								</View>
-								<Skeleton className="h-3 w-10" />
-								<View className="flex items-center gap-1">
-									<Skeleton className="size-7" />
-									<Skeleton className="size-7" />
+
+								{/* Second row: category description */}
+								<View className="flex flex-row items-center gap-2">
+									<Skeleton className="h-5 w-20 rounded-full" />
 								</View>
 							</View>
 						))}

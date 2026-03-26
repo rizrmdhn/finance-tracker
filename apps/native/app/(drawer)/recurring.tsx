@@ -11,7 +11,6 @@ import {
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { Container } from "@/components/container";
 import EditRecurrenceDialog from "@/components/form/edit-recurrence-dialog";
@@ -26,7 +25,6 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 
 export default function Recurring() {
 	const { t } = useTranslation();
-	const insets = useSafeAreaInsets();
 
 	const { state, openModal, closeModal } = useModalState({
 		editRecurrence: false,
@@ -101,10 +99,7 @@ export default function Recurring() {
 					</View>
 				</View>
 
-				<View
-					className="flex flex-col gap-2"
-					style={{ paddingBottom: insets.bottom }}
-				>
+				<View className="flex flex-col gap-3">
 					{recurrences.map((rule) => {
 						const Icon = rule.templateTransaction.category?.icon
 							? ICON_MAP[rule.templateTransaction.category.icon]
@@ -216,20 +211,39 @@ export default function Recurring() {
 						[...Array(3)].map((_) => (
 							<View
 								key={createId()}
-								className="flex items-center gap-3 rounded-lg border px-4 py-3"
+								className="flex items-center gap-3 rounded-lg border border-border px-4 py-3"
 							>
-								<Skeleton className="size-4 shrink-0 rounded-full" />
-								<View className="flex flex-1 flex-col gap-1">
-									<Skeleton className="h-4 w-32" />
-									<Skeleton className="h-3 w-20" />
+								{/* Top row: icon + name/account + amount */}
+								<View className="flex flex-row items-center gap-3">
+									<Skeleton className="size-4 shrink-0 rounded-full" />
+
+									<View className="flex min-w-0 flex-1 flex-col">
+										<Skeleton className="mb-1 h-4 w-32" />
+										<Skeleton className="h-3 w-24" />
+									</View>
+
+									<Text className="shrink-0 font-medium text-sm">
+										<Skeleton className="h-4 w-16" />
+									</Text>
 								</View>
-								<Skeleton className="h-4 w-16" />
-								<Skeleton className="h-5 w-14 rounded-full" />
-								<Skeleton className="h-3 w-24" />
-								<Skeleton className="h-5 w-12 rounded-full" />
-								<Skeleton className="size-7" />
-								<Skeleton className="size-7" />
-								<Skeleton className="size-7" />
+
+								{/* Bottom row: badges + next run + actions */}
+								<View className="flex flex-row items-center gap-2">
+									<Skeleton className="h-5 w-20 rounded-full" />
+
+									{/* Active / paused badge */}
+									<Skeleton className="h-5 w-12 rounded-full" />
+
+									{/* Next run */}
+									<Skeleton className="h-4 w-32 min-w-0 flex-1" />
+
+									{/* Actions */}
+									<View className="flex shrink-0 flex-row items-center gap-1">
+										<Skeleton className="size-3.5" />
+										<Skeleton className="size-3.5" />
+										<Skeleton className="size-3.5" />
+									</View>
+								</View>
 							</View>
 						))}
 					{recurrences.length === 0 && !isLoading && (
