@@ -36,6 +36,7 @@ export default function getTransactionsColumns({
 			trpc.transaction.paginated.queryOptions(params),
 		useSearchParams: () => Route.useSearch(),
 		onEdit,
+		additionalInvalidations: [trpc.transaction.listDeleted.queryOptions()],
 	});
 
 	const accountColumn: ColumnDef<Transaction> = {

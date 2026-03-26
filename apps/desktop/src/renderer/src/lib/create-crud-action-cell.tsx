@@ -7,6 +7,7 @@ import DataTableActionCell, {
 } from "@/components/data-table-action-cell";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { useOptimisticMutation } from "./optimistic-update";
+import { queryClient } from "./trpc";
 
 /** Structural type for a tRPC mutation proxy that exposes `.mutationOptions()` */
 interface TRPCMutationLike<TInput> {
@@ -49,6 +50,8 @@ interface CrudActionCellConfig<T, TParams> {
 	onHoverDetail?: (id: string) => void;
 	/** Extra dropdown items derived from the row. Use for actions like opening a file URL. */
 	customActions?: (row: T) => CustomAction[];
+	/** Extra query keys to invalidate after a successful delete */
+	additionalInvalidations?: { queryKey: QueryKey }[];
 }
 
 /**
@@ -68,6 +71,7 @@ export function createCrudActionCell<T extends { id: string }, TParams>(
 		onHoverEdit,
 		onHoverDetail,
 		customActions: getCustomActions,
+		additionalInvalidations,
 	} = config;
 
 	// Resolved outside the component so the hook call count is stable across renders
@@ -88,8 +92,15 @@ export function createCrudActionCell<T extends { id: string }, TParams>(
 					type: "soft-delete",
 					getId: (input) => input.id,
 				},
-				onSuccess: () => {
+				onSuccess: async () => {
 					globalSuccessToast(t("common.deleteSuccess", { name: resourceName }));
+					if (additionalInvalidations?.length) {
+						await Promise.all(
+							additionalInvalidations.map((q) =>
+								queryClient.invalidateQueries({ queryKey: q.queryKey }),
+							),
+						);
+					}
 				},
 				onError: (error) => {
 					globalErrorToast(
