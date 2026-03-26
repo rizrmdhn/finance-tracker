@@ -1,28 +1,18 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { DrawerContentComponentProps } from "@react-navigation/drawer";
-import { DrawerContentScrollView, DrawerItemList } from "@react-navigation/drawer";
+import {
+	DrawerContentScrollView,
+	DrawerItemList,
+} from "@react-navigation/drawer";
 import { Drawer } from "expo-router/drawer";
-import { useThemeColor } from "@/lib/theme";
 import { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
 
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useThemeColor } from "@/lib/theme";
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>["name"];
-
-const navItems: {
-	name: string;
-	title: string;
-	icon: IoniconsName;
-}[] = [
-	{ name: "index", title: "Dashboard", icon: "home-outline" },
-	{ name: "accounts", title: "Accounts", icon: "wallet-outline" },
-	{ name: "transactions", title: "Transactions", icon: "swap-horizontal-outline" },
-	{ name: "recurring", title: "Recurring", icon: "repeat-outline" },
-	{ name: "categories", title: "Categories", icon: "pricetag-outline" },
-	{ name: "budgets", title: "Budgets", icon: "flag-outline" },
-	{ name: "settings", title: "Settings", icon: "settings-outline" },
-];
 
 function CustomDrawerContent(props: DrawerContentComponentProps) {
 	const themeColorForeground = useThemeColor("foreground");
@@ -42,7 +32,11 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
 					gap: 8,
 				}}
 			>
-				<Ionicons name="wallet-outline" size={20} color={themeColorForeground} />
+				<Ionicons
+					name="wallet-outline"
+					size={20}
+					color={themeColorForeground}
+				/>
 				<Text
 					style={{
 						color: themeColorForeground,
@@ -59,6 +53,8 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
 }
 
 function DrawerLayout() {
+	const { t } = useTranslation();
+
 	const themeColorForeground = useThemeColor("foreground");
 	const themeColorBackground = useThemeColor("background");
 
@@ -67,6 +63,36 @@ function DrawerLayout() {
 		(props: DrawerContentComponentProps) => <CustomDrawerContent {...props} />,
 		[],
 	);
+
+	const navItems: {
+		name: string;
+		title: string;
+		icon: IoniconsName;
+	}[] = [
+		{ name: "index", title: t("sidebar.dashboard"), icon: "home-outline" },
+		{ name: "accounts", title: t("sidebar.accounts"), icon: "wallet-outline" },
+		{
+			name: "transactions",
+			title: t("sidebar.transactions"),
+			icon: "swap-horizontal-outline",
+		},
+		{
+			name: "recurring",
+			title: t("sidebar.recurring"),
+			icon: "repeat-outline",
+		},
+		{
+			name: "categories",
+			title: t("sidebar.categories"),
+			icon: "pricetag-outline",
+		},
+		{ name: "budgets", title: t("sidebar.budgets"), icon: "flag-outline" },
+		{
+			name: "settings",
+			title: t("sidebar.settings"),
+			icon: "settings-outline",
+		},
+	];
 
 	return (
 		<Drawer
