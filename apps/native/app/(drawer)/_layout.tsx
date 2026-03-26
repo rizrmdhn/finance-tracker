@@ -9,6 +9,7 @@ import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
 
+import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useThemeColor } from "@/lib/theme";
 
@@ -58,7 +59,15 @@ function DrawerLayout() {
 	const themeColorForeground = useThemeColor("foreground");
 	const themeColorBackground = useThemeColor("background");
 
-	const renderThemeToggle = useCallback(() => <ThemeToggle />, []);
+	const renderHeaderRight = useCallback(
+		() => (
+			<View style={{ flexDirection: "row", alignItems: "center" }}>
+				<LanguageToggle />
+				<ThemeToggle />
+			</View>
+		),
+		[],
+	);
 	const renderDrawerContent = useCallback(
 		(props: DrawerContentComponentProps) => <CustomDrawerContent {...props} />,
 		[],
@@ -104,7 +113,7 @@ function DrawerLayout() {
 					fontWeight: "600",
 					color: themeColorForeground,
 				},
-				headerRight: renderThemeToggle,
+				headerRight: renderHeaderRight,
 				drawerStyle: { backgroundColor: themeColorBackground },
 			}}
 		>
