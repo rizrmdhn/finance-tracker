@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
+import { DevToolsBubble } from "react-native-react-query-devtools";
 import { Toaster } from "sonner-native";
 import { OnboardingScreen } from "@/components/onboarding-screen";
 import { SplashScreen } from "@/components/splash-screen";
@@ -97,6 +98,7 @@ export default function Layout() {
 						<PortalHost />
 						<Toaster richColors />
 					</AppThemeProvider>
+					<DevToolsBubble queryClient={queryClient} />
 				</QueryClientProvider>
 			</KeyboardProvider>
 		</GestureHandlerRootView>
