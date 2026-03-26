@@ -31,6 +31,19 @@ const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
 const CHART_HEIGHT = 220;
 
+function formatCurrencyWorklet(amount: number) {
+	"worklet";
+	const rounded = Math.round(amount);
+	const abs = Math.abs(rounded);
+	const str = String(abs);
+	let formatted = "";
+	for (let i = 0; i < str.length; i++) {
+		if (i > 0 && (str.length - i) % 3 === 0) formatted += ".";
+		formatted += str[i];
+	}
+	return `${rounded < 0 ? "-" : ""}Rp\u00A0${formatted}`;
+}
+
 type Tab = "monthly" | "category" | "balance";
 
 interface AnalyticsCardProps {
@@ -185,30 +198,30 @@ export function AnalyticsCard({
 
 	// Monthly animated text props
 	const monthLabelProps = useAnimatedProps(() => ({
-		text: String(monthlyPress.x.value),
+		text: String(monthlyPress.x.value.value),
 		defaultValue: "",
 	}));
 	const incomeProps = useAnimatedProps(() => ({
-		text: formatCurrency(monthlyPress.y.income.value.value),
-		defaultValue: formatCurrency(0),
+		text: formatCurrencyWorklet(monthlyPress.y.income.value.value),
+		defaultValue: formatCurrencyWorklet(0),
 	}));
 	const expenseProps = useAnimatedProps(() => ({
-		text: formatCurrency(monthlyPress.y.expense.value.value),
-		defaultValue: formatCurrency(0),
+		text: formatCurrencyWorklet(monthlyPress.y.expense.value.value),
+		defaultValue: formatCurrencyWorklet(0),
 	}));
 	const savingsProps = useAnimatedProps(() => ({
-		text: formatCurrency(monthlyPress.y.savings.value.value),
-		defaultValue: formatCurrency(0),
+		text: formatCurrencyWorklet(monthlyPress.y.savings.value.value),
+		defaultValue: formatCurrencyWorklet(0),
 	}));
 
 	// Balance animated text props
 	const balanceLabelProps = useAnimatedProps(() => ({
-		text: String(balancePress.x.value),
+		text: String(balancePress.x.value.value),
 		defaultValue: "",
 	}));
 	const balanceValueProps = useAnimatedProps(() => ({
-		text: formatCurrency(balancePress.y.balance.value.value),
-		defaultValue: formatCurrency(0),
+		text: formatCurrencyWorklet(balancePress.y.balance.value.value),
+		defaultValue: formatCurrencyWorklet(0),
 	}));
 
 	const tabs: { key: Tab; label: string }[] = [
@@ -277,6 +290,7 @@ export function AnalyticsCard({
 									position: "absolute",
 									top: 8,
 									left: 8,
+									zIndex: 10,
 									backgroundColor: cardColor,
 									borderRadius: 8,
 									borderWidth: 1,
@@ -481,6 +495,7 @@ export function AnalyticsCard({
 									position: "absolute",
 									top: 8,
 									left: 8,
+									zIndex: 10,
 									backgroundColor: cardColor,
 									borderRadius: 8,
 									borderWidth: 1,
