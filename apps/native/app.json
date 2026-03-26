@@ -8,7 +8,7 @@
 			"bundler": "metro",
 			"favicon": "./assets/images/web/favicon.ico"
 		},
-		"name": "finance-tracker",
+		"name": "Finance Tracker",
 		"slug": "finance-tracker",
 		"plugins": [
 			"expo-font",
