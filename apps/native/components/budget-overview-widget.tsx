@@ -146,7 +146,8 @@ export function BudgetOverviewWidget({ from, to }: BudgetOverviewWidgetProps) {
 								hitSlop={8}
 							>
 								<Text className="text-center text-muted-foreground text-xs">
-									+{budgets.length - 5} more · {t("common.viewAll")}
+									+{budgets.length - 5} {t("common.more")} ·{" "}
+									{t("common.viewAll")}
 								</Text>
 							</Pressable>
 						)}

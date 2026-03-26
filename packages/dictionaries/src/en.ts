@@ -73,6 +73,7 @@ export const en = {
 		recentTransactions: "Recent transactions",
 		noTransactions: "No transactions",
 		loading: "Loading...",
+		more: "More",
 	},
 	errors: {
 		noData: "No data",

@@ -73,6 +73,7 @@ export const id = {
 		recentTransactions: "Transaksi Terbaru",
 		noTransactions: "Tidak ada transaksi yang ditemukan",
 		loading: "Memuat...",
+		more: "Lainnya",
 	},
 	errors: {
 		noData: "Tidak ada data",

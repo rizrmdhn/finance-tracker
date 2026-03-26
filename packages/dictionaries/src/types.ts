@@ -69,6 +69,7 @@ export interface Dictionary {
 		recentTransactions: string;
 		noTransactions: string;
 		loading: string;
+		more: string;
 	};
 	errors: {
 		noData: string;
