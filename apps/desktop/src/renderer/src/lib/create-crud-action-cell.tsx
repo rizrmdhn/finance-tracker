@@ -85,7 +85,7 @@ export function createCrudActionCell<T extends { id: string }, TParams>(
 			{
 				queryOptions,
 				operation: {
-					type: "delete",
+					type: "soft-delete",
 					getId: (input) => input.id,
 				},
 				onSuccess: () => {
