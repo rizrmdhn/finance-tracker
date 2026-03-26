@@ -8,7 +8,8 @@
 		"rebuild": "electron-rebuild -f -w better-sqlite3",
 		"package": "bun run build && electron-builder --win",
 		"package:dir": "bun run build && electron-builder --win --dir",
-		"check-types": "tsc --noEmit"
+		"check-types": "tsc --noEmit",
+		"postinstall": "electron-builder install-app-deps"
 	},
 	"build": {
 		"appId": "com.finance-tracker.desktop",
