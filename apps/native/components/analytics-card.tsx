@@ -10,7 +10,7 @@ import Animated, {
 } from "react-native-reanimated";
 import {
 	Area,
-	Bar,
+	BarGroup,
 	CartesianChart,
 	Line,
 	Pie,
@@ -384,26 +384,15 @@ export function AnalyticsCard({
 							chartPressState={monthlyPress}
 						>
 							{({ points, chartBounds }) => (
-								<>
-									<Bar
-										points={points.income}
-										chartBounds={chartBounds}
-										color="#22c55e"
-										roundedCorners={{ topLeft: 4, topRight: 4 }}
-									/>
-									<Bar
-										points={points.expense}
-										chartBounds={chartBounds}
-										color="#ef4444"
-										roundedCorners={{ topLeft: 4, topRight: 4 }}
-									/>
-									<Bar
-										points={points.savings}
-										chartBounds={chartBounds}
-										color="#a855f7"
-										roundedCorners={{ topLeft: 4, topRight: 4 }}
-									/>
-								</>
+								<BarGroup
+									chartBounds={chartBounds}
+									betweenGroupPadding={0.3}
+									withinGroupPadding={0.1}
+								>
+									<BarGroup.Bar points={points.income} color="#22c55e" />
+									<BarGroup.Bar points={points.expense} color="#ef4444" />
+									<BarGroup.Bar points={points.savings} color="#a855f7" />
+								</BarGroup>
 							)}
 						</CartesianChart>
 					</View>
