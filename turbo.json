@@ -59,6 +59,9 @@
 		},
 		"native:prebuild": {
 			"cache": false
+		},
+		"bump": {
+			"cache": false
 		}
 	}
 }

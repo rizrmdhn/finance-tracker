@@ -12,6 +12,7 @@
 		"prebuild": "expo prebuild",
 		"postprebuild": "bun scripts/fix-main-activity.mjs",
 		"web": "expo start --web",
+		"bump": "node scripts/bump-version.mjs",
 		"doctor": "bunx expo-doctor",
 		"db:generate": "drizzle-kit generate",
 		"check-types": "tsc --noEmit"
