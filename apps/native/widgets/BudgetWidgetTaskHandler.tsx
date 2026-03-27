@@ -49,13 +49,13 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
 			props.renderWidget(<BudgetWidget data={data} />);
 			break;
 		}
-		case "REFRESH_WIDGET": {
-			await fetchAndSaveWidgetData();
-			const fresh = getWidgetData();
-			props.renderWidget(<BudgetWidget data={fresh} />);
+		default: {
+			if ((props.widgetAction as string) === "REFRESH_WIDGET") {
+				await fetchAndSaveWidgetData();
+				const fresh = getWidgetData();
+				props.renderWidget(<BudgetWidget data={fresh} />);
+			}
 			break;
 		}
-		default:
-			break;
 	}
 }
