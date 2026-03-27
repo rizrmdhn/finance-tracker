@@ -1,18 +1,17 @@
-import {
-	ACCOUNT_TYPE_LABELS,
-	ACCOUNT_TYPES,
-	SUPPORTED_CURRENCIES,
-} from "@finance-tracker/constants";
+import { ACCOUNT_TYPE_LABELS, ACCOUNT_TYPES } from "@finance-tracker/constants";
 import { type AccountInput, accountSchema } from "@finance-tracker/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { View } from "react-native";
+import { ScrollView, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { globalErrorToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
 import { ColorPicker } from "./form/color-picker";
 import { CurrencyInput } from "./form/currency-input";
+import { CurrencySelect } from "./form/currency-select";
+import { OptionSelect } from "./form/option-select";
 import { IconPicker } from "./form/icon-picker";
 import { Button } from "./ui/button";
 import {
@@ -24,18 +23,13 @@ import {
 } from "./ui/card";
 import { Field, FieldError, FieldLabel } from "./ui/field";
 import { Input } from "./ui/input";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "./ui/select";
 import { Spinner } from "./ui/spinner";
 import { Text } from "./ui/text";
 
 export function OnboardingScreen() {
 	const { t } = useTranslation();
+	const insets = useSafeAreaInsets();
+
 	const form = useForm<AccountInput>({
 		resolver: zodResolver(accountSchema),
 		defaultValues: {
@@ -92,7 +86,13 @@ export function OnboardingScreen() {
 	}
 
 	return (
-		<View className="flex flex-1 items-center justify-center p-4">
+		<ScrollView
+			contentContainerClassName="flex-1 items-center justify-center p-4"
+			contentContainerStyle={{
+				paddingTop: insets.top,
+				paddingBottom: insets.bottom,
+			}}
+		>
 			<Card className="w-full max-w-md">
 				<CardHeader>
 					<CardTitle className="text-center">{t("onboarding.title")}</CardTitle>
@@ -110,9 +110,8 @@ export function OnboardingScreen() {
 									<FieldLabel>{t("common.name")}</FieldLabel>
 									<Input
 										placeholder={t("accounts.create.namePlaceholder")}
-										value={field.value}
 										onChangeText={field.onChange}
-										onBlur={field.onBlur}
+										{...field}
 									/>
 									{fieldState.invalid && (
 										<FieldError errors={[fieldState.error]} />
@@ -121,7 +120,7 @@ export function OnboardingScreen() {
 							)}
 						/>
 
-						<View className="flex-row gap-3">
+						<View className="flex flex-row gap-3">
 							<Controller
 								control={form.control}
 								name="icon"
@@ -160,36 +159,16 @@ export function OnboardingScreen() {
 							render={({ field, fieldState }) => (
 								<Field data-invalid={fieldState.invalid}>
 									<FieldLabel>{t("common.type")}</FieldLabel>
-									<Select
-										value={
-											field.value
-												? {
-														value: field.value,
-														label: ACCOUNT_TYPE_LABELS[field.value],
-													}
-												: undefined
-										}
-										onValueChange={field.onChange}
-									>
-										<SelectTrigger className="w-full">
-											<SelectValue placeholder={t("common.selectAccountType")}>
-												{field.value
-													? ACCOUNT_TYPE_LABELS[
-															field.value as (typeof ACCOUNT_TYPES)[number]
-														]
-													: null}
-											</SelectValue>
-										</SelectTrigger>
-										<SelectContent>
-											{ACCOUNT_TYPES.map((type) => (
-												<SelectItem
-													key={type}
-													value={type}
-													label={ACCOUNT_TYPE_LABELS[type]}
-												/>
-											))}
-										</SelectContent>
-									</Select>
+									<OptionSelect
+										value={field.value}
+										onChange={field.onChange}
+										options={ACCOUNT_TYPES.map((type) => ({
+											value: type,
+											label: ACCOUNT_TYPE_LABELS[type],
+										}))}
+										placeholder={t("common.selectAccountType")}
+										title={t("common.type")}
+									/>
 									{fieldState.invalid && (
 										<FieldError errors={[fieldState.error]} />
 									)}
@@ -221,27 +200,10 @@ export function OnboardingScreen() {
 							render={({ field, fieldState }) => (
 								<Field data-invalid={fieldState.invalid}>
 									<FieldLabel>{t("common.currency")}</FieldLabel>
-									<Select
-										onValueChange={field.onChange}
-										value={
-											field.value
-												? { value: field.value, label: field.value }
-												: undefined
-										}
-									>
-										<SelectTrigger className="w-full">
-											<SelectValue placeholder={t("common.selectCurrency")} />
-										</SelectTrigger>
-										<SelectContent>
-											{SUPPORTED_CURRENCIES.map((currency) => (
-												<SelectItem
-													key={currency}
-													value={currency}
-													label={currency}
-												/>
-											))}
-										</SelectContent>
-									</Select>
+									<CurrencySelect
+										value={field.value}
+										onChange={field.onChange}
+									/>
 									{fieldState.invalid && (
 										<FieldError errors={[fieldState.error]} />
 									)}
@@ -260,6 +222,6 @@ export function OnboardingScreen() {
 					</View>
 				</CardContent>
 			</Card>
-		</View>
+		</ScrollView>
 	);
 }
