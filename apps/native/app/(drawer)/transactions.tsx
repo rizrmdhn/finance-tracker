@@ -209,6 +209,9 @@ export default function Transactions() {
 					autoCorrect={false}
 					autoCapitalize="none"
 					clearButtonMode="while-editing"
+					style={{
+						backgroundColor: "transparent",
+					}}
 				/>
 			</View>
 		</View>
