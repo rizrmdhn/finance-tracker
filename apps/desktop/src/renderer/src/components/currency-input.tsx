@@ -1,3 +1,4 @@
+import { CURRENCY_LOCALE_MAP, type SupportedCurrency } from "@finance-tracker/constants";
 import {
 	InputGroup,
 	InputGroupAddon,
@@ -6,16 +7,21 @@ import {
 } from "@finance-tracker/ui/components/input-group";
 import { useEffect, useRef, useState } from "react";
 
-const format = (n: number) =>
-	new Intl.NumberFormat("id-ID", {
+const NO_DECIMAL_CURRENCIES: SupportedCurrency[] = ["IDR", "JPY"];
+
+function format(n: number, currency: SupportedCurrency): string {
+	const locale = CURRENCY_LOCALE_MAP[currency] ?? "en-US";
+	const decimals = NO_DECIMAL_CURRENCIES.includes(currency) ? 0 : 2;
+	return new Intl.NumberFormat(locale, {
 		minimumFractionDigits: 0,
-		maximumFractionDigits: 0,
+		maximumFractionDigits: decimals,
 	}).format(n);
+}
 
 interface CurrencyInputProps {
 	value?: number;
 	onChange: (value: number | undefined) => void;
-	currency?: string;
+	currency?: SupportedCurrency;
 	placeholder?: string;
 	className?: string;
 }
@@ -28,25 +34,28 @@ export function CurrencyInput({
 	className,
 }: CurrencyInputProps) {
 	const [display, setDisplay] = useState(
-		value !== undefined ? format(value) : "",
+		value !== undefined ? format(value, currency) : "",
 	);
 	const isFocused = useRef(false);
 
 	useEffect(() => {
 		if (!isFocused.current) {
-			setDisplay(value !== undefined ? format(value) : "");
+			setDisplay(value !== undefined ? format(value, currency) : "");
 		}
-	}, [value]);
+	}, [value, currency]);
 
 	function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-		const raw = e.target.value.replace(/\D/g, "");
+		const decimals = NO_DECIMAL_CURRENCIES.includes(currency) ? 0 : 2;
+		const raw = decimals > 0
+			? e.target.value.replace(/[^\d.]/g, "")
+			: e.target.value.replace(/\D/g, "");
 		setDisplay(raw);
 		onChange(raw === "" ? undefined : Number(raw));
 	}
 
 	function handleBlur() {
 		isFocused.current = false;
-		setDisplay(value !== undefined ? format(value) : "");
+		setDisplay(value !== undefined ? format(value, currency) : "");
 	}
 
 	return (

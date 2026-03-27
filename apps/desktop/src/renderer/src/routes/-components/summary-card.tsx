@@ -1,22 +1,26 @@
+import type { SupportedCurrency } from "@finance-tracker/constants";
 import {
 	Card,
 	CardContent,
 	CardHeader,
 	CardTitle,
 } from "@finance-tracker/ui/components/card";
-import { formatCurrency } from "./utils";
+import { useFormatCurrency } from "@/hooks/use-format-currency";
 
 export function SummaryCard({
 	title,
 	value,
 	icon,
 	highlight,
+	sourceCurrency,
 }: {
 	title: string;
 	value: number;
 	icon: React.ReactNode;
 	highlight: "positive" | "negative" | "neutral";
+	sourceCurrency?: SupportedCurrency;
 }) {
+	const { format } = useFormatCurrency();
 	const valueColor =
 		highlight === "positive"
 			? "text-green-600"
@@ -34,7 +38,7 @@ export function SummaryCard({
 			</CardHeader>
 			<CardContent>
 				<p className={`font-bold text-2xl tabular-nums ${valueColor}`}>
-					{formatCurrency(value)}
+					{format(value, sourceCurrency)}
 				</p>
 			</CardContent>
 		</Card>

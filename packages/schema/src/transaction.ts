@@ -1,4 +1,4 @@
-import { RECURRENCE_FREQUENCIES } from "@finance-tracker/constants";
+import { RECURRENCE_FREQUENCIES, SUPPORTED_CURRENCIES } from "@finance-tracker/constants";
 import type { transactions } from "@finance-tracker/db";
 import { z } from "zod";
 import { createPaginationSchema } from "./pagination";
@@ -54,6 +54,7 @@ export const summaryFiltersSchema = z.object({
 	accountId: z.string().optional(),
 	from: z.number({ error: "Please provide a valid start date" }),
 	to: z.number({ error: "Please provide a valid end date" }),
+	displayCurrency: z.enum(SUPPORTED_CURRENCIES).optional(),
 });
 
 export const exportTransactionsSchema = paginatedTransactionsSchema.omit({

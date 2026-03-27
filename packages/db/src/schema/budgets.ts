@@ -1,3 +1,4 @@
+import { SUPPORTED_CURRENCIES } from "@finance-tracker/constants";
 import { createId } from "@paralleldrive/cuid2";
 import { relations } from "drizzle-orm";
 import {
@@ -20,6 +21,7 @@ export const budgets = sqliteTable(
 			.references(() => categories.id)
 			.notNull(),
 		amount: real("amount").notNull(),
+		currency: text("currency", { enum: SUPPORTED_CURRENCIES }).notNull().default("IDR"),
 		period: text("period", { enum: ["monthly", "weekly"] }).notNull(),
 		startDate: integer("start_date").notNull(), // Unix timestamp
 		...timestamp,

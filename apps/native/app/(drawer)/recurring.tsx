@@ -19,13 +19,15 @@ import { Button } from "@/components/ui/button";
 import { Icon as IconComp } from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Text } from "@/components/ui/text";
+import { useFormatCurrency } from "@/hooks/use-format-currency";
 import useModalState from "@/hooks/use-modal-state";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
 
 export default function Recurring() {
 	const { t } = useTranslation();
+	const { format } = useFormatCurrency();
 
 	const { state, openModal, closeModal } = useModalState({
 		editRecurrence: false,
@@ -147,7 +149,7 @@ export default function Recurring() {
 									</View>
 
 									<Text className="shrink-0 font-medium text-sm">
-										{formatCurrency(rule.templateTransaction.amount)}
+										{format(rule.templateTransaction.amount)}
 									</Text>
 								</View>
 

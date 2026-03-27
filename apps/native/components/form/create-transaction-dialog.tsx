@@ -1,6 +1,7 @@
 import {
 	RECURRENCE_FREQUENCIES,
 	REUCRRENCE_FREQUENCY_LABELS,
+	type SupportedCurrency,
 } from "@finance-tracker/constants";
 import {
 	type TransactionInput,
@@ -95,6 +96,8 @@ export default function CreateTransactionDialog({
 	const watchedCategoryId = form.watch("categoryId");
 	const selectedCategory = categories.find((c) => c.id === watchedCategoryId);
 	const isTransfer = selectedCategory?.type === "transfer";
+	const watchedAccountId = form.watch("accountId");
+	const accountCurrency = (accounts.find((a) => a.id === watchedAccountId)?.currency ?? "IDR") as SupportedCurrency;
 
 	return (
 		<ModalSheet
@@ -167,7 +170,7 @@ export default function CreateTransactionDialog({
 							<FieldLabel invalid={fieldState.invalid}>
 								{t("common.amount")}
 							</FieldLabel>
-							<CurrencyInput value={field.value} onChange={field.onChange} />
+							<CurrencyInput value={field.value} onChange={field.onChange} currency={accountCurrency} />
 							<FieldError errors={[fieldState.error]} />
 						</Field>
 					)}

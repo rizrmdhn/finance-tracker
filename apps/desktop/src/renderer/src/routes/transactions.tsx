@@ -74,6 +74,10 @@ function TransactionsComponent() {
 		() => new Map(accounts.map((a) => [a.id, a.name])),
 		[accounts],
 	);
+	const accountCurrencyMap = useMemo(
+		() => new Map(accounts.map((a) => [a.id, a.currency])),
+		[accounts],
+	);
 	const categoriesMap = useMemo(
 		() => new Map(categories.map((c) => [c.id, c.name])),
 		[categories],
@@ -94,8 +98,9 @@ function TransactionsComponent() {
 				perPage: params.limit,
 				onEdit: handleEdit,
 				accountsMap,
+				accountCurrencyMap,
 			}),
-		[params.page, params.limit, handleEdit, accountsMap],
+		[params.page, params.limit, handleEdit, accountsMap, accountCurrencyMap],
 	);
 
 	const { table } = useDataTableRouter({

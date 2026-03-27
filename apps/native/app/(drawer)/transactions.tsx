@@ -25,10 +25,11 @@ import { Icon as IconComp } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Text } from "@/components/ui/text";
+import { useFormatCurrency } from "@/hooks/use-format-currency";
 import useModalState from "@/hooks/use-modal-state";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
 
 const typeConfig = {
 	income: {
@@ -61,6 +62,7 @@ type CategoryType = keyof typeof typeConfig;
 
 export default function Transactions() {
 	const { t } = useTranslation();
+	const { format } = useFormatCurrency();
 
 	const { state, openModal, closeModal } = useModalState({
 		create: false,
@@ -270,7 +272,7 @@ export default function Transactions() {
 
 								<Text className={`shrink-0 font-medium text-sm ${amountClass}`}>
 									{prefix}
-									{formatCurrency(item.amount)}
+									{format(item.amount)}
 								</Text>
 							</View>
 

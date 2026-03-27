@@ -1,8 +1,10 @@
+import { SUPPORTED_CURRENCIES } from "@finance-tracker/constants";
 import { z } from "zod";
 
 export const budgetSchema = z.object({
 	categoryId: z.string().min(1),
 	amount: z.number().positive(),
+	currency: z.enum(SUPPORTED_CURRENCIES),
 	period: z.enum(["monthly", "weekly"]),
 	startDate: z.number(), // Unix timestamp
 });

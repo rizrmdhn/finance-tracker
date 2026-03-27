@@ -1,3 +1,4 @@
+import { CURRENCY_LABELS, SUPPORTED_CURRENCIES } from "@finance-tracker/constants";
 import {
 	type BudgetUpdateInput,
 	budgetUpdateSchema,
@@ -67,6 +68,7 @@ export default function EditBudgetDialog({
 				id: budget.id,
 				categoryId: budget.categoryId,
 				amount: budget.amount,
+				currency: budget.currency,
 				period: budget.period as BudgetUpdateInput["period"],
 				startDate: budget.startDate,
 			});
@@ -130,6 +132,42 @@ export default function EditBudgetDialog({
 							value={field.value}
 							onChange={(val) => field.onChange(val)}
 						/>
+						{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+					</Field>
+				)}
+			/>
+
+			<Controller
+				control={form.control}
+				name="currency"
+				render={({ field, fieldState }) => (
+					<Field data-invalid={fieldState.invalid}>
+						<FieldLabel>{t("common.currency")}</FieldLabel>
+						<Select
+							onValueChange={(option) => field.onChange(option?.value)}
+							defaultValue={
+								field.value
+									? { value: field.value, label: CURRENCY_LABELS[field.value as keyof typeof CURRENCY_LABELS] }
+									: undefined
+							}
+						>
+							<SelectTrigger
+								ref={selectTriggerRef}
+								className="w-full"
+								onTouchStart={Platform.select({
+									web: () => selectTriggerRef.current?.open(),
+								})}
+							>
+								<SelectValue placeholder={t("common.selectCurrency")}>
+									{field.value ? CURRENCY_LABELS[field.value as keyof typeof CURRENCY_LABELS] : null}
+								</SelectValue>
+							</SelectTrigger>
+							<SelectContent portalHost="modal-select">
+								{SUPPORTED_CURRENCIES.map((c) => (
+									<SelectItem key={c} value={c} label={CURRENCY_LABELS[c]} />
+								))}
+							</SelectContent>
+						</Select>
 						{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
 					</Field>
 				)}

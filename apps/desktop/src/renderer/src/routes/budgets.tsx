@@ -9,12 +9,13 @@ import { useTranslation } from "react-i18next";
 import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { ICON_MAP } from "@/components/icon-picker";
 import useModalState from "@/hooks/use-modal-state";
+import { useFormatCurrency } from "@/hooks/use-format-currency";
 import { pageHead } from "@/lib/page-head";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
 import CreateBudgetDialog from "./-components/create-budget-dialog";
 import EditBudgetDialog from "./-components/edit-budget-dialog";
-import { formatCurrency, getCurrentMonthRange } from "./-components/utils";
+import { getCurrentMonthRange } from "./-components/utils";
 
 export const Route = createFileRoute("/budgets")({
 	component: BudgetsComponent,
@@ -27,6 +28,7 @@ export const Route = createFileRoute("/budgets")({
 
 function BudgetsComponent() {
 	const { t } = useTranslation();
+	const { format } = useFormatCurrency();
 	const { state, openModal, closeModal } = useModalState({
 		createBudget: false,
 		editBudget: false,
@@ -157,9 +159,9 @@ function BudgetsComponent() {
 							<div className="flex flex-col gap-1.5">
 								<div className="flex justify-between text-muted-foreground text-xs">
 									<span>
-										{t("budgets.spent")}: {formatCurrency(budget.spent)}
+										{t("budgets.spent")}: {format(budget.spent)}
 									</span>
-									<span>{formatCurrency(budget.amount)}</span>
+									<span>{format(budget.amount)}</span>
 								</div>
 								<div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
 									<div
@@ -178,10 +180,10 @@ function BudgetsComponent() {
 								>
 									{budget.isOverBudget
 										? t("budgets.overBy", {
-												amount: formatCurrency(Math.abs(budget.remaining)),
+												amount: format(Math.abs(budget.remaining)),
 											})
 										: t("budgets.remaining", {
-												amount: formatCurrency(budget.remaining),
+												amount: format(budget.remaining),
 											})}
 								</p>
 							</div>

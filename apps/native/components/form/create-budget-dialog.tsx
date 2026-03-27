@@ -1,3 +1,4 @@
+import { CURRENCY_LABELS, SUPPORTED_CURRENCIES } from "@finance-tracker/constants";
 import { type BudgetInput, budgetSchema } from "@finance-tracker/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { TriggerRef } from "@rn-primitives/select";
@@ -8,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import { Platform } from "react-native";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
+import { useFormatCurrency } from "@/hooks/use-format-currency";
 import { getCurrentMonthRange } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { Field, FieldError, FieldLabel } from "../ui/field";
@@ -39,6 +41,7 @@ export default function CreateBudgetDialog({
 	to,
 }: CreateBudgetDialogProps) {
 	const { t } = useTranslation();
+	const { displayCurrency } = useFormatCurrency();
 	const selectTriggerRef = useRef<TriggerRef>(null);
 
 	const { data: categories = [] } = useQuery(trpc.category.list.queryOptions());
@@ -50,6 +53,7 @@ export default function CreateBudgetDialog({
 		defaultValues: {
 			categoryId: "",
 			amount: undefined,
+			currency: displayCurrency,
 			period: "monthly",
 			startDate: getCurrentMonthRange().from,
 		},
@@ -112,6 +116,42 @@ export default function CreateBudgetDialog({
 							value={field.value}
 							onChange={(val) => field.onChange(val)}
 						/>
+						{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+					</Field>
+				)}
+			/>
+
+			<Controller
+				control={form.control}
+				name="currency"
+				render={({ field, fieldState }) => (
+					<Field data-invalid={fieldState.invalid}>
+						<FieldLabel>{t("common.currency")}</FieldLabel>
+						<Select
+							onValueChange={(option) => field.onChange(option?.value)}
+							defaultValue={
+								field.value
+									? { value: field.value, label: CURRENCY_LABELS[field.value as keyof typeof CURRENCY_LABELS] }
+									: undefined
+							}
+						>
+							<SelectTrigger
+								ref={selectTriggerRef}
+								className="w-full"
+								onTouchStart={Platform.select({
+									web: () => selectTriggerRef.current?.open(),
+								})}
+							>
+								<SelectValue placeholder={t("common.selectCurrency")}>
+									{field.value ? CURRENCY_LABELS[field.value as keyof typeof CURRENCY_LABELS] : null}
+								</SelectValue>
+							</SelectTrigger>
+							<SelectContent portalHost="modal-select">
+								{SUPPORTED_CURRENCIES.map((c) => (
+									<SelectItem key={c} value={c} label={CURRENCY_LABELS[c]} />
+								))}
+							</SelectContent>
+						</Select>
 						{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
 					</Field>
 				)}

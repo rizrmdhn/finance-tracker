@@ -1,11 +1,12 @@
+import type { SupportedCurrency } from "@finance-tracker/constants";
 import { createId } from "@paralleldrive/cuid2";
 import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { Target } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import { Pressable, View } from "react-native";
+import { useFormatCurrency } from "@/hooks/use-format-currency";
 import { trpc } from "@/lib/trpc";
-import { formatCurrency } from "@/lib/utils";
 import { ICON_MAP } from "./form/icon-picker";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Icon } from "./ui/icon";
@@ -19,6 +20,7 @@ interface BudgetOverviewWidgetProps {
 
 export function BudgetOverviewWidget({ from, to }: BudgetOverviewWidgetProps) {
 	const { t } = useTranslation();
+	const { format } = useFormatCurrency();
 
 	const { data: budgets = [], isPending } = useQuery(
 		trpc.budget.listWithSpent.queryOptions({ from, to }),
@@ -85,6 +87,7 @@ export function BudgetOverviewWidget({ from, to }: BudgetOverviewWidgetProps) {
 							const BudgetIcon = budget.category?.icon
 								? ICON_MAP[budget.category.icon]
 								: null;
+							const budgetCurrency = budget.currency as SupportedCurrency;
 							const percent =
 								budget.amount > 0
 									? Math.min((budget.spent / budget.amount) * 100, 100)
@@ -123,8 +126,8 @@ export function BudgetOverviewWidget({ from, to }: BudgetOverviewWidgetProps) {
 											)}
 										</View>
 										<Text className="shrink-0 text-muted-foreground text-xs tabular-nums">
-											{formatCurrency(budget.spent)} /{" "}
-											{formatCurrency(budget.amount)}
+											{format(budget.spent, budgetCurrency)} /{" "}
+											{format(budget.amount, budgetCurrency)}
 										</Text>
 									</View>
 									<View className="h-1.5 w-full overflow-hidden rounded-full bg-muted">

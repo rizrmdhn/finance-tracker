@@ -1,3 +1,4 @@
+import type { SupportedCurrency } from "@finance-tracker/constants";
 import type { Category, Transaction } from "@finance-tracker/types";
 import {
 	Card,
@@ -31,7 +32,8 @@ import {
 	PieChart,
 	XAxis,
 } from "recharts";
-import { formatCurrency, getMonthsInRange } from "./utils";
+import { useFormatCurrency } from "@/hooks/use-format-currency";
+import { getMonthsInRange } from "./utils";
 
 const barChartConfig = {
 	income: { label: "Pemasukan", color: "#22c55e" },
@@ -43,22 +45,12 @@ const balanceChartConfig = {
 	balance: { label: "Saldo", color: "#3b82f6" },
 } satisfies ChartConfig;
 
-function currencyFormatter(value: unknown, name: unknown) {
-	return (
-		<>
-			<span className="text-muted-foreground">{name as string}</span>
-			<span className="ml-auto font-medium font-mono tabular-nums">
-				{formatCurrency(value as number)}
-			</span>
-		</>
-	);
-}
-
 interface AnalyticsCardProps {
 	transactions: Transaction[];
 	categories: Category[];
 	from: number;
 	to: number;
+	sourceCurrency?: SupportedCurrency;
 }
 
 export function AnalyticsCard({
@@ -66,8 +58,21 @@ export function AnalyticsCard({
 	categories,
 	from,
 	to,
+	sourceCurrency,
 }: AnalyticsCardProps) {
 	const { t } = useTranslation();
+	const { format } = useFormatCurrency();
+
+	function currencyFormatter(value: unknown, name: unknown) {
+		return (
+			<>
+				<span className="text-muted-foreground">{name as string}</span>
+				<span className="ml-auto font-medium font-mono tabular-nums">
+					{format(value as number, sourceCurrency)}
+				</span>
+			</>
+		);
+	}
 
 	const categoryMap = useMemo(
 		() => new Map(categories.map((c) => [c.id, c])),

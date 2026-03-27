@@ -17,11 +17,11 @@ import {
 	PolarChart,
 	useChartPressState,
 } from "victory-native";
+import { useFormatCurrency } from "@/hooks/use-format-currency";
 import { useThemeColor } from "@/lib/theme";
 import { trpc } from "@/lib/trpc";
 import {
 	cn,
-	formatCurrency,
 	getMonthsInRange,
 	getSixMonthsRange,
 } from "@/lib/utils";
@@ -60,6 +60,7 @@ export function AnalyticsCard({
 	to,
 }: AnalyticsCardProps) {
 	const { t } = useTranslation();
+	const { format } = useFormatCurrency();
 
 	const [activeTab, setActiveTab] = useState<Tab>("monthly");
 	const [chartWidth, setChartWidth] = useState(0);
@@ -461,7 +462,7 @@ export function AnalyticsCard({
 										{label}
 									</Text>
 									<Text className="font-medium text-foreground text-xs">
-										{formatCurrency(value)}
+										{format(value)}
 									</Text>
 								</View>
 							))}
