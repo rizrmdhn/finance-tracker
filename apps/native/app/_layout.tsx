@@ -89,7 +89,7 @@ export default function Layout() {
 		<GestureHandlerRootView style={{ flex: 1 }}>
 			<KeyboardProvider>
 				<QueryClientProvider client={queryClient}>
-					<QueryDevTools />
+					{__DEV__ && <QueryDevTools />}
 					<AppThemeProvider>
 						<MigratedApp />
 						<PortalHost />
