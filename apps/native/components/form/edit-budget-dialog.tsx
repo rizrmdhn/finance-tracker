@@ -121,6 +121,7 @@ export default function EditBudgetDialog({
 						<CurrencyInput
 							value={field.value}
 							onChange={(val) => field.onChange(val)}
+							currency={form.watch("currency")}
 						/>
 						{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
 					</Field>

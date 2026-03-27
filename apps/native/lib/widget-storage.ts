@@ -20,10 +20,14 @@ export type WidgetData = {
 	language: string;
 	currency: string;
 	currencyLocale: string;
+	lastUpdated: number;
 };
 
-export function saveWidgetData(data: WidgetData) {
-	storage.set("widget-data", JSON.stringify(data));
+export function saveWidgetData(data: Omit<WidgetData, "lastUpdated">) {
+	storage.set(
+		"widget-data",
+		JSON.stringify({ ...data, lastUpdated: Date.now() }),
+	);
 }
 
 export function getWidgetData(): WidgetData | null {

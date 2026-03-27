@@ -19,7 +19,7 @@ function Textarea({
 				className,
 			)}
 			placeholderTextColorClassName={cn(
-				"text-muted-foreground",
+				"accent-muted-foreground",
 				placeholderTextColorClassName,
 			)}
 			multiline={multiline}

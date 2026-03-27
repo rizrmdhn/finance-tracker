@@ -23,9 +23,12 @@ function Input({
 						"focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
 						"aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40",
 					),
-					native: "placeholder:text-muted-foreground/50",
 				}),
 				className,
+			)}
+			placeholderTextColorClassName={cn(
+				"accent-muted-foreground",
+				placeholderTextColorClassName,
 			)}
 			{...props}
 		/>

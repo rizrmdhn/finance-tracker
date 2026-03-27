@@ -1,10 +1,10 @@
 import type { SupportedCurrency } from "@finance-tracker/constants";
 import type { Account, Category, Transaction } from "@finance-tracker/types";
+import { router } from "expo-router";
 import {
 	ArrowDownLeft,
 	ArrowLeftRight,
 	ArrowUpRight,
-	Minus,
 	PiggyBank,
 } from "lucide-react-native";
 import { useMemo } from "react";
@@ -76,7 +76,7 @@ export function RecentTransactions({
 				<CardTitle>{t("common.recentTransactions")}</CardTitle>
 				<Text
 					className="text-muted-foreground text-xs hover:text-foreground"
-					onPress={() => {}}
+					onPress={() => router.push("/transactions")}
 				>
 					{t("common.viewAll")}
 				</Text>
@@ -98,7 +98,7 @@ export function RecentTransactions({
 						return (
 							<View
 								key={tx.id}
-								className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/50"
+								className="flex flex-row items-center gap-3 py-3"
 							>
 								<View
 									className={`flex size-8 shrink-0 items-center justify-center rounded-full ${iconClass}`}
@@ -113,14 +113,8 @@ export function RecentTransactions({
 										{formatDate(tx.date)}
 									</Text>
 								</View>
-								<Text
-									className={`font-medium text-sm tabular-nums ${amountClass}`}
-								>
-									{prefix === "-" ? (
-										<IconComp as={Minus} className="inline size-3" />
-									) : (
-										prefix
-									)}
+								<Text className={`font-medium text-sm ${amountClass}`}>
+									{prefix}
 									{format(tx.amount, txCurrency)}
 								</Text>
 							</View>

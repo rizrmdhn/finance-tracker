@@ -52,7 +52,7 @@ export default function CreateTransactionDialog({
 		if (open && defaultValues) {
 			form.reset(defaultValues);
 		}
-	}, [open, defaultValues]);
+	}, [open, defaultValues, form.reset]);
 
 	const createTransactionMutation = useMutation(
 		trpc.transaction.create.mutationOptions({
@@ -68,7 +68,7 @@ export default function CreateTransactionDialog({
 						queryKey: trpc.transaction.paginated.queryKey(),
 					}),
 					queryClient.invalidateQueries({
-						queryKey: trpc.transaction.infiniteList.queryKey(),
+						queryKey: trpc.transaction.infiniteList.infiniteQueryKey(),
 					}),
 					...(variables.recurrence
 						? [
