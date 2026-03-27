@@ -1,6 +1,6 @@
 {
 	"expo": {
-		"version": "1.1.0",
+		"version": "1.2.0",
 		"scheme": "finance-tracker",
 		"userInterfaceStyle": "automatic",
 		"orientation": "default",
@@ -53,7 +53,7 @@
 		},
 		"icon": "./assets/images/icon.png",
 		"android": {
-			"versionCode": 3,
+			"versionCode": 4,
 			"package": "com.rizrmdhn.finance_tracker",
 			"adaptiveIcon": {
 				"foregroundImage": "./assets/images/android-icon-foreground.png",
