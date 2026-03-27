@@ -95,7 +95,7 @@ export default function Layout() {
 						<PortalHost />
 						<Toaster richColors />
 					</AppThemeProvider>
-					<DevToolsBubble queryClient={queryClient} />
+					{__DEV__ && <DevToolsBubble queryClient={queryClient} />}
 				</QueryClientProvider>
 			</KeyboardProvider>
 		</GestureHandlerRootView>
