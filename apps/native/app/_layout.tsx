@@ -6,7 +6,7 @@ import { PortalHost } from "@rn-primitives/portal";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
 import { Stack } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -39,18 +39,23 @@ function StackLayout() {
 function MigratedApp() {
 	const { i18n } = useTranslation();
 	const { success, error } = useMigrations(db, migrations);
+	const [isSeeded, setIsSeeded] = useState(false);
 
 	useEffect(() => {
 		if (!success) return;
-		seedDatabase(db); // replaces the manual db.insert(schema.appSettings)... block
+		seedDatabase(db);
+		setIsSeeded(true);
 	}, [success]);
-	const { data: onboarding, isLoading } = useQuery(
-		trpc.appSetting.get.queryOptions({ key: "onboarding" }),
-	);
 
-	const { data: language } = useQuery(
-		trpc.appSetting.get.queryOptions({ key: "language" }),
-	);
+	const { data: onboarding, isLoading } = useQuery({
+		...trpc.appSetting.get.queryOptions({ key: "onboarding" }),
+		enabled: isSeeded,
+	});
+
+	const { data: language } = useQuery({
+		...trpc.appSetting.get.queryOptions({ key: "language" }),
+		enabled: isSeeded,
+	});
 
 	useEffect(() => {
 		if (language?.value) {
