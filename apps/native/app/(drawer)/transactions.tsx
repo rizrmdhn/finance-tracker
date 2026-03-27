@@ -127,9 +127,9 @@ export default function Transactions() {
 					queryClient.invalidateQueries({
 						queryKey: trpc.transaction.summary.queryKey(),
 					}),
-					queryClient.invalidateQueries({
-						queryKey: trpc.transaction.infiniteList.queryKey(),
-					}),
+					queryClient.invalidateQueries(
+						trpc.transaction.infiniteList.pathFilter(),
+					),
 					queryClient.invalidateQueries(
 						trpc.transaction.listDeleted.queryOptions(),
 					),
