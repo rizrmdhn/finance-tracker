@@ -21,7 +21,9 @@ export const budgets = sqliteTable(
 			.references(() => categories.id)
 			.notNull(),
 		amount: real("amount").notNull(),
-		currency: text("currency", { enum: SUPPORTED_CURRENCIES }).notNull().default("IDR"),
+		currency: text("currency", { enum: SUPPORTED_CURRENCIES })
+			.notNull()
+			.default("IDR"),
 		period: text("period", { enum: ["monthly", "weekly"] }).notNull(),
 		startDate: integer("start_date").notNull(), // Unix timestamp
 		...timestamp,

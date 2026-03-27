@@ -9,6 +9,7 @@ import {
 } from "@finance-tracker/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { View } from "react-native";
@@ -32,17 +33,26 @@ import { TagsInput } from "./tags-input";
 interface CreateTransactionDialogProps {
 	open: boolean;
 	setIsOpen: (open: boolean) => void;
+	defaultValues?: Partial<TransactionInput>;
 }
 
 export default function CreateTransactionDialog({
 	open,
 	setIsOpen,
+	defaultValues,
 }: CreateTransactionDialogProps) {
 	const { t } = useTranslation();
 
 	const form = useForm<TransactionInput>({
 		resolver: zodResolver(transactionSchema),
+		defaultValues,
 	});
+
+	useEffect(() => {
+		if (open && defaultValues) {
+			form.reset(defaultValues);
+		}
+	}, [open, defaultValues]);
 
 	const createTransactionMutation = useMutation(
 		trpc.transaction.create.mutationOptions({
@@ -91,7 +101,8 @@ export default function CreateTransactionDialog({
 	const selectedCategory = categories.find((c) => c.id === watchedCategoryId);
 	const isTransfer = selectedCategory?.type === "transfer";
 	const watchedAccountId = form.watch("accountId");
-	const accountCurrency = (accounts.find((a) => a.id === watchedAccountId)?.currency ?? "IDR") as SupportedCurrency;
+	const accountCurrency = (accounts.find((a) => a.id === watchedAccountId)
+		?.currency ?? "IDR") as SupportedCurrency;
 
 	return (
 		<ModalSheet
@@ -99,6 +110,13 @@ export default function CreateTransactionDialog({
 			onClose={() => setIsOpen(false)}
 			title={t("transactions.create.title")}
 		>
+			{defaultValues && (
+				<View className="flex-row items-center rounded-md bg-primary/10 px-3 py-2">
+					<Text className="font-medium text-primary text-sm">
+						{t("receiptScanner.scannedBadge")}
+					</Text>
+				</View>
+			)}
 			<Controller
 				control={form.control}
 				name="accountId"
@@ -164,7 +182,11 @@ export default function CreateTransactionDialog({
 							<FieldLabel invalid={fieldState.invalid}>
 								{t("common.amount")}
 							</FieldLabel>
-							<CurrencyInput value={field.value} onChange={field.onChange} currency={accountCurrency} />
+							<CurrencyInput
+								value={field.value}
+								onChange={field.onChange}
+								currency={accountCurrency}
+							/>
 							<FieldError errors={[fieldState.error]} />
 						</Field>
 					)}
@@ -243,7 +265,7 @@ export default function CreateTransactionDialog({
 								<FieldLabel invalid={fieldState.invalid}>
 									{t("transactions.frequency")}
 								</FieldLabel>
-														<OptionSelect
+								<OptionSelect
 									value={field.value}
 									onChange={field.onChange}
 									options={RECURRENCE_FREQUENCIES.map((f) => ({

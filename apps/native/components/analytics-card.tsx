@@ -20,11 +20,7 @@ import {
 import { useFormatCurrency } from "@/hooks/use-format-currency";
 import { useThemeColor } from "@/lib/theme";
 import { trpc } from "@/lib/trpc";
-import {
-	cn,
-	getMonthsInRange,
-	getSixMonthsRange,
-} from "@/lib/utils";
+import { cn, getMonthsInRange, getSixMonthsRange } from "@/lib/utils";
 import { Text } from "./ui/text";
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);

@@ -99,7 +99,8 @@ export default function EditTransactionDialog({
 	const selectedCategory = categories.find((c) => c.id === watchedCategoryId);
 	const isTransfer = selectedCategory?.type === "transfer";
 	const watchedAccountId = form.watch("accountId");
-	const accountCurrency = (accounts.find((a) => a.id === watchedAccountId)?.currency ?? "IDR") as SupportedCurrency;
+	const accountCurrency = (accounts.find((a) => a.id === watchedAccountId)
+		?.currency ?? "IDR") as SupportedCurrency;
 
 	function onSubmit(data: UpdateTransactionInput) {
 		updateMutation.mutate(data);

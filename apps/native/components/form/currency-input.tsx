@@ -1,4 +1,7 @@
-import { CURRENCY_LOCALE_MAP, type SupportedCurrency } from "@finance-tracker/constants";
+import {
+	CURRENCY_LOCALE_MAP,
+	type SupportedCurrency,
+} from "@finance-tracker/constants";
 import { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 import { Text } from "@/components/ui/text";
@@ -49,7 +52,9 @@ export function CurrencyInput({
 	}, [value, currency]);
 
 	function handleChangeText(text: string) {
-		const raw = hasDecimals ? text.replace(/[^\d.]/g, "") : text.replace(/\D/g, "");
+		const raw = hasDecimals
+			? text.replace(/[^\d.]/g, "")
+			: text.replace(/\D/g, "");
 		setDisplay(raw);
 		onChange(raw === "" ? undefined : Number(raw));
 	}

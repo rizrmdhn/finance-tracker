@@ -101,7 +101,9 @@ function TrashCategoriesComponent() {
 						render={
 							<Button
 								variant="destructive"
-								disabled={emptyTrashMutation.isPending || categories.length === 0}
+								disabled={
+									emptyTrashMutation.isPending || categories.length === 0
+								}
 							>
 								<Trash2 className="size-4" />
 								{t("trash.emptyTrash")}
@@ -147,7 +149,9 @@ function TrashCategoriesComponent() {
 									style={{ backgroundColor: category.color ?? "#94a3b8" }}
 								/>
 							)}
-							<span className="flex-1 font-medium text-sm">{category.name}</span>
+							<span className="flex-1 font-medium text-sm">
+								{category.name}
+							</span>
 							<span className="text-muted-foreground text-xs capitalize">
 								{category.type}
 							</span>
@@ -185,7 +189,9 @@ function TrashCategoriesComponent() {
 											</AlertDialogDescription>
 										</AlertDialogHeader>
 										<AlertDialogFooter>
-											<AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+											<AlertDialogCancel>
+												{t("common.cancel")}
+											</AlertDialogCancel>
 											<AlertDialogAction
 												className="bg-red-600 text-white hover:bg-red-500"
 												onClick={() =>

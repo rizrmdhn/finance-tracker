@@ -140,7 +140,12 @@ function SelectContent({
 									)}
 								>
 									{Platform.OS !== "web" ? (
-										<ScrollView nestedScrollEnabled showsVerticalScrollIndicator={false}>{children}</ScrollView>
+										<ScrollView
+											nestedScrollEnabled
+											showsVerticalScrollIndicator={false}
+										>
+											{children}
+										</ScrollView>
 									) : (
 										children
 									)}

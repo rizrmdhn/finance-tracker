@@ -41,11 +41,11 @@ export function useGithubRelease(repo: string) {
 
 				const latestVersion = release.tag_name.replace(/^mobile\/v/, "");
 				const supportedAbis = Device.supportedCpuArchitectures ?? [];
-			const apkAsset =
-				supportedAbis
-					.map((abi) => release.assets.find((a) => a.name.includes(abi)))
-					.find(Boolean) ??
-				release.assets.find((a) => a.name.endsWith(".apk"));
+				const apkAsset =
+					supportedAbis
+						.map((abi) => release.assets.find((a) => a.name.includes(abi)))
+						.find(Boolean) ??
+					release.assets.find((a) => a.name.endsWith(".apk"));
 
 				// If current version is unknown, assume up to date to avoid false positives
 				const isUpToDate =

@@ -94,9 +94,8 @@ export default function Home() {
 	const transfer = summary?.transfer ?? 0;
 	const savings = summary?.savings ?? 0;
 
-	const sourceCurrency = (
-		accounts.find((a) => a.id === selectedAccountId)?.currency ?? DEFAULT_CURRENCY
-	) as SupportedCurrency;
+	const sourceCurrency = (accounts.find((a) => a.id === selectedAccountId)
+		?.currency ?? DEFAULT_CURRENCY) as SupportedCurrency;
 
 	return (
 		<Container

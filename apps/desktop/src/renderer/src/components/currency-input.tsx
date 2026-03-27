@@ -1,4 +1,7 @@
-import { CURRENCY_LOCALE_MAP, type SupportedCurrency } from "@finance-tracker/constants";
+import {
+	CURRENCY_LOCALE_MAP,
+	type SupportedCurrency,
+} from "@finance-tracker/constants";
 import {
 	InputGroup,
 	InputGroupAddon,
@@ -46,9 +49,10 @@ export function CurrencyInput({
 
 	function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
 		const decimals = NO_DECIMAL_CURRENCIES.includes(currency) ? 0 : 2;
-		const raw = decimals > 0
-			? e.target.value.replace(/[^\d.]/g, "")
-			: e.target.value.replace(/\D/g, "");
+		const raw =
+			decimals > 0
+				? e.target.value.replace(/[^\d.]/g, "")
+				: e.target.value.replace(/\D/g, "");
 		setDisplay(raw);
 		onChange(raw === "" ? undefined : Number(raw));
 	}

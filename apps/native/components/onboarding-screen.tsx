@@ -11,8 +11,8 @@ import { queryClient, trpc } from "@/lib/trpc";
 import { ColorPicker } from "./form/color-picker";
 import { CurrencyInput } from "./form/currency-input";
 import { CurrencySelect } from "./form/currency-select";
-import { OptionSelect } from "./form/option-select";
 import { IconPicker } from "./form/icon-picker";
+import { OptionSelect } from "./form/option-select";
 import { Button } from "./ui/button";
 import {
 	Card,

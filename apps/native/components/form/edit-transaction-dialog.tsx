@@ -104,7 +104,8 @@ export default function EditTransactionDialog({
 	const selectedCategory = categories.find((c) => c.id === watchedCategoryId);
 	const isTransfer = selectedCategory?.type === "transfer";
 	const watchedAccountId = form.watch("accountId");
-	const accountCurrency = (accounts.find((a) => a.id === watchedAccountId)?.currency ?? "IDR") as SupportedCurrency;
+	const accountCurrency = (accounts.find((a) => a.id === watchedAccountId)
+		?.currency ?? "IDR") as SupportedCurrency;
 
 	return (
 		<ModalSheet
@@ -177,7 +178,11 @@ export default function EditTransactionDialog({
 							<FieldLabel invalid={fieldState.invalid}>
 								{t("common.amount")}
 							</FieldLabel>
-							<CurrencyInput value={field.value} onChange={field.onChange} currency={accountCurrency} />
+							<CurrencyInput
+								value={field.value}
+								onChange={field.onChange}
+								currency={accountCurrency}
+							/>
 							<FieldError errors={[fieldState.error]} />
 						</Field>
 					)}
@@ -256,7 +261,7 @@ export default function EditTransactionDialog({
 								<FieldLabel invalid={fieldState.invalid}>
 									{t("transactions.frequency")}
 								</FieldLabel>
-														<OptionSelect
+								<OptionSelect
 									value={field.value}
 									onChange={field.onChange}
 									options={RECURRENCE_FREQUENCIES.map((f) => ({

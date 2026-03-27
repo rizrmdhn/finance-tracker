@@ -93,7 +93,9 @@ export function RecentTransactions({
 							typeConfig.transfer;
 						const { Icon, iconClass, amountClass, prefix } = config;
 						const category = categoryMap.get(tx.categoryId ?? "");
-						const txCurrency = (accountMap.get(tx.accountId)?.currency as SupportedCurrency) ?? sourceCurrency;
+						const txCurrency =
+							(accountMap.get(tx.accountId)?.currency as SupportedCurrency) ??
+							sourceCurrency;
 
 						return (
 							<div

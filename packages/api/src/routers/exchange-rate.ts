@@ -1,3 +1,4 @@
+import { SUPPORTED_CURRENCIES } from "@finance-tracker/constants";
 import {
 	getCachedRate,
 	getCachedRates,
@@ -7,7 +8,6 @@ import {
 	exchangeRateFetchSchema,
 	exchangeRateGetSchema,
 } from "@finance-tracker/schema";
-import { SUPPORTED_CURRENCIES } from "@finance-tracker/constants";
 import {
 	fetchExchangeRates,
 	isRateStale,
@@ -26,9 +26,7 @@ export const exchangeRateRouter = createTRPCRouter({
 			);
 			if (fetchErr) throw toTRPCError(fetchErr);
 
-			const [data, err] = await tryCatchAsync(() =>
-				upsertRates(ctx.db, rows),
-			);
+			const [data, err] = await tryCatchAsync(() => upsertRates(ctx.db, rows));
 			if (err) throw toTRPCError(err);
 			return data;
 		}),
@@ -52,9 +50,7 @@ export const exchangeRateRouter = createTRPCRouter({
 			);
 			if (fetchErr) throw toTRPCError(fetchErr);
 
-			const [data, err] = await tryCatchAsync(() =>
-				upsertRates(ctx.db, rows),
-			);
+			const [data, err] = await tryCatchAsync(() => upsertRates(ctx.db, rows));
 			if (err) throw toTRPCError(err);
 			return data;
 		}),

@@ -359,4 +359,22 @@ export interface Dictionary {
 		navigateHint: string;
 		heading: string;
 	};
+	receiptScanner: {
+		title: string;
+		description: string;
+		takePhoto: string;
+		chooseFromLibrary: string;
+		scanning: string;
+		scanFailed: string;
+		noTextFound: string;
+		fillManually: string;
+		scannedBadge: string;
+		scanReceipt: string;
+		permissionDenied: string;
+		review: string;
+		reviewDescription: string;
+		confirmAndFill: string;
+		scanAgain: string;
+		notDetected: string;
+	};
 }
