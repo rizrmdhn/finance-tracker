@@ -8,29 +8,22 @@ import {
 } from "@finance-tracker/schema";
 import type { Category } from "@finance-tracker/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { TriggerRef } from "@rn-primitives/select";
 import { useMutation } from "@tanstack/react-query";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { Platform, View } from "react-native";
+import { View } from "react-native";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
 import { Button } from "../ui/button";
 import { Field, FieldError, FieldLabel } from "../ui/field";
 import { Input } from "../ui/input";
 import { ModalSheet } from "../ui/modal-sheet";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "../ui/select";
 import { Spinner } from "../ui/spinner";
 import { Text } from "../ui/text";
 import { ColorPicker } from "./color-picker";
 import { IconPicker } from "./icon-picker";
+import { OptionSelect } from "./option-select";
 
 interface EditCategoryDialogProps {
 	open: boolean;
@@ -44,7 +37,6 @@ export default function EditCategoryDialog({
 	category,
 }: EditCategoryDialogProps) {
 	const { t } = useTranslation();
-	const selectTriggerRef = useRef<TriggerRef>(null);
 	const form = useForm<CategoryUpdateInput>({
 		resolver: zodResolver(categoryUpdateSchema),
 	});
@@ -137,42 +129,16 @@ export default function EditCategoryDialog({
 				render={({ field, fieldState }) => (
 					<Field data-invalid={fieldState.invalid}>
 						<FieldLabel>{t("common.type")}</FieldLabel>
-						<Select
-							value={
-								field.value
-									? {
-											value: field.value,
-											label: CATEGORY_TYPE_LABELS[field.value],
-										}
-									: undefined
-							}
-							onValueChange={(option) => field.onChange(option?.value)}
-						>
-							<SelectTrigger
-								ref={selectTriggerRef}
-								className="w-full"
-								onTouchStart={Platform.select({
-									web: () => selectTriggerRef.current?.open(),
-								})}
-							>
-								<SelectValue placeholder={t("common.selectCategoryType")}>
-									{field.value
-										? CATEGORY_TYPE_LABELS[
-												field.value as (typeof CATEGORY_TYPES)[number]
-											]
-										: null}
-								</SelectValue>
-							</SelectTrigger>
-							<SelectContent portalHost="modal-select">
-								{CATEGORY_TYPES.map((type) => (
-									<SelectItem
-										key={type}
-										value={type}
-										label={CATEGORY_TYPE_LABELS[type]}
-									/>
-								))}
-							</SelectContent>
-						</Select>
+										<OptionSelect
+							value={field.value}
+							onChange={field.onChange}
+							options={CATEGORY_TYPES.map((type) => ({
+								value: type,
+								label: CATEGORY_TYPE_LABELS[type],
+							}))}
+							placeholder={t("common.selectCategoryType")}
+							title={t("common.type")}
+						/>
 						{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
 					</Field>
 				)}

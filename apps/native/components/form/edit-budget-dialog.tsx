@@ -1,33 +1,25 @@
-import { CURRENCY_LABELS, SUPPORTED_CURRENCIES } from "@finance-tracker/constants";
 import {
 	type BudgetUpdateInput,
 	budgetUpdateSchema,
 } from "@finance-tracker/schema";
 import type { BudgetWithSpent } from "@finance-tracker/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { TriggerRef } from "@rn-primitives/select";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { Platform } from "react-native";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
 import { Button } from "../ui/button";
 import { Field, FieldError, FieldLabel } from "../ui/field";
 import { ModalSheet } from "../ui/modal-sheet";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "../ui/select";
 import { Spinner } from "../ui/spinner";
 import { Text } from "../ui/text";
 import { CategoryCombobox } from "./category-combobox";
 import { CurrencyInput } from "./currency-input";
+import { CurrencySelect } from "./currency-select";
 import { DatePicker } from "./date-picker";
+import { OptionSelect } from "./option-select";
 
 interface EditBudgetDialogProps {
 	open: boolean;
@@ -45,8 +37,6 @@ export default function EditBudgetDialog({
 	to,
 }: EditBudgetDialogProps) {
 	const { t } = useTranslation();
-	const selectTriggerRef = useRef<TriggerRef>(null);
-
 	const { data: categories = [] } = useQuery(trpc.category.list.queryOptions());
 
 	const expenseCategories = categories.filter((c) => c.type === "expense");
@@ -143,31 +133,7 @@ export default function EditBudgetDialog({
 				render={({ field, fieldState }) => (
 					<Field data-invalid={fieldState.invalid}>
 						<FieldLabel>{t("common.currency")}</FieldLabel>
-						<Select
-							onValueChange={(option) => field.onChange(option?.value)}
-							defaultValue={
-								field.value
-									? { value: field.value, label: CURRENCY_LABELS[field.value as keyof typeof CURRENCY_LABELS] }
-									: undefined
-							}
-						>
-							<SelectTrigger
-								ref={selectTriggerRef}
-								className="w-full"
-								onTouchStart={Platform.select({
-									web: () => selectTriggerRef.current?.open(),
-								})}
-							>
-								<SelectValue placeholder={t("common.selectCurrency")}>
-									{field.value ? CURRENCY_LABELS[field.value as keyof typeof CURRENCY_LABELS] : null}
-								</SelectValue>
-							</SelectTrigger>
-							<SelectContent portalHost="modal-select">
-								{SUPPORTED_CURRENCIES.map((c) => (
-									<SelectItem key={c} value={c} label={CURRENCY_LABELS[c]} />
-								))}
-							</SelectContent>
-						</Select>
+						<CurrencySelect value={field.value} onChange={field.onChange} />
 						{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
 					</Field>
 				)}
@@ -179,40 +145,16 @@ export default function EditBudgetDialog({
 				render={({ field, fieldState }) => (
 					<Field data-invalid={fieldState.invalid}>
 						<FieldLabel>{t("budgets.period")}</FieldLabel>
-						<Select
-							onValueChange={(option) => field.onChange(option?.value)}
-							defaultValue={
-								field.value
-									? {
-											value: field.value,
-											label:
-												field.value === "monthly"
-													? t("budgets.monthly")
-													: t("budgets.weekly"),
-										}
-									: undefined
-							}
-						>
-							<SelectTrigger
-								ref={selectTriggerRef}
-								className="w-full"
-								onTouchStart={Platform.select({
-									web: () => selectTriggerRef.current?.open(),
-								})}
-							>
-								<SelectValue placeholder={t("budgets.selectPeriod")}>
-									{field.value === "monthly"
-										? t("budgets.monthly")
-										: field.value === "weekly"
-											? t("budgets.weekly")
-											: null}
-								</SelectValue>
-							</SelectTrigger>
-							<SelectContent portalHost="modal-select">
-								<SelectItem value="monthly" label={t("budgets.monthly")} />
-								<SelectItem value="weekly" label={t("budgets.weekly")} />
-							</SelectContent>
-						</Select>
+						<OptionSelect
+							value={field.value}
+							onChange={field.onChange}
+							options={[
+								{ value: "monthly", label: t("budgets.monthly") },
+								{ value: "weekly", label: t("budgets.weekly") },
+							]}
+							placeholder={t("budgets.selectPeriod")}
+							title={t("budgets.period")}
+						/>
 						{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
 					</Field>
 				)}

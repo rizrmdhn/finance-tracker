@@ -29,7 +29,7 @@
 							"targetHeight": "270dp",
 							"updatePeriodMillis": 1800000,
 							"resizeMode": "vertical|horizontal",
-							"previewImage": "./assets/images/icon.png"
+							"previewImage": "./assets/images/budget-widget-preview.png"
 						}
 					]
 				}
@@ -55,9 +55,7 @@
 		"android": {
 			"versionCode": 6,
 			"package": "com.rizrmdhn.finance_tracker",
-			"permissions": [
-				"android.permission.REQUEST_INSTALL_PACKAGES"
-			],
+			"permissions": ["android.permission.REQUEST_INSTALL_PACKAGES"],
 			"adaptiveIcon": {
 				"foregroundImage": "./assets/images/android-icon-foreground.png",
 				"backgroundImage": "./assets/images/android-icon-background.png",
