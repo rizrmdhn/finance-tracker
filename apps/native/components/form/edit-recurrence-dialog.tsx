@@ -88,7 +88,7 @@ export default function EditRecurrenceDialog({
 				render={({ field, fieldState }) => (
 					<Field data-invalid={fieldState.invalid}>
 						<FieldLabel>{t("transactions.frequency")}</FieldLabel>
-										<OptionSelect
+						<OptionSelect
 							value={field.value}
 							onChange={field.onChange}
 							options={RECURRENCE_FREQUENCIES.map((f) => ({

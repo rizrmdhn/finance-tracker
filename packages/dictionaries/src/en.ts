@@ -383,4 +383,18 @@ export const en = {
 		navigateHint: "Navigate to Transactions on select",
 		heading: "Transactions",
 	},
+	receiptScanner: {
+		title: "Scan Receipt",
+		description: "Point your camera at a receipt to auto-fill a transaction.",
+		takePhoto: "Take Photo",
+		chooseFromLibrary: "Choose from Library",
+		scanning: "Reading receipt...",
+		scanFailed: "Could not read the receipt. Please fill in manually.",
+		noTextFound: "No text found on the image. Try a clearer photo.",
+		fillManually: "Fill Manually",
+		scannedBadge: "Filled from receipt",
+		scanReceipt: "Scan Receipt",
+		permissionDenied:
+			"Camera permission was denied. Please enable it in Settings.",
+	},
 } satisfies Dictionary;

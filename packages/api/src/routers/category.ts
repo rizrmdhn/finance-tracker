@@ -76,9 +76,7 @@ export const categoryRouter = createTRPCRouter({
 		}),
 
 	listDeleted: publicProcedure.query(async ({ ctx }) => {
-		const [data, err] = await tryCatchAsync(() =>
-			getDeletedCategories(ctx.db),
-		);
+		const [data, err] = await tryCatchAsync(() => getDeletedCategories(ctx.db));
 		if (err) throw toTRPCError(err);
 		return data;
 	}),

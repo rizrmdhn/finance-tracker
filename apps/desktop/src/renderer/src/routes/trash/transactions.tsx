@@ -39,8 +39,15 @@ function TrashTransactionsComponent() {
 	const params = Route.useSearch();
 	const navigate = Route.useNavigate();
 
-	const { data: transactions, isLoading, error } = useQuery({
-		...trpc.transaction.paginated.queryOptions({ ...params, showDeleted: true }),
+	const {
+		data: transactions,
+		isLoading,
+		error,
+	} = useQuery({
+		...trpc.transaction.paginated.queryOptions({
+			...params,
+			showDeleted: true,
+		}),
 		placeholderData: keepPreviousData,
 	});
 
@@ -80,7 +87,9 @@ function TrashTransactionsComponent() {
 					}),
 				);
 				globalSuccessToast(
-					t("trash.toast.permanentlyDeleted", { name: t("trash.transactions") }),
+					t("trash.toast.permanentlyDeleted", {
+						name: t("trash.transactions"),
+					}),
 				);
 			},
 			onError: (err) =>

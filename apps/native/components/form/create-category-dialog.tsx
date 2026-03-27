@@ -116,7 +116,7 @@ export default function CreateCategoryDialog({
 				render={({ field, fieldState }) => (
 					<Field data-invalid={fieldState.invalid}>
 						<FieldLabel>{t("common.type")}</FieldLabel>
-										<OptionSelect
+						<OptionSelect
 							value={field.value}
 							onChange={field.onChange}
 							options={CATEGORY_TYPES.map((type) => ({

@@ -102,7 +102,8 @@ export default function CreateTransactionDialog({
 	const watchedAccountId = form.watch("accountId");
 	const selectedCategory = categories.find((c) => c.id === watchedCategoryId);
 	const isTransfer = selectedCategory?.type === "transfer";
-	const accountCurrency = (accounts.find((a) => a.id === watchedAccountId)?.currency ?? "IDR") as SupportedCurrency;
+	const accountCurrency = (accounts.find((a) => a.id === watchedAccountId)
+		?.currency ?? "IDR") as SupportedCurrency;
 
 	return (
 		<Dialog open={open} onOpenChange={setIsOpen}>

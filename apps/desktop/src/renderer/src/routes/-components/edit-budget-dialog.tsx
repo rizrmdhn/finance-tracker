@@ -1,4 +1,7 @@
-import { CURRENCY_LABELS, SUPPORTED_CURRENCIES } from "@finance-tracker/constants";
+import {
+	CURRENCY_LABELS,
+	SUPPORTED_CURRENCIES,
+} from "@finance-tracker/constants";
 import {
 	type BudgetUpdateInput,
 	budgetUpdateSchema,
@@ -162,7 +165,11 @@ export default function EditBudgetDialog({
 									<Select value={field.value} onValueChange={field.onChange}>
 										<SelectTrigger className="w-full">
 											<SelectValue placeholder={t("common.selectCurrency")}>
-												{field.value ? CURRENCY_LABELS[field.value as keyof typeof CURRENCY_LABELS] : null}
+												{field.value
+													? CURRENCY_LABELS[
+															field.value as keyof typeof CURRENCY_LABELS
+														]
+													: null}
 											</SelectValue>
 										</SelectTrigger>
 										<SelectContent>

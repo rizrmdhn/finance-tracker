@@ -128,7 +128,9 @@ export function TrashTransactions() {
 		</View>
 	) : (
 		<View className="flex flex-col items-center py-12">
-			<Text className="text-muted-foreground text-sm">{t("trash.noItems")}</Text>
+			<Text className="text-muted-foreground text-sm">
+				{t("trash.noItems")}
+			</Text>
 		</View>
 	);
 
@@ -196,7 +198,10 @@ export function TrashTransactions() {
 									openModal("permanentDelete");
 								}}
 							>
-								<IconComp as={Trash2Icon} className="size-3.5 text-destructive" />
+								<IconComp
+									as={Trash2Icon}
+									className="size-3.5 text-destructive"
+								/>
 								<Text className="text-destructive text-xs">
 									{t("trash.permanentDelete")}
 								</Text>

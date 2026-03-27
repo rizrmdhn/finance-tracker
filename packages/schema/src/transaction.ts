@@ -1,4 +1,7 @@
-import { RECURRENCE_FREQUENCIES, SUPPORTED_CURRENCIES } from "@finance-tracker/constants";
+import {
+	RECURRENCE_FREQUENCIES,
+	SUPPORTED_CURRENCIES,
+} from "@finance-tracker/constants";
 import type { transactions } from "@finance-tracker/db";
 import { z } from "zod";
 import { createPaginationSchema } from "./pagination";

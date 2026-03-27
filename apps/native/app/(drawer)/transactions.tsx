@@ -1,3 +1,4 @@
+import type { TransactionInput } from "@finance-tracker/schema";
 import type { Transaction } from "@finance-tracker/types";
 import { createId } from "@paralleldrive/cuid2";
 import { FlashList } from "@shopify/flash-list";
@@ -9,6 +10,7 @@ import {
 	PencilIcon,
 	PiggyBank,
 	PlusCircle,
+	ScanText,
 	Search,
 	Trash2Icon,
 } from "lucide-react-native";
@@ -20,6 +22,7 @@ import { Container } from "@/components/container";
 import CreateTransactionDialog from "@/components/form/create-transaction-dialog";
 import EditTransactionDialog from "@/components/form/edit-transaction-dialog";
 import { ICON_MAP } from "@/components/form/icon-picker";
+import { ReceiptScanner } from "@/components/receipt-scanner";
 import { Button } from "@/components/ui/button";
 import { Icon as IconComp } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
@@ -27,6 +30,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Text } from "@/components/ui/text";
 import { useFormatCurrency } from "@/hooks/use-format-currency";
 import useModalState from "@/hooks/use-modal-state";
+import type { ParsedReceipt } from "@/lib/receipt-parser";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
 import { formatDate } from "@/lib/utils";
@@ -68,9 +72,13 @@ export default function Transactions() {
 		create: false,
 		edit: false,
 		delete: false,
+		scan: false,
 	});
 
 	const [selected, setSelected] = useState<Transaction | null>(null);
+	const [scannedDefaults, setScannedDefaults] = useState<
+		Partial<TransactionInput> | undefined
+	>(undefined);
 	const [rawQuery, setRawQuery] = useState("");
 	const [query, setQuery] = useState("");
 
@@ -148,6 +156,15 @@ export default function Transactions() {
 		openModal("delete");
 	}
 
+	function handleScanSuccess(parsed: ParsedReceipt) {
+		const defaults: Partial<TransactionInput> = {};
+		if (parsed.amount !== null) defaults.amount = parsed.amount;
+		if (parsed.note) defaults.note = parsed.note;
+		if (parsed.date !== null) defaults.date = parsed.date;
+		setScannedDefaults(defaults);
+		openModal("create");
+	}
+
 	const ListHeader = (
 		<View className="flex flex-col gap-3 py-3">
 			<View className="flex flex-row items-center justify-between">
@@ -163,10 +180,21 @@ export default function Transactions() {
 						</Text>
 					)}
 				</View>
-				<Button size="sm" onPress={() => openModal("create")}>
-					<IconComp as={PlusCircle} className="size-4" />
-					<Text>{t("transactions.addTransaction")}</Text>
-				</Button>
+				<View className="flex-row items-center gap-2">
+					<Button size="sm" variant="outline" onPress={() => openModal("scan")}>
+						<IconComp as={ScanText} className="size-4" />
+					</Button>
+					<Button
+						size="sm"
+						onPress={() => {
+							setScannedDefaults(undefined);
+							openModal("create");
+						}}
+					>
+						<IconComp as={PlusCircle} className="size-4" />
+						<Text>{t("transactions.addTransaction")}</Text>
+					</Button>
+				</View>
 			</View>
 			<View className="flex-row items-center gap-2 rounded-md border border-input bg-background px-3 shadow-black/5 shadow-sm dark:bg-input/30">
 				<IconComp
@@ -321,6 +349,7 @@ export default function Transactions() {
 				setIsOpen={(open) =>
 					open ? openModal("create") : closeModal("create")
 				}
+				defaultValues={scannedDefaults}
 			/>
 
 			<EditTransactionDialog
@@ -344,6 +373,12 @@ export default function Transactions() {
 				onConfirm={() => {
 					if (selected) deleteMutation.mutate({ id: selected.id });
 				}}
+			/>
+
+			<ReceiptScanner
+				open={state.scan}
+				onClose={() => closeModal("scan")}
+				onScanSuccess={handleScanSuccess}
 			/>
 		</Container>
 	);

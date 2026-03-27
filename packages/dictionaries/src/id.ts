@@ -382,4 +382,18 @@ export const id = {
 		navigateHint: "Buka halaman Transaksi saat dipilih",
 		heading: "Transaksi",
 	},
+	receiptScanner: {
+		title: "Pindai Struk",
+		description:
+			"Arahkan kamera ke struk untuk mengisi transaksi secara otomatis.",
+		takePhoto: "Ambil Foto",
+		chooseFromLibrary: "Pilih dari Galeri",
+		scanning: "Membaca struk...",
+		scanFailed: "Tidak dapat membaca struk. Silakan isi secara manual.",
+		noTextFound: "Tidak ada teks pada gambar. Coba foto yang lebih jelas.",
+		fillManually: "Isi Manual",
+		scannedBadge: "Diisi dari struk",
+		scanReceipt: "Pindai Struk",
+		permissionDenied: "Izin kamera ditolak. Aktifkan di Pengaturan.",
+	},
 } satisfies Dictionary;

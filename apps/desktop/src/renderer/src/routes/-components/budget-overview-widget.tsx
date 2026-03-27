@@ -19,10 +19,7 @@ interface BudgetOverviewWidgetProps {
 	to: number;
 }
 
-export function BudgetOverviewWidget({
-	from,
-	to,
-}: BudgetOverviewWidgetProps) {
+export function BudgetOverviewWidget({ from, to }: BudgetOverviewWidgetProps) {
 	const { t } = useTranslation();
 	const { format } = useFormatCurrency();
 

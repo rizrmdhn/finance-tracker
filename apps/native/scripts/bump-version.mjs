@@ -55,10 +55,14 @@ writeFileSync(pkgJsonPath, `${JSON.stringify(pkgJson, null, "\t")}\n`);
 console.log(`✓ ${current} → ${next} (versionCode ${nextVersionCode})`);
 console.log("Running expo prebuild...");
 
-const result = spawnSync("bunx", ["expo", "prebuild", "--platform", "android"], {
-	stdio: "inherit",
-	cwd: root,
-});
+const result = spawnSync(
+	"bunx",
+	["expo", "prebuild", "--platform", "android"],
+	{
+		stdio: "inherit",
+		cwd: root,
+	},
+);
 
 if (result.status !== 0) {
 	console.error("Prebuild failed.");

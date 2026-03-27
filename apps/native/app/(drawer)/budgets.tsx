@@ -5,7 +5,6 @@ import { PencilIcon, Trash2Icon } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { View } from "react-native";
-import { saveWidgetData } from "@/lib/widget-storage";
 import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { Container } from "@/components/container";
 import CreateBudgetDialog from "@/components/form/create-budget-dialog";
@@ -20,6 +19,7 @@ import useModalState from "@/hooks/use-modal-state";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
 import { getCurrentMonthRange } from "@/lib/utils";
+import { saveWidgetData } from "@/lib/widget-storage";
 
 export default function Budgets() {
 	const { t } = useTranslation();

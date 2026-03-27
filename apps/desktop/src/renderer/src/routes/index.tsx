@@ -178,10 +178,7 @@ function HomeComponent() {
 				/>
 			)}
 
-			<BudgetOverviewWidget
-				from={dateRange.from}
-				to={dateRange.to}
-			/>
+			<BudgetOverviewWidget from={dateRange.from} to={dateRange.to} />
 
 			<CreateTransactionDialog
 				open={state.transaction}

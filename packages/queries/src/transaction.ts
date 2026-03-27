@@ -28,8 +28,8 @@ import {
 	lte,
 	or,
 } from "drizzle-orm";
-import { getCachedRates } from "./exchange-rate";
 import { NotFoundError } from "./errors";
+import { getCachedRates } from "./exchange-rate";
 import { getOffsetPaginated } from "./utils/get-offset-paginated";
 
 export async function getTransactions(
@@ -210,7 +210,12 @@ export async function getAllFilteredTransactions(
 
 export async function getTransactionSummary(
 	db: AnyDatabase,
-	input: { accountId?: string; from: number; to: number; displayCurrency?: SupportedCurrency },
+	input: {
+		accountId?: string;
+		from: number;
+		to: number;
+		displayCurrency?: SupportedCurrency;
+	},
 ) {
 	const accountFilter = input.accountId
 		? or(
@@ -231,11 +236,21 @@ export async function getTransactionSummary(
 		}),
 		input.accountId
 			? db
-					.select({ initialBalance: accounts.initialBalance, currency: accounts.currency })
+					.select({
+						initialBalance: accounts.initialBalance,
+						currency: accounts.currency,
+					})
 					.from(accounts)
 					.where(eq(accounts.id, input.accountId))
-			: db.select({ initialBalance: accounts.initialBalance, currency: accounts.currency }).from(accounts),
-		input.displayCurrency ? getCachedRates(db, input.displayCurrency) : Promise.resolve([]),
+			: db
+					.select({
+						initialBalance: accounts.initialBalance,
+						currency: accounts.currency,
+					})
+					.from(accounts),
+		input.displayCurrency
+			? getCachedRates(db, input.displayCurrency)
+			: Promise.resolve([]),
 	]);
 
 	// rateMap: target currency → rate, where 1 displayCurrency = rate target
@@ -243,7 +258,8 @@ export async function getTransactionSummary(
 	const rateMap = new Map(cachedRates.map((r) => [r.target, r.rate]));
 
 	function toDisplay(amount: number, sourceCurrency: string): number {
-		if (!input.displayCurrency || sourceCurrency === input.displayCurrency) return amount;
+		if (!input.displayCurrency || sourceCurrency === input.displayCurrency)
+			return amount;
 		const rate = rateMap.get(sourceCurrency as SupportedCurrency);
 		return rate ? amount / rate : amount;
 	}
