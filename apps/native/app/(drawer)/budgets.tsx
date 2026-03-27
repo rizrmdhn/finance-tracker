@@ -2,9 +2,10 @@ import type { BudgetWithSpent } from "@finance-tracker/types";
 import { createId } from "@paralleldrive/cuid2";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { PencilIcon, Trash2Icon } from "lucide-react-native";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { View } from "react-native";
+import { saveWidgetData } from "@/lib/widget-storage";
 import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { Container } from "@/components/container";
 import CreateBudgetDialog from "@/components/form/create-budget-dialog";
@@ -37,6 +38,38 @@ export default function Budgets() {
 		isRefetching,
 		refetch,
 	} = useQuery(trpc.budget.listWithSpent.queryOptions({ from, to }));
+
+	const { data: languageSetting } = useQuery(
+		trpc.appSetting.get.queryOptions({ key: "language" }),
+	);
+	const { data: currencySetting } = useQuery(
+		trpc.appSetting.get.queryOptions({ key: "currency" }),
+	);
+
+	useEffect(() => {
+		if (isLoading || budgets.length === 0) return;
+		const currency = currencySetting?.value ?? "IDR";
+		const currencyLocaleMap: Record<string, string> = {
+			IDR: "id-ID",
+			USD: "en-US",
+		};
+		saveWidgetData({
+			budgets: budgets.map((b) => ({
+				id: b.id,
+				amount: b.amount,
+				spent: b.spent,
+				remaining: b.remaining,
+				isOverBudget: b.isOverBudget,
+				period: b.period,
+				category: b.category
+					? { name: b.category.name, color: b.category.color }
+					: null,
+			})),
+			language: languageSetting?.value ?? "id",
+			currency,
+			currencyLocale: currencyLocaleMap[currency] ?? "id-ID",
+		});
+	}, [budgets, isLoading, languageSetting, currencySetting]);
 
 	const deleteMutation = useMutation(
 		trpc.budget.delete.mutationOptions({

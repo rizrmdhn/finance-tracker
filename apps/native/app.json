@@ -1,6 +1,6 @@
 {
 	"expo": {
-		"version": "1.1.0",
+		"version": "1.2.0",
 		"scheme": "finance-tracker",
 		"userInterfaceStyle": "automatic",
 		"orientation": "default",
@@ -15,6 +15,25 @@
 			"expo-router",
 			"expo-secure-store",
 			"expo-web-browser",
+			[
+				"react-native-android-widget",
+				{
+					"widgets": [
+						{
+							"name": "BudgetWidget",
+							"label": "Budget Tracker",
+							"description": "Shows your current budgets and spending",
+							"minWidth": "180dp",
+							"minHeight": "110dp",
+							"targetWidth": "270dp",
+							"targetHeight": "270dp",
+							"updatePeriodMillis": 1800000,
+							"resizeMode": "vertical|horizontal",
+							"previewImage": "./assets/images/icon.png"
+						}
+					]
+				}
+			],
 			[
 				"expo-splash-screen",
 				{
@@ -34,7 +53,7 @@
 		},
 		"icon": "./assets/images/icon.png",
 		"android": {
-			"versionCode": 3,
+			"versionCode": 4,
 			"package": "com.rizrmdhn.finance_tracker",
 			"adaptiveIcon": {
 				"foregroundImage": "./assets/images/android-icon-foreground.png",
