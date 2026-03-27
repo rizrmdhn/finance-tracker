@@ -110,7 +110,9 @@ export function OnboardingScreen() {
 									<FieldLabel>{t("common.name")}</FieldLabel>
 									<Input
 										placeholder={t("accounts.create.namePlaceholder")}
-										{...field}
+										value={field.value}
+										onChangeText={field.onChange}
+										onBlur={field.onBlur}
 									/>
 									{fieldState.invalid && (
 										<FieldError errors={[fieldState.error]} />
