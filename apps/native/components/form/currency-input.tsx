@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { TextInput, View } from "react-native";
+import { View } from "react-native";
 import { Text } from "@/components/ui/text";
+import { useThemeColor } from "@/lib/theme";
 import { cn } from "@/lib/utils";
+import { Input } from "../ui/input";
 
 const format = (n: number) =>
 	new Intl.NumberFormat("id-ID", {
@@ -24,6 +26,8 @@ export function CurrencyInput({
 	placeholder = "0",
 	className,
 }: CurrencyInputProps) {
+	const mutedForeground = useThemeColor("mutedForeground");
+
 	const [display, setDisplay] = useState(
 		value !== undefined ? format(value) : "",
 	);
@@ -63,12 +67,12 @@ export function CurrencyInput({
 				className,
 			)}
 		>
-			<TextInput
-				className="flex-1 px-3 text-base text-foreground"
+			<Input
+				className="flex-1 rounded-r-none rounded-l-md border-0 px-3 text-base text-foreground"
 				style={{
-					height: 40,
-					textAlignVertical: "center",
+					backgroundColor: "transparent",
 					lineHeight: undefined,
+					textAlignVertical: "center",
 				}}
 				keyboardType="numeric"
 				value={display}
@@ -76,7 +80,7 @@ export function CurrencyInput({
 				onFocus={handleFocus}
 				onBlur={handleBlur}
 				placeholder={placeholder}
-				placeholderTextColor="#94a3b8"
+				placeholderTextColor={mutedForeground}
 			/>
 			<View className="h-full items-center justify-center border-input border-l px-3">
 				<Text className="font-medium text-muted-foreground text-sm">

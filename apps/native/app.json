@@ -55,6 +55,7 @@
 		"android": {
 			"versionCode": 5,
 			"package": "com.rizrmdhn.finance_tracker",
+			"permissions": ["android.permission.REQUEST_INSTALL_PACKAGES"],
 			"adaptiveIcon": {
 				"foregroundImage": "./assets/images/android-icon-foreground.png",
 				"backgroundImage": "./assets/images/android-icon-background.png",
