@@ -1,4 +1,5 @@
-import type { Category, Transaction } from "@finance-tracker/types";
+import type { SupportedCurrency } from "@finance-tracker/constants";
+import type { Account, Category, Transaction } from "@finance-tracker/types";
 import {
 	Card,
 	CardContent,
@@ -14,11 +15,15 @@ import {
 	PiggyBank,
 } from "lucide-react";
 import { useMemo } from "react";
-import { formatCurrency, formatDate } from "./utils";
+import { useTranslation } from "react-i18next";
+import { useFormatCurrency } from "@/hooks/use-format-currency";
+import { formatDate } from "./utils";
 
 interface RecentTransactionsProps {
 	transactions: Transaction[];
 	categories: Category[];
+	accounts: Account[];
+	sourceCurrency?: SupportedCurrency;
 }
 
 const typeConfig = {
@@ -51,10 +56,18 @@ const typeConfig = {
 export function RecentTransactions({
 	transactions,
 	categories,
+	accounts,
+	sourceCurrency,
 }: RecentTransactionsProps) {
+	const { t } = useTranslation();
+	const { format } = useFormatCurrency();
 	const categoryMap = useMemo(
 		() => new Map(categories.map((c) => [c.id, c])),
 		[categories],
+	);
+	const accountMap = useMemo(
+		() => new Map(accounts.map((a) => [a.id, a])),
+		[accounts],
 	);
 
 	const recent = transactions.slice(0, 6);
@@ -62,12 +75,12 @@ export function RecentTransactions({
 	return (
 		<Card>
 			<CardHeader className="flex flex-row items-center justify-between">
-				<CardTitle>Transaksi Terbaru</CardTitle>
+				<CardTitle>{t("common.recentTransactions")}</CardTitle>
 				<Link
 					to="/transactions"
 					className="text-muted-foreground text-xs hover:text-foreground"
 				>
-					Lihat Semua
+					{t("common.viewAll")}
 				</Link>
 			</CardHeader>
 			<CardContent className="p-0">
@@ -80,6 +93,7 @@ export function RecentTransactions({
 							typeConfig.transfer;
 						const { Icon, iconClass, amountClass, prefix } = config;
 						const category = categoryMap.get(tx.categoryId ?? "");
+						const txCurrency = (accountMap.get(tx.accountId)?.currency as SupportedCurrency) ?? sourceCurrency;
 
 						return (
 							<div
@@ -107,14 +121,14 @@ export function RecentTransactions({
 									) : (
 										prefix
 									)}
-									{formatCurrency(tx.amount)}
+									{format(tx.amount, txCurrency)}
 								</span>
 							</div>
 						);
 					})}
 					{recent.length === 0 && (
 						<p className="px-4 py-6 text-center text-muted-foreground text-sm">
-							Belum ada transaksi
+							{t("common.noTransactions")}
 						</p>
 					)}
 				</div>

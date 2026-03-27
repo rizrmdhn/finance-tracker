@@ -1,29 +1,22 @@
 import { type BudgetInput, budgetSchema } from "@finance-tracker/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { TriggerRef } from "@rn-primitives/select";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useRef } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { Platform } from "react-native";
+import { useFormatCurrency } from "@/hooks/use-format-currency";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
 import { getCurrentMonthRange } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { Field, FieldError, FieldLabel } from "../ui/field";
 import { ModalSheet } from "../ui/modal-sheet";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "../ui/select";
 import { Spinner } from "../ui/spinner";
 import { Text } from "../ui/text";
 import { CategoryCombobox } from "./category-combobox";
 import { CurrencyInput } from "./currency-input";
+import { CurrencySelect } from "./currency-select";
 import { DatePicker } from "./date-picker";
+import { OptionSelect } from "./option-select";
 
 interface CreateBudgetDialogProps {
 	open: boolean;
@@ -39,8 +32,7 @@ export default function CreateBudgetDialog({
 	to,
 }: CreateBudgetDialogProps) {
 	const { t } = useTranslation();
-	const selectTriggerRef = useRef<TriggerRef>(null);
-
+	const { displayCurrency } = useFormatCurrency();
 	const { data: categories = [] } = useQuery(trpc.category.list.queryOptions());
 
 	const expenseCategories = categories.filter((c) => c.type === "expense");
@@ -50,6 +42,7 @@ export default function CreateBudgetDialog({
 		defaultValues: {
 			categoryId: "",
 			amount: undefined,
+			currency: displayCurrency,
 			period: "monthly",
 			startDate: getCurrentMonthRange().from,
 		},
@@ -119,44 +112,32 @@ export default function CreateBudgetDialog({
 
 			<Controller
 				control={form.control}
+				name="currency"
+				render={({ field, fieldState }) => (
+					<Field data-invalid={fieldState.invalid}>
+						<FieldLabel>{t("common.currency")}</FieldLabel>
+						<CurrencySelect value={field.value} onChange={field.onChange} />
+						{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+					</Field>
+				)}
+			/>
+
+			<Controller
+				control={form.control}
 				name="period"
 				render={({ field, fieldState }) => (
 					<Field data-invalid={fieldState.invalid}>
 						<FieldLabel>{t("budgets.period")}</FieldLabel>
-						<Select
-							onValueChange={(option) => field.onChange(option?.value)}
-							defaultValue={
-								field.value
-									? {
-											value: field.value,
-											label:
-												field.value === "monthly"
-													? t("budgets.monthly")
-													: t("budgets.weekly"),
-										}
-									: undefined
-							}
-						>
-							<SelectTrigger
-								ref={selectTriggerRef}
-								className="w-full"
-								onTouchStart={Platform.select({
-									web: () => selectTriggerRef.current?.open(),
-								})}
-							>
-								<SelectValue placeholder={t("budgets.selectPeriod")}>
-									{field.value === "monthly"
-										? t("budgets.monthly")
-										: field.value === "weekly"
-											? t("budgets.weekly")
-											: null}
-								</SelectValue>
-							</SelectTrigger>
-							<SelectContent portalHost="modal-select">
-								<SelectItem value="monthly" label={t("budgets.monthly")} />
-								<SelectItem value="weekly" label={t("budgets.weekly")} />
-							</SelectContent>
-						</Select>
+						<OptionSelect
+							value={field.value}
+							onChange={field.onChange}
+							options={[
+								{ value: "monthly", label: t("budgets.monthly") },
+								{ value: "weekly", label: t("budgets.weekly") },
+							]}
+							placeholder={t("budgets.selectPeriod")}
+							title={t("budgets.period")}
+						/>
 						{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
 					</Field>
 				)}

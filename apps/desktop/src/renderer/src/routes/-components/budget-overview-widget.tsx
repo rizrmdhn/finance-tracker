@@ -1,3 +1,4 @@
+import type { SupportedCurrency } from "@finance-tracker/constants";
 import {
 	Card,
 	CardContent,
@@ -10,16 +11,20 @@ import { Link } from "@tanstack/react-router";
 import { Target } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ICON_MAP } from "@/components/icon-picker";
+import { useFormatCurrency } from "@/hooks/use-format-currency";
 import { trpc } from "@/lib/trpc";
-import { formatCurrency } from "./utils";
 
 interface BudgetOverviewWidgetProps {
 	from: number;
 	to: number;
 }
 
-export function BudgetOverviewWidget({ from, to }: BudgetOverviewWidgetProps) {
+export function BudgetOverviewWidget({
+	from,
+	to,
+}: BudgetOverviewWidgetProps) {
 	const { t } = useTranslation();
+	const { format } = useFormatCurrency();
 
 	const { data: budgets = [], isPending } = useQuery(
 		trpc.budget.listWithSpent.queryOptions({ from, to }),
@@ -89,6 +94,7 @@ export function BudgetOverviewWidget({ from, to }: BudgetOverviewWidgetProps) {
 							const Icon = budget.category?.icon
 								? ICON_MAP[budget.category.icon]
 								: null;
+							const budgetCurrency = budget.currency as SupportedCurrency;
 							const percent =
 								budget.amount > 0
 									? Math.min((budget.spent / budget.amount) * 100, 100)
@@ -124,8 +130,8 @@ export function BudgetOverviewWidget({ from, to }: BudgetOverviewWidgetProps) {
 											)}
 										</div>
 										<span className="shrink-0 text-muted-foreground text-xs tabular-nums">
-											{formatCurrency(budget.spent)} /{" "}
-											{formatCurrency(budget.amount)}
+											{format(budget.spent, budgetCurrency)} /{" "}
+											{format(budget.amount, budgetCurrency)}
 										</span>
 									</div>
 									<div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">

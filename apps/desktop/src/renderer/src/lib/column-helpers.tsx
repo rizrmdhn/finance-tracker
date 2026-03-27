@@ -1,3 +1,7 @@
+import {
+	CURRENCY_LOCALE_MAP,
+	type SupportedCurrency,
+} from "@finance-tracker/constants";
 import type { FilterVariant } from "@finance-tracker/types";
 import { Badge } from "@finance-tracker/ui/components/badge";
 import { cn } from "@finance-tracker/ui/lib/utils";
@@ -267,13 +271,18 @@ export function createStatusColumn<T extends RowData>(
 	};
 }
 
+interface PriceColumnOptions extends TextColumnOptions {
+	/** ISO 4217 currency code */
+	currency?: SupportedCurrency;
+}
+
 /**
  * Creates a price column with consistent formatting
  */
 export function createPriceColumn<T extends RowData>(
 	id: Extract<NestedKeyOf<T>, string>,
 	label: string,
-	options: TextColumnOptions = {},
+	options: PriceColumnOptions = {},
 ): ColumnDef<T> {
 	const {
 		width = "w-48",
@@ -281,7 +290,11 @@ export function createPriceColumn<T extends RowData>(
 		placeholder = `Cari ${label.toLowerCase()}...`,
 		variant = "text",
 		icon = Text,
+		currency = "IDR",
 	} = options;
+
+	const locale = CURRENCY_LOCALE_MAP[currency] ?? "en-US";
+	const maximumFractionDigits = ["IDR", "JPY"].includes(currency) ? 0 : 2;
 
 	const meta: ColumnMeta<T, unknown> = enableFilter
 		? {
@@ -292,6 +305,12 @@ export function createPriceColumn<T extends RowData>(
 			}
 		: { label };
 
+	const formatter = new Intl.NumberFormat(locale, {
+		style: "currency",
+		currency,
+		maximumFractionDigits,
+	});
+
 	return {
 		id,
 		accessorKey: id,
@@ -299,12 +318,7 @@ export function createPriceColumn<T extends RowData>(
 			<DataTableColumnHeader column={column} title={label} label={label} />
 		),
 		cell: ({ row }) => {
-			const value = row.getValue(id);
-			const formattedPrice = new Intl.NumberFormat("id-ID", {
-				style: "currency",
-				currency: "IDR",
-				maximumFractionDigits: 0,
-			}).format(Number(value));
+			const formattedPrice = formatter.format(Number(row.getValue(id)));
 			return (
 				<div className={`${width} truncate`} title={formattedPrice}>
 					{formattedPrice}
@@ -399,12 +413,8 @@ export function createTagsColumn<T extends RowData>(
 interface CurrencyColumnOptions {
 	/** Width class */
 	width?: string;
-	/** BCP 47 locale (e.g. "en-US", "id-ID") */
-	locale?: string;
-	/** ISO 4217 currency code (e.g. "USD", "IDR") */
-	currency?: string;
-	/** Maximum fraction digits */
-	maximumFractionDigits?: number;
+	/** ISO 4217 currency code */
+	currency?: SupportedCurrency;
 	/** Enable column filtering */
 	enableFilter?: boolean;
 	/** Filter variant */
@@ -423,13 +433,14 @@ export function createCurrencyColumn<T extends RowData>(
 ): ColumnDef<T> {
 	const {
 		width = "w-48",
-		locale = "id-ID",
 		currency = "IDR",
-		maximumFractionDigits = 0,
 		enableFilter = false,
 		variant = "range",
 		icon = Text,
 	} = options;
+
+	const locale = CURRENCY_LOCALE_MAP[currency] ?? "en-US";
+	const maximumFractionDigits = ["IDR", "JPY"].includes(currency) ? 0 : 2;
 
 	const formatter = new Intl.NumberFormat(locale, {
 		style: "currency",

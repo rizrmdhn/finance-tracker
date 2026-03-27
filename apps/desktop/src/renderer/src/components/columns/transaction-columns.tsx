@@ -1,3 +1,7 @@
+import {
+	CURRENCY_LOCALE_MAP,
+	type SupportedCurrency,
+} from "@finance-tracker/constants";
 import type { Transaction } from "@finance-tracker/types";
 import type { ColumnDef } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
@@ -5,7 +9,6 @@ import {
 	createActionColumn,
 	createDateColumn,
 	createNumberColumn,
-	createPriceColumn,
 	createTagsColumn,
 	createTextColumn,
 } from "@/lib/column-helpers";
@@ -18,6 +21,7 @@ interface TransactionsColumnsProps {
 	perPage: number;
 	onEdit: (row: Transaction) => void;
 	accountsMap: Map<string, string>;
+	accountCurrencyMap: Map<string, SupportedCurrency>;
 }
 
 export default function getTransactionsColumns({
@@ -25,6 +29,7 @@ export default function getTransactionsColumns({
 	perPage,
 	onEdit,
 	accountsMap,
+	accountCurrencyMap,
 }: TransactionsColumnsProps): ColumnDef<Transaction>[] {
 	const ActionCell = createCrudActionCell<
 		Transaction,
@@ -38,6 +43,32 @@ export default function getTransactionsColumns({
 		onEdit,
 		additionalInvalidations: [trpc.transaction.listDeleted.queryOptions()],
 	});
+
+	const amountColumn: ColumnDef<Transaction> = {
+		id: "amount",
+		accessorKey: "amount",
+		header: ({ column }) => (
+			<DataTableColumnHeader column={column} title="Jumlah" label="Jumlah" />
+		),
+		cell: ({ row }) => {
+			const currency =
+				accountCurrencyMap.get(row.getValue("accountId")) ?? "IDR";
+			const locale = CURRENCY_LOCALE_MAP[currency] ?? "en-US";
+			const maximumFractionDigits = ["IDR", "JPY"].includes(currency) ? 0 : 2;
+			const formatted = new Intl.NumberFormat(locale, {
+				style: "currency",
+				currency,
+				maximumFractionDigits,
+			}).format(Number(row.getValue("amount")));
+			return (
+				<div className="w-32 truncate" title={formatted}>
+					{formatted}
+				</div>
+			);
+		},
+		meta: { label: "Jumlah" },
+		enableColumnFilter: true,
+	};
 
 	const accountColumn: ColumnDef<Transaction> = {
 		id: "accountId",
@@ -55,10 +86,7 @@ export default function getTransactionsColumns({
 
 	return [
 		createNumberColumn<Transaction>(currentPage, perPage),
-		createPriceColumn<Transaction>("amount", "Jumlah", {
-			width: "w-32",
-			enableFilter: true,
-		}),
+		amountColumn,
 		accountColumn,
 		createTextColumn<Transaction>("note", "Catatan", {
 			width: "w-24",

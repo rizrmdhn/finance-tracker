@@ -1,8 +1,4 @@
-import {
-	ACCOUNT_TYPE_LABELS,
-	ACCOUNT_TYPES,
-	SUPPORTED_CURRENCIES,
-} from "@finance-tracker/constants";
+import { ACCOUNT_TYPE_LABELS, ACCOUNT_TYPES } from "@finance-tracker/constants";
 import { type AccountInput, accountSchema } from "@finance-tracker/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -15,18 +11,13 @@ import { Button } from "../ui/button";
 import { Field, FieldError, FieldLabel } from "../ui/field";
 import { Input } from "../ui/input";
 import { ModalSheet } from "../ui/modal-sheet";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "../ui/select";
 import { Spinner } from "../ui/spinner";
 import { Text } from "../ui/text";
 import { ColorPicker } from "./color-picker";
 import { CurrencyInput } from "./currency-input";
+import { CurrencySelect } from "./currency-select";
 import { IconPicker } from "./icon-picker";
+import { OptionSelect } from "./option-select";
 
 interface CreateAccountDialogProps {
 	open: boolean;
@@ -121,36 +112,16 @@ export default function CreateAccountDialog({
 				render={({ field, fieldState }) => (
 					<Field data-invalid={fieldState.invalid}>
 						<FieldLabel>{t("common.type")}</FieldLabel>
-						<Select
-							value={
-								field.value
-									? {
-											value: field.value,
-											label: ACCOUNT_TYPE_LABELS[field.value],
-										}
-									: undefined
-							}
-							onValueChange={(option) => field.onChange(option?.value)}
-						>
-							<SelectTrigger className="w-full">
-								<SelectValue placeholder={t("common.selectAccountType")}>
-									{field.value
-										? ACCOUNT_TYPE_LABELS[
-												field.value as (typeof ACCOUNT_TYPES)[number]
-											]
-										: null}
-								</SelectValue>
-							</SelectTrigger>
-							<SelectContent portalHost="modal-select">
-								{ACCOUNT_TYPES.map((type) => (
-									<SelectItem
-										key={type}
-										value={type}
-										label={ACCOUNT_TYPE_LABELS[type]}
-									/>
-								))}
-							</SelectContent>
-						</Select>
+						<OptionSelect
+							value={field.value}
+							onChange={field.onChange}
+							options={ACCOUNT_TYPES.map((type) => ({
+								value: type,
+								label: ACCOUNT_TYPE_LABELS[type],
+							}))}
+							placeholder={t("common.selectAccountType")}
+							title={t("common.type")}
+						/>
 						{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
 					</Field>
 				)}
@@ -178,27 +149,7 @@ export default function CreateAccountDialog({
 				render={({ field, fieldState }) => (
 					<Field data-invalid={fieldState.invalid}>
 						<FieldLabel>{t("common.currency")}</FieldLabel>
-						<Select
-							onValueChange={(option) => field.onChange(option?.value)}
-							value={
-								field.value
-									? { value: field.value, label: field.value }
-									: undefined
-							}
-						>
-							<SelectTrigger className="w-full">
-								<SelectValue placeholder={t("common.selectCurrency")} />
-							</SelectTrigger>
-							<SelectContent portalHost="modal-select">
-								{SUPPORTED_CURRENCIES.map((currency) => (
-									<SelectItem
-										key={currency}
-										value={currency}
-										label={currency}
-									/>
-								))}
-							</SelectContent>
-						</Select>
+						<CurrencySelect value={field.value} onChange={field.onChange} />
 						{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
 					</Field>
 				)}

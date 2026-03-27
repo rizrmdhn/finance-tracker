@@ -1,4 +1,5 @@
-import type { Category, Transaction } from "@finance-tracker/types";
+import type { SupportedCurrency } from "@finance-tracker/constants";
+import type { Account, Category, Transaction } from "@finance-tracker/types";
 import {
 	ArrowDownLeft,
 	ArrowLeftRight,
@@ -9,7 +10,8 @@ import {
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { View } from "react-native";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { useFormatCurrency } from "@/hooks/use-format-currency";
+import { formatDate } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Icon as IconComp } from "./ui/icon";
 import { Text } from "./ui/text";
@@ -17,6 +19,8 @@ import { Text } from "./ui/text";
 interface RecentTransactionsProps {
 	transactions: Transaction[];
 	categories: Category[];
+	accounts: Account[];
+	sourceCurrency?: SupportedCurrency;
 }
 
 const typeConfig = {
@@ -49,12 +53,19 @@ const typeConfig = {
 export function RecentTransactions({
 	transactions,
 	categories,
+	accounts,
+	sourceCurrency,
 }: RecentTransactionsProps) {
 	const { t } = useTranslation();
+	const { format } = useFormatCurrency();
 
 	const categoryMap = useMemo(
 		() => new Map(categories.map((c) => [c.id, c])),
 		[categories],
+	);
+	const accountMap = useMemo(
+		() => new Map(accounts.map((a) => [a.id, a])),
+		[accounts],
 	);
 
 	const recent = transactions.slice(0, 6);
@@ -80,6 +91,7 @@ export function RecentTransactions({
 							typeConfig.transfer;
 						const { Icon, iconClass, amountClass, prefix } = config;
 						const category = categoryMap.get(tx.categoryId ?? "");
+						const txCurrency = (accountMap.get(tx.accountId)?.currency as SupportedCurrency) ?? sourceCurrency;
 
 						return (
 							<View
@@ -107,7 +119,7 @@ export function RecentTransactions({
 									) : (
 										prefix
 									)}
-									{formatCurrency(tx.amount)}
+									{format(tx.amount, txCurrency)}
 								</Text>
 							</View>
 						);

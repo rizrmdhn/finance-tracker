@@ -1,34 +1,48 @@
 {
-	"version": "7",
-	"dialect": "sqlite",
-	"entries": [
-		{
-			"idx": 0,
-			"version": "6",
-			"when": 1774010246140,
-			"tag": "0000_fat_wendell_rand",
-			"breakpoints": true
-		},
-		{
-			"idx": 1,
-			"version": "6",
-			"when": 1774012595075,
-			"tag": "0001_loud_darwin",
-			"breakpoints": true
-		},
-		{
-			"idx": 2,
-			"version": "6",
-			"when": 1774169331849,
-			"tag": "0002_thick_triathlon",
-			"breakpoints": true
-		},
-		{
-			"idx": 3,
-			"version": "6",
-			"when": 1774236018375,
-			"tag": "0003_perfect_queen_noir",
-			"breakpoints": true
-		}
-	]
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1774010246140,
+      "tag": "0000_fat_wendell_rand",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1774012595075,
+      "tag": "0001_loud_darwin",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1774169331849,
+      "tag": "0002_thick_triathlon",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1774236018375,
+      "tag": "0003_perfect_queen_noir",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1774575910536,
+      "tag": "0004_groovy_shadow_king",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1774579052892,
+      "tag": "0005_luxuriant_chimera",
+      "breakpoints": true
+    }
+  ]
 }

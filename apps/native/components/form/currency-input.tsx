@@ -1,3 +1,4 @@
+import { CURRENCY_LOCALE_MAP, type SupportedCurrency } from "@finance-tracker/constants";
 import { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 import { Text } from "@/components/ui/text";
@@ -5,16 +6,21 @@ import { useThemeColor } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 import { Input } from "../ui/input";
 
-const format = (n: number) =>
-	new Intl.NumberFormat("id-ID", {
+const NO_DECIMAL_CURRENCIES: SupportedCurrency[] = ["IDR", "JPY"];
+
+function format(n: number, currency: SupportedCurrency): string {
+	const locale = CURRENCY_LOCALE_MAP[currency] ?? "en-US";
+	const decimals = NO_DECIMAL_CURRENCIES.includes(currency) ? 0 : 2;
+	return new Intl.NumberFormat(locale, {
 		minimumFractionDigits: 0,
-		maximumFractionDigits: 0,
+		maximumFractionDigits: decimals,
 	}).format(n);
+}
 
 interface CurrencyInputProps {
 	value?: number;
 	onChange: (value: number | undefined) => void;
-	currency?: string;
+	currency?: SupportedCurrency;
 	placeholder?: string;
 	className?: string;
 }
@@ -28,20 +34,22 @@ export function CurrencyInput({
 }: CurrencyInputProps) {
 	const mutedForeground = useThemeColor("mutedForeground");
 
+	const hasDecimals = !NO_DECIMAL_CURRENCIES.includes(currency);
+
 	const [display, setDisplay] = useState(
-		value !== undefined ? format(value) : "",
+		value !== undefined ? format(value, currency) : "",
 	);
 	const [focused, setFocused] = useState(false);
 	const isFocused = useRef(false);
 
 	useEffect(() => {
 		if (!isFocused.current) {
-			setDisplay(value !== undefined ? format(value) : "");
+			setDisplay(value !== undefined ? format(value, currency) : "");
 		}
-	}, [value]);
+	}, [value, currency]);
 
 	function handleChangeText(text: string) {
-		const raw = text.replace(/\D/g, "");
+		const raw = hasDecimals ? text.replace(/[^\d.]/g, "") : text.replace(/\D/g, "");
 		setDisplay(raw);
 		onChange(raw === "" ? undefined : Number(raw));
 	}
@@ -49,14 +57,13 @@ export function CurrencyInput({
 	function handleFocus() {
 		isFocused.current = true;
 		setFocused(true);
-		// Show raw digits when focused
 		setDisplay(value !== undefined ? String(value) : "");
 	}
 
 	function handleBlur() {
 		isFocused.current = false;
 		setFocused(false);
-		setDisplay(value !== undefined ? format(value) : "");
+		setDisplay(value !== undefined ? format(value, currency) : "");
 	}
 
 	return (
@@ -74,7 +81,7 @@ export function CurrencyInput({
 					lineHeight: undefined,
 					textAlignVertical: "center",
 				}}
-				keyboardType="numeric"
+				keyboardType={hasDecimals ? "decimal-pad" : "numeric"}
 				value={display}
 				onChangeText={handleChangeText}
 				onFocus={handleFocus}

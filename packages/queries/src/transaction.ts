@@ -1,3 +1,4 @@
+import type { SupportedCurrency } from "@finance-tracker/constants";
 import {
 	type AnyDatabase,
 	accounts,
@@ -27,6 +28,7 @@ import {
 	lte,
 	or,
 } from "drizzle-orm";
+import { getCachedRates } from "./exchange-rate";
 import { NotFoundError } from "./errors";
 import { getOffsetPaginated } from "./utils/get-offset-paginated";
 
@@ -208,7 +210,7 @@ export async function getAllFilteredTransactions(
 
 export async function getTransactionSummary(
 	db: AnyDatabase,
-	input: { accountId?: string; from: number; to: number },
+	input: { accountId?: string; from: number; to: number; displayCurrency?: SupportedCurrency },
 ) {
 	const accountFilter = input.accountId
 		? or(
@@ -217,26 +219,37 @@ export async function getTransactionSummary(
 			)
 		: undefined;
 
-	const [result, allAccounts] = await Promise.all([
+	const [result, allAccounts, cachedRates] = await Promise.all([
 		db.query.transactions.findMany({
 			where: and(
 				accountFilter,
 				between(transactions.date, input.from, input.to),
 				isNull(transactions.deletedAt),
 			),
-			with: { category: true },
+			with: { category: true, account: true },
 			orderBy: desc(transactions.date),
 		}),
 		input.accountId
 			? db
-					.select({ initialBalance: accounts.initialBalance })
+					.select({ initialBalance: accounts.initialBalance, currency: accounts.currency })
 					.from(accounts)
 					.where(eq(accounts.id, input.accountId))
-			: db.select({ initialBalance: accounts.initialBalance }).from(accounts),
+			: db.select({ initialBalance: accounts.initialBalance, currency: accounts.currency }).from(accounts),
+		input.displayCurrency ? getCachedRates(db, input.displayCurrency) : Promise.resolve([]),
 	]);
 
+	// rateMap: target currency → rate, where 1 displayCurrency = rate target
+	// to convert amount in sourceCurrency → displayCurrency: amount / rate
+	const rateMap = new Map(cachedRates.map((r) => [r.target, r.rate]));
+
+	function toDisplay(amount: number, sourceCurrency: string): number {
+		if (!input.displayCurrency || sourceCurrency === input.displayCurrency) return amount;
+		const rate = rateMap.get(sourceCurrency as SupportedCurrency);
+		return rate ? amount / rate : amount;
+	}
+
 	const initialBalance = allAccounts.reduce(
-		(sum, a) => sum + a.initialBalance,
+		(sum, a) => sum + toDisplay(a.initialBalance, a.currency),
 		0,
 	);
 
@@ -249,24 +262,26 @@ export async function getTransactionSummary(
 	};
 
 	result.forEach((item) => {
+		const currency = item.account?.currency ?? input.displayCurrency ?? "IDR";
+		const amount = toDisplay(item.amount, currency);
 		switch (item.category?.type) {
 			case "income":
-				summary.income += item.amount;
-				summary.balance += item.amount;
+				summary.income += amount;
+				summary.balance += amount;
 				break;
 			case "expense":
-				summary.expense += item.amount;
-				summary.balance -= item.amount;
+				summary.expense += amount;
+				summary.balance -= amount;
 				break;
 			case "savings":
-				summary.savings += item.amount;
-				summary.balance -= item.amount;
+				summary.savings += amount;
+				summary.balance -= amount;
 				break;
 			case "transfer":
-				summary.transfer += item.amount;
+				summary.transfer += amount;
 				if (input.accountId) {
 					const isDestination = item.toAccountId === input.accountId;
-					summary.balance += isDestination ? item.amount : -item.amount;
+					summary.balance += isDestination ? amount : -amount;
 				}
 				break;
 		}

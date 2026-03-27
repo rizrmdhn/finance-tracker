@@ -8,27 +8,20 @@ import {
 } from "@finance-tracker/schema";
 import type { RecurrenceWithTemplate } from "@finance-tracker/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { TriggerRef } from "@rn-primitives/select";
 import { useMutation } from "@tanstack/react-query";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { Platform, View } from "react-native";
+import { View } from "react-native";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
 import { Button } from "../ui/button";
 import { Field, FieldDescription, FieldError, FieldLabel } from "../ui/field";
 import { ModalSheet } from "../ui/modal-sheet";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "../ui/select";
 import { Spinner } from "../ui/spinner";
 import { Text } from "../ui/text";
 import { DatePicker } from "./date-picker";
+import { OptionSelect } from "./option-select";
 
 interface EditRecurrenceDialogProps {
 	open: boolean;
@@ -41,7 +34,6 @@ export default function EditRecurrenceDialog({
 	recurrence,
 }: EditRecurrenceDialogProps) {
 	const { t } = useTranslation();
-	const selectTriggerRef = useRef<TriggerRef>(null);
 
 	const form = useForm<UpdateRecurrenceInput>({
 		resolver: zodResolver(updateRecurrenceSchema),
@@ -96,40 +88,16 @@ export default function EditRecurrenceDialog({
 				render={({ field, fieldState }) => (
 					<Field data-invalid={fieldState.invalid}>
 						<FieldLabel>{t("transactions.frequency")}</FieldLabel>
-						<Select
-							value={
-								field.value
-									? {
-											value: field.value,
-											label: REUCRRENCE_FREQUENCY_LABELS[field.value],
-										}
-									: undefined
-							}
-							onValueChange={(option) => field.onChange(option?.value)}
-						>
-							<SelectTrigger
-								ref={selectTriggerRef}
-								className="w-full"
-								onTouchStart={Platform.select({
-									web: () => selectTriggerRef.current?.open(),
-								})}
-							>
-								<SelectValue placeholder={t("common.selectCategoryType")}>
-									{field.value
-										? REUCRRENCE_FREQUENCY_LABELS[field.value]
-										: null}
-								</SelectValue>
-							</SelectTrigger>
-							<SelectContent portalHost="modal-select">
-								{RECURRENCE_FREQUENCIES.map((frequency) => (
-									<SelectItem
-										key={frequency}
-										value={frequency}
-										label={REUCRRENCE_FREQUENCY_LABELS[frequency]}
-									/>
-								))}
-							</SelectContent>
-						</Select>
+										<OptionSelect
+							value={field.value}
+							onChange={field.onChange}
+							options={RECURRENCE_FREQUENCIES.map((f) => ({
+								value: f,
+								label: REUCRRENCE_FREQUENCY_LABELS[f],
+							}))}
+							placeholder={t("transactions.frequency")}
+							title={t("transactions.frequency")}
+						/>
 						{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
 					</Field>
 				)}

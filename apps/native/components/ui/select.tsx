@@ -6,7 +6,7 @@ import {
 	ChevronUpIcon,
 } from "lucide-react-native";
 import * as React from "react";
-import { Platform, StyleSheet, View } from "react-native";
+import { Platform, ScrollView, StyleSheet, View } from "react-native";
 import { FadeIn, FadeOut } from "react-native-reanimated";
 import { FullWindowOverlay as RNFullWindowOverlay } from "react-native-screens";
 import { Icon } from "@/components/ui/icon";
@@ -139,7 +139,11 @@ function SelectContent({
 											),
 									)}
 								>
-									{children}
+									{Platform.OS !== "web" ? (
+										<ScrollView nestedScrollEnabled showsVerticalScrollIndicator={false}>{children}</ScrollView>
+									) : (
+										children
+									)}
 								</SelectPrimitive.Viewport>
 								<SelectScrollDownButton />
 							</SelectPrimitive.Content>

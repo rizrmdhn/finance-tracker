@@ -1,3 +1,5 @@
+import type { SupportedCurrency } from "@finance-tracker/constants";
+import { DEFAULT_CURRENCY } from "@finance-tracker/constants";
 import { createId } from "@paralleldrive/cuid2";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -23,6 +25,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Icon } from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Text } from "@/components/ui/text";
+import { useFormatCurrency } from "@/hooks/use-format-currency";
 import useModalState from "@/hooks/use-modal-state";
 import { trpc } from "@/lib/trpc";
 import { getCurrentMonthRange } from "@/lib/utils";
@@ -32,6 +35,7 @@ export default function Home() {
 	const { state, openModal, closeModal } = useModalState({
 		transaction: false,
 	});
+	const { displayCurrency } = useFormatCurrency();
 
 	const defaultRange = getCurrentMonthRange();
 	const [dateRange, setDateRange] = useState(defaultRange);
@@ -52,6 +56,7 @@ export default function Home() {
 			accountId: selectedAccountId,
 			from: dateRange.from,
 			to: dateRange.to,
+			displayCurrency,
 		}),
 	);
 
@@ -88,6 +93,10 @@ export default function Home() {
 	const balance = summary?.balance ?? 0;
 	const transfer = summary?.transfer ?? 0;
 	const savings = summary?.savings ?? 0;
+
+	const sourceCurrency = (
+		accounts.find((a) => a.id === selectedAccountId)?.currency ?? DEFAULT_CURRENCY
+	) as SupportedCurrency;
 
 	return (
 		<Container
@@ -139,6 +148,7 @@ export default function Home() {
 									<Icon as={Wallet} className="size-4 text-muted-foreground" />
 								}
 								highlight={balance >= 0 ? "positive" : "negative"}
+								sourceCurrency={displayCurrency}
 							/>
 						</View>
 						<View className="w-[48%]">
@@ -152,6 +162,7 @@ export default function Home() {
 									/>
 								}
 								highlight="positive"
+								sourceCurrency={displayCurrency}
 							/>
 						</View>
 						<View className="w-[48%]">
@@ -165,6 +176,7 @@ export default function Home() {
 									/>
 								}
 								highlight="negative"
+								sourceCurrency={displayCurrency}
 							/>
 						</View>
 						<View className="w-[48%]">
@@ -178,6 +190,7 @@ export default function Home() {
 									/>
 								}
 								highlight="neutral"
+								sourceCurrency={displayCurrency}
 							/>
 						</View>
 						<View className="w-[48%]">
@@ -191,6 +204,7 @@ export default function Home() {
 									/>
 								}
 								highlight="neutral"
+								sourceCurrency={displayCurrency}
 							/>
 						</View>
 					</>
@@ -214,6 +228,8 @@ export default function Home() {
 				<RecentTransactions
 					transactions={transactions}
 					categories={categories}
+					accounts={accounts}
+					sourceCurrency={sourceCurrency}
 				/>
 			)}
 

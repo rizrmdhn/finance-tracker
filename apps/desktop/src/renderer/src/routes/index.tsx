@@ -1,3 +1,4 @@
+import type { SupportedCurrency } from "@finance-tracker/constants";
 import { Button } from "@finance-tracker/ui/components/button";
 import {
 	Card,
@@ -17,6 +18,7 @@ import {
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AccountCombobox } from "@/components/account-combobox";
+import { useFormatCurrency } from "@/hooks/use-format-currency";
 import useModalState from "@/hooks/use-modal-state";
 import { trpc } from "../lib/trpc";
 import { AnalyticsCard } from "./-components/analytics-card";
@@ -36,6 +38,7 @@ function HomeComponent() {
 	const { state, openModal, closeModal } = useModalState({
 		transaction: false,
 	});
+	const { displayCurrency } = useFormatCurrency();
 
 	const defaultRange = getCurrentMonthRange();
 	const [dateRange, setDateRange] = useState(defaultRange);
@@ -50,6 +53,7 @@ function HomeComponent() {
 			accountId: selectedAccountId,
 			from: dateRange.from,
 			to: dateRange.to,
+			displayCurrency,
 		}),
 	);
 
@@ -63,6 +67,9 @@ function HomeComponent() {
 		);
 
 	const { data: categories = [] } = useQuery(trpc.category.list.queryOptions());
+
+	const sourceCurrency = (accounts.find((a) => a.id === selectedAccountId)
+		?.currency ?? displayCurrency) as SupportedCurrency;
 
 	const income = summary?.income ?? 0;
 	const expense = summary?.expense ?? 0;
@@ -114,30 +121,35 @@ function HomeComponent() {
 							value={balance}
 							icon={<Wallet className="size-4 text-muted-foreground" />}
 							highlight={balance >= 0 ? "positive" : "negative"}
+							sourceCurrency={displayCurrency}
 						/>
 						<SummaryCard
 							title={t("dashboard.income")}
 							value={income}
 							icon={<TrendingUp className="size-4 text-muted-foreground" />}
 							highlight="positive"
+							sourceCurrency={displayCurrency}
 						/>
 						<SummaryCard
 							title={t("dashboard.expense")}
 							value={expense}
 							icon={<TrendingDown className="size-4 text-muted-foreground" />}
 							highlight="negative"
+							sourceCurrency={displayCurrency}
 						/>
 						<SummaryCard
 							title={t("dashboard.transfer")}
 							value={transfer}
 							icon={<ArrowLeftRight className="size-4 text-muted-foreground" />}
 							highlight="neutral"
+							sourceCurrency={displayCurrency}
 						/>
 						<SummaryCard
 							title={t("dashboard.savings")}
 							value={savings}
 							icon={<PiggyBank className="size-4 text-muted-foreground" />}
 							highlight="neutral"
+							sourceCurrency={displayCurrency}
 						/>
 					</>
 				)}
@@ -151,6 +163,7 @@ function HomeComponent() {
 					categories={categories}
 					from={dateRange.from}
 					to={dateRange.to}
+					sourceCurrency={sourceCurrency}
 				/>
 			)}
 
@@ -160,10 +173,15 @@ function HomeComponent() {
 				<RecentTransactions
 					transactions={transactions}
 					categories={categories}
+					accounts={accounts}
+					sourceCurrency={sourceCurrency}
 				/>
 			)}
 
-			<BudgetOverviewWidget from={dateRange.from} to={dateRange.to} />
+			<BudgetOverviewWidget
+				from={dateRange.from}
+				to={dateRange.to}
+			/>
 
 			<CreateTransactionDialog
 				open={state.transaction}

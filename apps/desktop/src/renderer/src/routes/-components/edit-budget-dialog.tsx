@@ -1,3 +1,4 @@
+import { CURRENCY_LABELS, SUPPORTED_CURRENCIES } from "@finance-tracker/constants";
 import {
 	type BudgetUpdateInput,
 	budgetUpdateSchema,
@@ -75,6 +76,7 @@ export default function EditBudgetDialog({
 				categoryId: budget.categoryId,
 				amount: budget.amount,
 				period: budget.period as BudgetUpdateInput["period"],
+				currency: budget.currency,
 				startDate: budget.startDate,
 			});
 		}
@@ -144,6 +146,33 @@ export default function EditBudgetDialog({
 										value={field.value}
 										onChange={(val) => field.onChange(val)}
 									/>
+									{fieldState.invalid && (
+										<FieldError errors={[fieldState.error]} />
+									)}
+								</Field>
+							)}
+						/>
+
+						<Controller
+							control={form.control}
+							name="currency"
+							render={({ field, fieldState }) => (
+								<Field data-invalid={fieldState.invalid}>
+									<FieldLabel>{t("common.currency")}</FieldLabel>
+									<Select value={field.value} onValueChange={field.onChange}>
+										<SelectTrigger className="w-full">
+											<SelectValue placeholder={t("common.selectCurrency")}>
+												{field.value ? CURRENCY_LABELS[field.value as keyof typeof CURRENCY_LABELS] : null}
+											</SelectValue>
+										</SelectTrigger>
+										<SelectContent>
+											{SUPPORTED_CURRENCIES.map((c) => (
+												<SelectItem key={c} value={c}>
+													{CURRENCY_LABELS[c]}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
 									{fieldState.invalid && (
 										<FieldError errors={[fieldState.error]} />
 									)}

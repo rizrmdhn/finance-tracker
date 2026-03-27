@@ -1,6 +1,7 @@
 import {
 	RECURRENCE_FREQUENCIES,
 	REUCRRENCE_FREQUENCY_LABELS,
+	type SupportedCurrency,
 } from "@finance-tracker/constants";
 import {
 	type UpdateTransactionInput,
@@ -20,13 +21,6 @@ import { Checkbox } from "../ui/checkbox";
 import { Field, FieldDescription, FieldError, FieldLabel } from "../ui/field";
 import { Label } from "../ui/label";
 import { ModalSheet } from "../ui/modal-sheet";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "../ui/select";
 import { Spinner } from "../ui/spinner";
 import { Text } from "../ui/text";
 import { Textarea } from "../ui/textarea";
@@ -34,6 +28,7 @@ import { AccountCombobox } from "./account-combobox";
 import { CategoryCombobox } from "./category-combobox";
 import { CurrencyInput } from "./currency-input";
 import { DatePicker } from "./date-picker";
+import { OptionSelect } from "./option-select";
 import { TagsInput } from "./tags-input";
 
 interface EditTransactionDialogProps {
@@ -108,6 +103,8 @@ export default function EditTransactionDialog({
 	const watchedCategoryId = form.watch("categoryId");
 	const selectedCategory = categories.find((c) => c.id === watchedCategoryId);
 	const isTransfer = selectedCategory?.type === "transfer";
+	const watchedAccountId = form.watch("accountId");
+	const accountCurrency = (accounts.find((a) => a.id === watchedAccountId)?.currency ?? "IDR") as SupportedCurrency;
 
 	return (
 		<ModalSheet
@@ -180,7 +177,7 @@ export default function EditTransactionDialog({
 							<FieldLabel invalid={fieldState.invalid}>
 								{t("common.amount")}
 							</FieldLabel>
-							<CurrencyInput value={field.value} onChange={field.onChange} />
+							<CurrencyInput value={field.value} onChange={field.onChange} currency={accountCurrency} />
 							<FieldError errors={[fieldState.error]} />
 						</Field>
 					)}
@@ -259,30 +256,16 @@ export default function EditTransactionDialog({
 								<FieldLabel invalid={fieldState.invalid}>
 									{t("transactions.frequency")}
 								</FieldLabel>
-								<Select
-									value={
-										field.value
-											? {
-													value: field.value,
-													label: REUCRRENCE_FREQUENCY_LABELS[field.value],
-												}
-											: undefined
-									}
-									onValueChange={(option) => field.onChange(option?.value)}
-								>
-									<SelectTrigger className="w-full">
-										<SelectValue placeholder="Select frequency" />
-									</SelectTrigger>
-									<SelectContent portalHost="modal-select">
-										{RECURRENCE_FREQUENCIES.map((f) => (
-											<SelectItem
-												key={f}
-												value={f}
-												label={REUCRRENCE_FREQUENCY_LABELS[f]}
-											/>
-										))}
-									</SelectContent>
-								</Select>
+														<OptionSelect
+									value={field.value}
+									onChange={field.onChange}
+									options={RECURRENCE_FREQUENCIES.map((f) => ({
+										value: f,
+										label: REUCRRENCE_FREQUENCY_LABELS[f],
+									}))}
+									placeholder={t("transactions.frequency")}
+									title={t("transactions.frequency")}
+								/>
 								<FieldError errors={[fieldState.error]} />
 							</Field>
 						)}

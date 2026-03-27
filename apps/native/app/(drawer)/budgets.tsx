@@ -15,13 +15,15 @@ import { Button } from "@/components/ui/button";
 import { Icon as IconComp } from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Text } from "@/components/ui/text";
+import { useFormatCurrency } from "@/hooks/use-format-currency";
 import useModalState from "@/hooks/use-modal-state";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
-import { formatCurrency, getCurrentMonthRange } from "@/lib/utils";
+import { getCurrentMonthRange } from "@/lib/utils";
 
 export default function Budgets() {
 	const { t } = useTranslation();
+	const { format } = useFormatCurrency();
 
 	const { state, openModal, closeModal } = useModalState({
 		createBudget: false,
@@ -195,9 +197,9 @@ export default function Budgets() {
 								<View className="flex flex-col gap-1.5">
 									<View className="flex justify-between text-muted-foreground text-xs">
 										<Text>
-											{t("budgets.spent")}: {formatCurrency(budget.spent)}
+											{t("budgets.spent")}: {format(budget.spent)}
 										</Text>
-										<Text>{formatCurrency(budget.amount)}</Text>
+										<Text>{format(budget.amount)}</Text>
 									</View>
 									<View className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
 										<View
@@ -216,10 +218,10 @@ export default function Budgets() {
 									>
 										{budget.isOverBudget
 											? t("budgets.overBy", {
-													amount: formatCurrency(Math.abs(budget.remaining)),
+													amount: format(Math.abs(budget.remaining)),
 												})
 											: t("budgets.remaining", {
-													amount: formatCurrency(budget.remaining),
+													amount: format(budget.remaining),
 												})}
 									</Text>
 								</View>

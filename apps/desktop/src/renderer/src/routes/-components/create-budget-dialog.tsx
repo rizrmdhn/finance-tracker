@@ -1,3 +1,4 @@
+import { CURRENCY_LABELS, SUPPORTED_CURRENCIES } from "@finance-tracker/constants";
 import { type BudgetInput, budgetSchema } from "@finance-tracker/schema";
 import { Button } from "@finance-tracker/ui/components/button";
 import {
@@ -28,6 +29,7 @@ import { useTranslation } from "react-i18next";
 import { CategoryCombobox } from "@/components/category-combobox";
 import { CurrencyInput } from "@/components/currency-input";
 import { DatePicker } from "@/components/date-picker";
+import { useFormatCurrency } from "@/hooks/use-format-currency";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
 import { getCurrentMonthRange } from "./utils";
@@ -46,6 +48,7 @@ export default function CreateBudgetDialog({
 	to,
 }: CreateBudgetDialogProps) {
 	const { t } = useTranslation();
+	const { displayCurrency } = useFormatCurrency();
 
 	const { data: categories = [] } = useQuery(trpc.category.list.queryOptions());
 
@@ -56,6 +59,7 @@ export default function CreateBudgetDialog({
 		defaultValues: {
 			categoryId: "",
 			amount: undefined,
+			currency: displayCurrency,
 			period: "monthly",
 			startDate: getCurrentMonthRange().from,
 		},
@@ -125,6 +129,33 @@ export default function CreateBudgetDialog({
 										value={field.value}
 										onChange={(val) => field.onChange(val)}
 									/>
+									{fieldState.invalid && (
+										<FieldError errors={[fieldState.error]} />
+									)}
+								</Field>
+							)}
+						/>
+
+						<Controller
+							control={form.control}
+							name="currency"
+							render={({ field, fieldState }) => (
+								<Field data-invalid={fieldState.invalid}>
+									<FieldLabel>{t("common.currency")}</FieldLabel>
+									<Select value={field.value} onValueChange={field.onChange}>
+										<SelectTrigger className="w-full">
+											<SelectValue placeholder={t("common.selectCurrency")}>
+												{field.value ? CURRENCY_LABELS[field.value as keyof typeof CURRENCY_LABELS] : null}
+											</SelectValue>
+										</SelectTrigger>
+										<SelectContent>
+											{SUPPORTED_CURRENCIES.map((c) => (
+												<SelectItem key={c} value={c}>
+													{CURRENCY_LABELS[c]}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
 									{fieldState.invalid && (
 										<FieldError errors={[fieldState.error]} />
 									)}

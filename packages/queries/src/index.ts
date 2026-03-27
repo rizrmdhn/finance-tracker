@@ -1,5 +1,6 @@
 export * from "./account";
 export * from "./app-settings";
+export * from "./exchange-rate";
 export * from "./budget";
 export * from "./category";
 export * from "./errors";

@@ -76,10 +76,19 @@ export function BudgetWidget({ data }: Props) {
 			/>
 
 			{budgets.length === 0 ? (
-				<TextWidget
-					text={t.noBudgets}
-					style={{ fontSize: 12, color: "#71717a", textAlign: "center" }}
-				/>
+				<FlexWidget
+					style={{
+						flex: 1,
+						width: "match_parent",
+						justifyContent: "center",
+						alignItems: "center",
+					}}
+				>
+					<TextWidget
+						text={t.noBudgets}
+						style={{ fontSize: 12, color: "#71717a", textAlign: "center" }}
+					/>
+				</FlexWidget>
 			) : (
 				budgets.slice(0, 4).map((budget) => {
 					const percent =

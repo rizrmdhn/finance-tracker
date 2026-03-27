@@ -1,0 +1,1 @@
+ALTER TABLE `budgets` ADD `currency` text DEFAULT 'IDR' NOT NULL;

@@ -6,10 +6,11 @@ import { RotateCcw, Trash2Icon } from "lucide-react-native";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, View } from "react-native";
+import { useFormatCurrency } from "@/hooks/use-format-currency";
 import useModalState from "@/hooks/use-modal-state";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
 import { ConfirmationDialog } from "./confirmation-dialog";
 import { Button } from "./ui/button";
 import { Icon as IconComp } from "./ui/icon";
@@ -18,6 +19,7 @@ import { Text } from "./ui/text";
 
 export function TrashTransactions() {
 	const { t } = useTranslation();
+	const { format } = useFormatCurrency();
 
 	const { state, openModal, closeModal } = useModalState({
 		permanentDelete: false,
@@ -171,7 +173,7 @@ export function TrashTransactions() {
 								</Text>
 							</View>
 							<Text className="shrink-0 font-medium text-sm">
-								{formatCurrency(tx.amount)}
+								{format(tx.amount)}
 							</Text>
 						</View>
 						<View className="flex flex-row items-center justify-end gap-1">

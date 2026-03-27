@@ -10,11 +10,12 @@ import { useTranslation } from "react-i18next";
 import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { ICON_MAP } from "@/components/icon-picker";
 import useModalState from "@/hooks/use-modal-state";
+import { useFormatCurrency } from "@/hooks/use-format-currency";
 import { pageHead } from "@/lib/page-head";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
 import EditRecurrenceDialog from "./-components/edit-recurrence-dialog";
-import { formatCurrency, formatDate } from "./-components/utils";
+import { formatDate } from "./-components/utils";
 
 export const Route = createFileRoute("/recurring")({
 	component: RecurringComponent,
@@ -27,6 +28,7 @@ export const Route = createFileRoute("/recurring")({
 
 function RecurringComponent() {
 	const { t } = useTranslation();
+	const { format } = useFormatCurrency();
 	const { state, openModal, closeModal } = useModalState({
 		editRecurrence: false,
 		deleteRecurrence: false,
@@ -143,7 +145,7 @@ function RecurringComponent() {
 
 							{/* Amount */}
 							<span className="shrink-0 font-medium text-sm">
-								{formatCurrency(rule.templateTransaction.amount)}
+								{format(rule.templateTransaction.amount)}
 							</span>
 
 							{/* Frequency badge */}
