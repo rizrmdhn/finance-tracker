@@ -7,6 +7,7 @@ import {
 import { useMutation, useQuery } from "@tanstack/react-query";
 import Constants from "expo-constants";
 import { Directory, File, Paths } from "expo-file-system";
+import { createDownloadResumable } from "expo-file-system/legacy";
 import * as IntentLauncher from "expo-intent-launcher";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -75,36 +76,28 @@ export default function Settings() {
 
 	const [downloadProgress, setDownloadProgress] = useState<number | null>(null);
 
-	const downloadAndInstall = async (downloadUrl: string) => {
-		try {
-			const response = await fetch(downloadUrl);
-			if (!response.ok) throw new Error(`Download failed: ${response.status}`);
-			if (!response.body) throw new Error("Response body is not readable");
-
-			const total = Number(response.headers.get("content-length") ?? 0);
-
+	const downloadMutation = useMutation({
+		mutationFn: async (downloadUrl: string) => {
 			const destination = new Directory(Paths.cache, "apk");
 			destination.create({ idempotent: true });
 			const file = new File(destination, "update.apk");
 
-			const writer = file.writableStream().getWriter();
-			const reader = response.body.getReader();
-			let received = 0;
 			setDownloadProgress(0);
-
-			try {
-				while (true) {
-					const { done, value } = await reader.read();
-					if (done) break;
-					await writer.write(value);
-					received += value.length;
-					if (total > 0) setDownloadProgress(received / total);
-				}
-				await writer.close();
-			} catch (e) {
-				await writer.abort();
-				throw e;
-			}
+			if (file.exists) file.delete();
+			const task = createDownloadResumable(
+				downloadUrl,
+				file.uri,
+				{},
+				(progress) => {
+					if (progress.totalBytesExpectedToWrite > 0) {
+						setDownloadProgress(
+							progress.totalBytesWritten / progress.totalBytesExpectedToWrite,
+						);
+					}
+				},
+			);
+			const result = await task.downloadAsync();
+			if (!result) throw new Error("Download failed");
 
 			if (Platform.OS === "android") {
 				await IntentLauncher.startActivityAsync("android.intent.action.VIEW", {
@@ -113,10 +106,14 @@ export default function Settings() {
 					type: "application/vnd.android.package-archive",
 				});
 			}
-		} finally {
-			setDownloadProgress(null);
-		}
-	};
+		},
+		onSettled: () => setDownloadProgress(null),
+		onError: (error) => {
+			globalErrorToast(
+				t("settings.toast.saveFailed", { message: error.message }),
+			);
+		},
+	});
 
 	return (
 		<Container contentContainerClassName="gap-6 p-4 pb-8">
@@ -270,10 +267,7 @@ export default function Settings() {
 							</Markdown>
 						)}
 						<TouchableOpacity
-							onPress={() =>
-								downloadProgress === null &&
-								downloadAndInstall(release.downloadUrl)
-							}
+							onPress={() => downloadMutation.mutate(release.downloadUrl)}
 							disabled={downloadProgress !== null}
 							className="overflow-hidden rounded-lg bg-foreground"
 						>
