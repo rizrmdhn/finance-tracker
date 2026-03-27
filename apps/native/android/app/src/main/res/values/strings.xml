@@ -1,4 +1,5 @@
 <resources>
   <string name="app_name">Finance Tracker</string>
   <string name="expo_splash_screen_resize_mode" translatable="false">contain</string>
+  <string name="widget_budgetwidget_description" translatable="false">Shows your current budgets and spending</string>
 </resources>

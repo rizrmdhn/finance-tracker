@@ -16,6 +16,25 @@
 			"expo-secure-store",
 			"expo-web-browser",
 			[
+				"react-native-android-widget",
+				{
+					"widgets": [
+						{
+							"name": "BudgetWidget",
+							"label": "Budget Tracker",
+							"description": "Shows your current budgets and spending",
+							"minWidth": "180dp",
+							"minHeight": "110dp",
+							"targetWidth": "270dp",
+							"targetHeight": "270dp",
+							"updatePeriodMillis": 1800000,
+							"resizeMode": "vertical|horizontal",
+							"previewImage": "./assets/images/icon.png"
+						}
+					]
+				}
+			],
+			[
 				"expo-splash-screen",
 				{
 					"backgroundColor": "#ffffff",

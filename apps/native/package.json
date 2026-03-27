@@ -2,7 +2,7 @@
 	"name": "@finance-tracker/native",
 	"version": "1.1.0",
 	"private": true,
-	"main": "expo-router/entry",
+	"main": "index.js",
 	"scripts": {
 		"postinstall": "patch-package",
 		"start": "expo start",
@@ -84,6 +84,7 @@
 		"react-hook-form": "^7.72.0",
 		"react-i18next": "^16.6.2",
 		"react-native": "0.83.2",
+		"react-native-android-widget": "^0.20.1",
 		"react-native-gesture-handler": "~2.30.0",
 		"react-native-keyboard-controller": "1.20.7",
 		"react-native-markdown-display": "^7.0.2",
