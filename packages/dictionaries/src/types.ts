@@ -371,5 +371,10 @@ export interface Dictionary {
 		scannedBadge: string;
 		scanReceipt: string;
 		permissionDenied: string;
+		review: string;
+		reviewDescription: string;
+		confirmAndFill: string;
+		scanAgain: string;
+		notDetected: string;
 	};
 }

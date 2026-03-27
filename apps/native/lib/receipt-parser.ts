@@ -1,102 +1,97 @@
+import type { SupportedCurrency } from "@finance-tracker/constants";
+import currency from "currency.js";
+import { isValid, type Locale, parse } from "date-fns";
+import { id as idLocale } from "date-fns/locale";
+
 export type ParsedReceipt = {
 	amount: number | null;
 	note: string | null;
 	date: number | null;
-	currency: "IDR" | "USD" | null;
+	currency: SupportedCurrency | null;
 };
 
 const TOTAL_KEYWORDS =
 	/\b(grand\s*total|total\s*belanja|total\s*bayar|total\s*harga|jumlah\s*bayar|jumlah\s*tagihan|jumlah|total)\b/i;
 
-const IDR_AMOUNT = /(?:rp\.?\s?)(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?)/i;
-const IDR_PLAIN = /(\d{1,3}(?:\.\d{3})+)/;
-const USD_AMOUNT = /\$\s?(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)/;
+// Matches any number with separators, optionally preceded by a currency symbol
+const AMOUNT_PATTERN =
+	/(?:rp\.?\s?|s\$|a\$|rm\s?|\$|€|£|¥)?(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{1,2})?)/gi;
 
-const DATE_PATTERNS: {
-	pattern: RegExp;
-	parse: (m: RegExpMatchArray) => Date | null;
-}[] = [
-	{
-		// DD/MM/YYYY or DD-MM-YYYY
-		pattern: /(\d{2})[/-](\d{2})[/-](\d{4})/,
-		parse: (m) => new Date(+m[3], +m[2] - 1, +m[1]),
-	},
-	{
-		// YYYY-MM-DD
-		pattern: /(\d{4})[/-](\d{2})[/-](\d{2})/,
-		parse: (m) => new Date(+m[1], +m[2] - 1, +m[3]),
-	},
-	{
-		// DD Mon YYYY (Indonesian months)
-		pattern:
-			/(\d{1,2})\s+(jan|feb|mar|apr|mei|jun|jul|agu|sep|okt|nov|des|january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{4})/i,
-		parse: (m) => {
-			const monthMap: Record<string, number> = {
-				jan: 0,
-				january: 0,
-				feb: 1,
-				february: 1,
-				mar: 2,
-				march: 2,
-				apr: 3,
-				april: 3,
-				mei: 4,
-				may: 4,
-				jun: 5,
-				june: 5,
-				jul: 6,
-				july: 6,
-				agu: 7,
-				august: 7,
-				sep: 8,
-				september: 8,
-				okt: 9,
-				october: 9,
-				nov: 10,
-				november: 10,
-				des: 11,
-				december: 11,
-			};
-			const month = monthMap[m[2].toLowerCase()];
-			if (month === undefined) return null;
-			return new Date(+m[3], month, +m[1]);
-		},
-	},
+// Date candidates — find substrings that look like dates
+const DATE_CANDIDATE_PATTERNS = [
+	/\d{2}[/-]\d{2}[/\-]\d{4}/, // DD/MM/YYYY or DD-MM-YYYY
+	/\d{4}[/-]\d{2}[/\-]\d{2}/, // YYYY-MM-DD
+	/\d{1,2}\s+\w{3,}\s+\d{4}/, // DD Mon YYYY (English or Indonesian)
 ];
 
-function detectCurrency(text: string): "IDR" | "USD" | null {
-	if (/\brp\.?\s?\d|\bidr\b/i.test(text)) return "IDR";
-	if (/\$\d|usd\b/i.test(text)) return "USD";
-	// Fallback: IDR-style thousands (dots as separators) without explicit symbol
-	if (/\d{1,3}(?:\.\d{3}){1,}/.test(text)) return "IDR";
+const DATE_FORMATS: { fmt: string; locale?: Locale }[] = [
+	{ fmt: "dd/MM/yyyy" },
+	{ fmt: "dd-MM-yyyy" },
+	{ fmt: "yyyy-MM-dd" },
+	{ fmt: "yyyy/MM/dd" },
+	{ fmt: "dd MMM yyyy" },
+	{ fmt: "dd MMMM yyyy" },
+	{ fmt: "dd MMM yyyy", locale: idLocale },
+	{ fmt: "dd MMMM yyyy", locale: idLocale },
+];
+
+// Ordered from most to least specific to avoid false positives
+const CURRENCY_DETECTION: { pattern: RegExp; code: SupportedCurrency }[] = [
+	{ pattern: /\bidr\b/i, code: "IDR" },
+	{ pattern: /\busd\b/i, code: "USD" },
+	{ pattern: /\bsgd\b/i, code: "SGD" },
+	{ pattern: /\bmyr\b/i, code: "MYR" },
+	{ pattern: /\beur\b/i, code: "EUR" },
+	{ pattern: /\bgbp\b/i, code: "GBP" },
+	{ pattern: /\bjpy\b/i, code: "JPY" },
+	{ pattern: /\baud\b/i, code: "AUD" },
+	// Symbols — longer/more specific first
+	{ pattern: /s\$\s?\d/, code: "SGD" },
+	{ pattern: /a\$\s?\d/i, code: "AUD" },
+	{ pattern: /\brp\.?\s?\d/i, code: "IDR" },
+	{ pattern: /\brm\s?\d/i, code: "MYR" },
+	{ pattern: /€\s?\d/, code: "EUR" },
+	{ pattern: /£\s?\d/, code: "GBP" },
+	{ pattern: /¥\s?\d/, code: "JPY" },
+	{ pattern: /\$\s?\d/, code: "USD" },
+	// Indonesian store names → IDR (no symbol on receipt)
+	{ pattern: /indomaret|alfamart|alfamidi|minimarket|swalayan/i, code: "IDR" },
+	// Dot-as-thousands pattern (e.g. 89.750, 1.250.000) → IDR
+	{ pattern: /\d{1,3}(?:\.\d{3}){1,}/, code: "IDR" },
+];
+
+function detectCurrency(text: string): SupportedCurrency | null {
+	for (const { pattern, code } of CURRENCY_DETECTION) {
+		if (pattern.test(text)) return code;
+	}
 	return null;
 }
 
 function parseAmount(
 	raw: string,
-	currency: "IDR" | "USD" | null,
+	curr: SupportedCurrency | null,
 ): number | null {
 	if (!raw.trim()) return null;
-	if (currency === "IDR") {
-		// Remove Rp prefix, then strip thousand separators (dots), treat comma as decimal
-		const cleaned = raw
-			.replace(/rp\.?\s?/i, "")
-			.replace(/\./g, "")
-			.replace(",", ".");
-		const val = Number.parseFloat(cleaned);
-		return Number.isFinite(val) ? val : null;
+
+	let val: number;
+	if (curr === "IDR") {
+		// IDR: dot = thousand separator, comma = decimal separator
+		// e.g. "89.750" → 89750, "1.250.000" → 1250000
+		val = currency(raw, { separator: ".", decimal: "," }).value;
+	} else {
+		// All others: comma = thousand separator, dot = decimal separator
+		// e.g. "$1,234.56" → 1234.56, "1.50" → 1.50
+		val = currency(raw).value;
 	}
-	// USD: remove $ and commas
-	const cleaned = raw.replace(/\$/g, "").replace(/,/g, "");
-	const val = Number.parseFloat(cleaned);
-	return Number.isFinite(val) ? val : null;
+
+	return val > 0 ? val : null;
 }
 
 function extractAmount(
 	lines: string[],
-	currency: "IDR" | "USD" | null,
+	currency: SupportedCurrency | null,
 ): number | null {
-	// Find the last occurrence of a total keyword line and extract amount from it or the next line
+	// Find the last line containing a total keyword
 	let lastTotalIdx = -1;
 	for (let i = 0; i < lines.length; i++) {
 		if (TOTAL_KEYWORDS.test(lines[i])) {
@@ -109,25 +104,13 @@ function extractAmount(
 			? [lines[lastTotalIdx], lines[lastTotalIdx + 1] ?? ""].join(" ")
 			: lines.join(" ");
 
-	// Try IDR with Rp prefix first
-	const idrMatch = candidates.match(IDR_AMOUNT);
-	if (idrMatch) {
-		return parseAmount(idrMatch[0], "IDR");
-	}
+	// Collect all number matches, pick the last one (most likely the total)
+	const matches = [...candidates.matchAll(AMOUNT_PATTERN)];
+	if (!matches.length) return null;
 
-	// Try USD
-	const usdMatch = candidates.match(USD_AMOUNT);
-	if (usdMatch) {
-		return parseAmount(usdMatch[0], "USD");
-	}
-
-	// Try plain IDR thousands (e.g. 45.000)
-	const plainMatch = candidates.match(IDR_PLAIN);
-	if (plainMatch && currency === "IDR") {
-		return parseAmount(plainMatch[0], "IDR");
-	}
-
-	return null;
+	// The last numeric match on a total line is usually the grand total
+	const lastMatch = matches[matches.length - 1];
+	return parseAmount(lastMatch[0], currency);
 }
 
 function extractMerchant(lines: string[]): string | null {
@@ -144,7 +127,7 @@ function extractMerchant(lines: string[]): string | null {
 		const trimmed = line.trim();
 		if (trimmed.length < 3) continue;
 		if (SKIP_PATTERNS.some((p) => p.test(trimmed))) continue;
-		// A valid merchant name is likely all-caps or title-case, not a price
+		// Skip lines that look like pure prices
 		if (/^\d+[.,]\d+$/.test(trimmed)) continue;
 		return trimmed;
 	}
@@ -153,13 +136,18 @@ function extractMerchant(lines: string[]): string | null {
 
 function extractDate(lines: string[]): number | null {
 	const fullText = lines.join(" ");
-	for (const { pattern, parse } of DATE_PATTERNS) {
-		const match = fullText.match(pattern);
-		if (match) {
-			const date = parse(match);
-			if (date && !Number.isNaN(date.getTime())) {
-				return date.getTime();
-			}
+	for (const candidatePattern of DATE_CANDIDATE_PATTERNS) {
+		const match = fullText.match(candidatePattern);
+		if (!match) continue;
+		const candidate = match[0];
+		for (const { fmt, locale } of DATE_FORMATS) {
+			const parsed = parse(
+				candidate,
+				fmt,
+				new Date(),
+				locale ? { locale } : {},
+			);
+			if (isValid(parsed)) return parsed.getTime();
 		}
 	}
 	return null;

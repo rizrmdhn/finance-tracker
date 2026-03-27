@@ -395,5 +395,11 @@ export const id = {
 		scannedBadge: "Diisi dari struk",
 		scanReceipt: "Pindai Struk",
 		permissionDenied: "Izin kamera ditolak. Aktifkan di Pengaturan.",
+		review: "Tinjau Hasil Pindai",
+		reviewDescription:
+			"Periksa dan koreksi nilai yang terdeteksi sebelum melanjutkan.",
+		confirmAndFill: "Konfirmasi & Isi Formulir",
+		scanAgain: "Pindai Ulang",
+		notDetected: "Tidak terdeteksi",
 	},
 } satisfies Dictionary;

@@ -396,5 +396,11 @@ export const en = {
 		scanReceipt: "Scan Receipt",
 		permissionDenied:
 			"Camera permission was denied. Please enable it in Settings.",
+		review: "Review Scan",
+		reviewDescription:
+			"Check and correct the extracted values before continuing.",
+		confirmAndFill: "Confirm & Fill Form",
+		scanAgain: "Scan Again",
+		notDetected: "Not detected",
 	},
 } satisfies Dictionary;
