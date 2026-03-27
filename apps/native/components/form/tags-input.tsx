@@ -1,8 +1,9 @@
 import { X } from "lucide-react-native";
-import { useRef, useState } from "react";
+import { type ComponentRef, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, TextInput, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { Icon } from "@/components/ui/icon";
+import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { cn } from "@/lib/utils";
 
@@ -23,7 +24,7 @@ export function TagsInput({
 	const resolvedPlaceholder = placeholder ?? t("common.addTag");
 
 	const [input, setInput] = useState("");
-	const inputRef = useRef<TextInput>(null);
+	const inputRef = useRef<ComponentRef<typeof Input>>(null);
 
 	function addTag(tag: string) {
 		const trimmed = tag.trim();
@@ -54,7 +55,7 @@ export function TagsInput({
 		<Pressable
 			onPress={() => inputRef.current?.focus()}
 			className={cn(
-				"min-h-10 w-full flex-row flex-wrap items-center gap-1 rounded-md border border-input bg-input/20 px-2 py-1.5 dark:bg-input/30",
+				"min-h-10 w-full flex-row flex-wrap items-center justify-center gap-1 rounded-md border border-input bg-background px-3 py-2 shadow-black/5 shadow-sm dark:bg-input/30",
 				className,
 			)}
 		>
@@ -69,7 +70,7 @@ export function TagsInput({
 					</Pressable>
 				</View>
 			))}
-			<TextInput
+			<Input
 				ref={inputRef}
 				value={input}
 				onChangeText={handleChangeText}
@@ -78,10 +79,13 @@ export function TagsInput({
 					if (input.trim()) addTag(input);
 				}}
 				placeholder={value.length === 0 ? resolvedPlaceholder : ""}
-				placeholderTextColor="#94a3b8"
 				returnKeyType="done"
-				blurOnSubmit={false}
-				className="min-w-16 flex-1 text-foreground text-xs"
+				className="h-full min-w-16 flex-1 rounded-none border-0 p-0 text-xs leading-none shadow-none"
+				style={{
+					backgroundColor: "transparent",
+					lineHeight: undefined,
+					textAlignVertical: "center",
+				}}
 			/>
 		</Pressable>
 	);

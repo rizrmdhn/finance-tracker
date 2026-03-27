@@ -16,7 +16,7 @@ import { CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react-native";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Modal, Pressable, ScrollView, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { cn } from "@/lib/utils";
@@ -31,6 +31,7 @@ interface DateRangePickerProps {
 
 export function DateRangePicker({ from, to, onChange }: DateRangePickerProps) {
 	const { t } = useTranslation();
+	const insets = useSafeAreaInsets();
 
 	const fromDate = new Date(from);
 	const toDate = new Date(to);
@@ -115,7 +116,10 @@ export function DateRangePicker({ from, to, onChange }: DateRangePickerProps) {
 					setModalVisible(false);
 				}}
 			>
-				<SafeAreaView className="flex-1 bg-background">
+				<View
+					className={cn("flex-1 bg-background")}
+					style={{ paddingTop: insets.top }}
+				>
 					{/* Header */}
 					<View className="flex-row items-center justify-between border-border border-b px-4 py-3">
 						<Text className="font-semibold text-base text-foreground">
@@ -247,7 +251,7 @@ export function DateRangePicker({ from, to, onChange }: DateRangePickerProps) {
 							</Text>
 						</Pressable>
 					</ScrollView>
-				</SafeAreaView>
+				</View>
 			</Modal>
 		</>
 	);

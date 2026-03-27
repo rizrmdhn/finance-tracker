@@ -6,6 +6,9 @@ import {
 } from "@finance-tracker/constants";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import Constants from "expo-constants";
+import { Directory, File, Paths } from "expo-file-system";
+import * as IntentLauncher from "expo-intent-launcher";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
 	ActivityIndicator,
@@ -31,9 +34,6 @@ import i18n from "@/lib/i18n";
 import { useThemeColor } from "@/lib/theme";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
-import { Directory, File, Paths } from 'expo-file-system';
-import * as IntentLauncher from 'expo-intent-launcher';
-
 
 const GITHUB_REPO = "rizrmdhn/finance-tracker-mobile";
 
@@ -73,18 +73,48 @@ export default function Settings() {
 		}),
 	);
 
+	const [downloadProgress, setDownloadProgress] = useState<number | null>(null);
+
 	const downloadAndInstall = async (downloadUrl: string) => {
-		const destination = new Directory(Paths.cache, "apk");
-		destination.create({ idempotent: true });
+		try {
+			const response = await fetch(downloadUrl);
+			if (!response.ok) throw new Error(`Download failed: ${response.status}`);
+			if (!response.body) throw new Error("Response body is not readable");
 
-		const downloaded = await File.downloadFileAsync(downloadUrl, destination);
+			const total = Number(response.headers.get("content-length") ?? 0);
 
-		if (Platform.OS === "android") {
-			await IntentLauncher.startActivityAsync("android.intent.action.VIEW", {
-				data: downloaded.contentUri,
-				flags: 1,
-				type: "application/vnd.android.package-archive",
-			});
+			const destination = new Directory(Paths.cache, "apk");
+			destination.create({ idempotent: true });
+			const file = new File(destination, "update.apk");
+
+			const writer = file.writableStream().getWriter();
+			const reader = response.body.getReader();
+			let received = 0;
+			setDownloadProgress(0);
+
+			try {
+				while (true) {
+					const { done, value } = await reader.read();
+					if (done) break;
+					await writer.write(value);
+					received += value.length;
+					if (total > 0) setDownloadProgress(received / total);
+				}
+				await writer.close();
+			} catch (e) {
+				await writer.abort();
+				throw e;
+			}
+
+			if (Platform.OS === "android") {
+				await IntentLauncher.startActivityAsync("android.intent.action.VIEW", {
+					data: file.contentUri,
+					flags: 1,
+					type: "application/vnd.android.package-archive",
+				});
+			}
+		} finally {
+			setDownloadProgress(null);
 		}
 	};
 
@@ -240,12 +270,26 @@ export default function Settings() {
 							</Markdown>
 						)}
 						<TouchableOpacity
-							onPress={() => downloadAndInstall(release.downloadUrl)}
-							className="items-center rounded-lg bg-foreground px-3 py-2"
+							onPress={() =>
+								downloadProgress === null &&
+								downloadAndInstall(release.downloadUrl)
+							}
+							disabled={downloadProgress !== null}
+							className="overflow-hidden rounded-lg bg-foreground"
 						>
-							<Text className="font-medium text-background text-sm">
-								Download APK
-							</Text>
+							{downloadProgress !== null && (
+								<View
+									className="absolute inset-0 bg-muted-foreground/30"
+									style={{ width: `${Math.round(downloadProgress * 100)}%` }}
+								/>
+							)}
+							<View className="items-center px-3 py-2">
+								<Text className="font-medium text-background text-sm">
+									{downloadProgress !== null
+										? `${t("settings.advanced.downloading")} ${Math.round(downloadProgress * 100)}%`
+										: t("settings.advanced.downloadApk")}
+								</Text>
+							</View>
 						</TouchableOpacity>
 					</View>
 				)}

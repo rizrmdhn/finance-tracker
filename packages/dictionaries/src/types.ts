@@ -218,6 +218,7 @@ export interface Dictionary {
 			versionAvailable: string;
 			downloadingAuto: string;
 			downloading: string;
+			downloadApk: string;
 			readyToInstall: string;
 			restartInstall: string;
 			resetOnboarding: string;
