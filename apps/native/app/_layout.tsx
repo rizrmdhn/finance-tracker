@@ -89,13 +89,13 @@ export default function Layout() {
 		<GestureHandlerRootView style={{ flex: 1 }}>
 			<KeyboardProvider>
 				<QueryClientProvider client={queryClient}>
-					<QueryDevTools />
+					{__DEV__ && <QueryDevTools />}
 					<AppThemeProvider>
 						<MigratedApp />
 						<PortalHost />
 						<Toaster richColors />
 					</AppThemeProvider>
-					<DevToolsBubble queryClient={queryClient} />
+					{__DEV__ && <DevToolsBubble queryClient={queryClient} />}
 				</QueryClientProvider>
 			</KeyboardProvider>
 		</GestureHandlerRootView>

@@ -62,6 +62,9 @@
 		},
 		"bump": {
 			"cache": false
+		},
+		"native:bump": {
+			"cache": false
 		}
 	}
 }

@@ -61,7 +61,7 @@
 		"check": "biome check --write .",
 		"native:doctor": "turbo -F @finance-tracker/native doctor",
 		"native:prebuild": "turbo -F @finance-tracker/native prebuild",
-		"native:bump": "turbo -F @finance-tracker/native bump",
+		"native:bump": "node apps/native/scripts/bump-version.mjs",
 		"tag": "bun scripts/tag.ts"
 	},
 	"dependencies": {
