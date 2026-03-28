@@ -18,17 +18,13 @@ export const transactions = sqliteTable(
 		id: text("id")
 			.primaryKey()
 			.$default(() => createId()),
-		amount: real("amount").notNull(),
+		amount: real("amount").notNull().default(0),
 		note: text("note"),
-		categoryId: text("category_id")
-			.references(() => categories.id)
-			.notNull(),
-		accountId: text("account_id")
-			.references(() => accounts.id)
-			.notNull(),
-		toAccountId: text("to_account_id").references(() => accounts.id),
+		categoryId: text("category_id").notNull().default(""),
+		accountId: text("account_id").notNull().default(""),
+		toAccountId: text("to_account_id"),
 		tags: text("tags"),
-		date: integer("date").notNull(),
+		date: integer("date").notNull().default(0),
 		...timestamp,
 	},
 	(table) => [

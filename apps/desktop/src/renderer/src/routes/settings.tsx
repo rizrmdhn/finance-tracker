@@ -17,6 +17,7 @@ import {
 	SelectValue,
 } from "@finance-tracker/ui/components/select";
 import { Separator } from "@finance-tracker/ui/components/separator";
+import { Switch } from "@finance-tracker/ui/components/switch";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { AlertCircle, CheckCircle2, Loader2, RefreshCw } from "lucide-react";
@@ -72,6 +73,11 @@ function RouteComponent() {
 	const { data: language } = useQuery(
 		trpc.appSetting.get.queryOptions({ key: "language" }),
 	);
+
+	const { data: preReleaseSetting } = useQuery(
+		trpc.appSetting.get.queryOptions({ key: "pre_release" }),
+	);
+	const isPreRelease = preReleaseSetting?.value === "true";
 
 	const setSettingMutation = useOptimisticMutation(
 		trpc.appSetting.set.mutationOptions(),
@@ -421,6 +427,19 @@ function RouteComponent() {
 						)}
 					</div>
 				)}
+
+				<SettingRow
+					label={t("settings.advanced.preRelease")}
+					description={t("settings.advanced.preReleaseDescription")}
+				>
+					<Switch
+						checked={isPreRelease}
+						onCheckedChange={async (checked) => {
+							await setSettingMutation.mutateAsync({ key: "pre_release", value: checked ? "true" : "false" });
+							await window.electronUpdater?.setAllowPrerelease(checked);
+						}}
+					/>
+				</SettingRow>
 
 				<SettingRow
 					label={t("settings.advanced.resetOnboarding")}

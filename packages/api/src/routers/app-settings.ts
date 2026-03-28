@@ -14,7 +14,7 @@ export const appSettingsRouter = createTRPCRouter({
 			);
 
 			if (err) throw toTRPCError(err);
-			return data;
+			return data ?? null;
 		}),
 
 	set: publicProcedure

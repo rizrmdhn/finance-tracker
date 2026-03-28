@@ -1,48 +1,76 @@
 {
-	"version": "7",
-	"dialect": "sqlite",
-	"entries": [
-		{
-			"idx": 0,
-			"version": "6",
-			"when": 1774010246140,
-			"tag": "0000_fat_wendell_rand",
-			"breakpoints": true
-		},
-		{
-			"idx": 1,
-			"version": "6",
-			"when": 1774012595075,
-			"tag": "0001_loud_darwin",
-			"breakpoints": true
-		},
-		{
-			"idx": 2,
-			"version": "6",
-			"when": 1774169331849,
-			"tag": "0002_thick_triathlon",
-			"breakpoints": true
-		},
-		{
-			"idx": 3,
-			"version": "6",
-			"when": 1774236018375,
-			"tag": "0003_perfect_queen_noir",
-			"breakpoints": true
-		},
-		{
-			"idx": 4,
-			"version": "6",
-			"when": 1774575910536,
-			"tag": "0004_groovy_shadow_king",
-			"breakpoints": true
-		},
-		{
-			"idx": 5,
-			"version": "6",
-			"when": 1774579052892,
-			"tag": "0005_luxuriant_chimera",
-			"breakpoints": true
-		}
-	]
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1774010246140,
+      "tag": "0000_fat_wendell_rand",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1774012595075,
+      "tag": "0001_loud_darwin",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1774169331849,
+      "tag": "0002_thick_triathlon",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1774236018375,
+      "tag": "0003_perfect_queen_noir",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1774575910536,
+      "tag": "0004_groovy_shadow_king",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1774579052892,
+      "tag": "0005_luxuriant_chimera",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1774660284711,
+      "tag": "0006_loose_energizer",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1774665471020,
+      "tag": "0007_familiar_longshot",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1774666086251,
+      "tag": "0008_green_paladin",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1774667883310,
+      "tag": "0009_silent_paladin",
+      "breakpoints": true
+    }
+  ]
 }

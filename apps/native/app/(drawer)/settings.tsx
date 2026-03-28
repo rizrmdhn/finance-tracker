@@ -43,20 +43,23 @@ export default function Settings() {
 	const { isDark, setTheme } = useAppTheme();
 	const foreground = useThemeColor("foreground");
 	const mutedForeground = useThemeColor("mutedForeground");
-	const {
-		data: release,
-		isFetching: isCheckingUpdate,
-		isError: isUpdateError,
-		error: updateError,
-		check: checkForUpdates,
-	} = useGithubRelease(GITHUB_REPO);
-
 	const { data: currency } = useQuery(
 		trpc.appSetting.get.queryOptions({ key: "currency" }),
 	);
 	const { data: language } = useQuery(
 		trpc.appSetting.get.queryOptions({ key: "language" }),
 	);
+	const { data: preReleaseSetting } = useQuery(
+		trpc.appSetting.get.queryOptions({ key: "pre_release" }),
+	);
+
+	const {
+		data: release,
+		isFetching: isCheckingUpdate,
+		isError: isUpdateError,
+		error: updateError,
+		check: checkForUpdates,
+	} = useGithubRelease(GITHUB_REPO, preReleaseSetting?.value === "true");
 
 	const setSettingMutation = useMutation(
 		trpc.appSetting.set.mutationOptions({
@@ -287,6 +290,18 @@ export default function Settings() {
 						</TouchableOpacity>
 					</View>
 				)}
+
+				<SettingRow
+					label={t("settings.advanced.preRelease")}
+					description={t("settings.advanced.preReleaseDescription")}
+				>
+					<Switch
+						value={preReleaseSetting?.value === "true"}
+						onValueChange={(val) => {
+							setSettingMutation.mutate({ key: "pre_release", value: val ? "true" : "false" });
+						}}
+					/>
+				</SettingRow>
 			</Section>
 
 			{Constants.expoConfig?.version && (

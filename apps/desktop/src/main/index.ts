@@ -1,22 +1,516 @@
+import crypto from "node:crypto";
 import fs from "node:fs";
+import { createServer } from "node:http";
+import os from "node:os";
 import path from "node:path";
 import { appRouter, createTRPCContext } from "@finance-tracker/api";
-import { APP_SETTINGS_DEFAULTS } from "@finance-tracker/constants";
+import { APP_SETTINGS_DEFAULTS, CRDT_TABLES } from "@finance-tracker/constants";
 import * as schema from "@finance-tracker/db";
-import { processRecurrences } from "@finance-tracker/queries";
+import {
+	addTrustedPeer,
+	getTrustedPeerByDeviceId,
+	processRecurrences,
+	updateSyncPeerHost,
+} from "@finance-tracker/queries";
+import type {
+	CRChange,
+	PairAcceptMsg,
+	PairChallengeMsg,
+	PairRejectMsg,
+	PairRequestMsg,
+	SyncChangesMsg,
+	SyncDoneMsg,
+	SyncRequestMsg,
+} from "@finance-tracker/sync";
+import {
+	base64ToPubKey,
+	computeSasCode,
+	deriveSharedSecret,
+	generateEphemeralKeypair,
+	pubKeyToBase64,
+} from "@finance-tracker/sync";
+import { extensionPath } from "@vlcn.io/crsqlite/nodejs-helper";
 import Database from "better-sqlite3";
+import { Bonjour } from "bonjour-service";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 import { app, BrowserWindow, dialog, ipcMain } from "electron";
 import { autoUpdater } from "electron-updater";
 import { createIPCHandler } from "trpc-electron/main";
+import { WebSocket, WebSocketServer } from "ws";
 
 const isDev = process.env.NODE_ENV_ELECTRON_VITE === "development";
 
 let win: BrowserWindow;
 
-function setupAutoUpdater() {
+const SYNC_PORT = 47821;
+const MDNS_SERVICE_TYPE = "financetracker";
+
+interface PendingPairing {
+	ws: WebSocket;
+	theirDeviceId: string;
+	theirDeviceName: string;
+	theirPlatform: "desktop" | "mobile";
+	theirPublicKey: string; // hex
+	sasCode: string;
+	sharedSecret: Uint8Array;
+	ourPrivateKey: string; // ephemeral hex
+}
+
+function getDeviceIdentityPath(userData: string) {
+	return path.join(userData, "sync-identity.json");
+}
+
+function loadOrCreateDeviceIdentity(userData: string): {
+	deviceId: string;
+	deviceName: string;
+} {
+	const identityPath = getDeviceIdentityPath(userData);
+	try {
+		const raw = fs.readFileSync(identityPath, "utf-8");
+		return JSON.parse(raw) as { deviceId: string; deviceName: string };
+	} catch {
+		const deviceId = crypto.randomUUID();
+		const deviceName = os.hostname() || "Desktop";
+		const identity = { deviceId, deviceName };
+		fs.writeFileSync(identityPath, JSON.stringify(identity), "utf-8");
+		return identity;
+	}
+}
+
+function setupSyncServer(
+	mainWin: BrowserWindow,
+	db: schema.AnyDatabase,
+	userData: string,
+	sqlite: InstanceType<typeof Database>,
+) {
+	const identity = loadOrCreateDeviceIdentity(userData);
+	const bonjour = new Bonjour();
+	let browser: ReturnType<typeof bonjour.find> | null = null;
+
+	// Pending pairings indexed by their deviceId
+	const pendingPairings = new Map<string, PendingPairing>();
+	// Pending outgoing pairings (we initiated)
+	const outgoingPairings = new Map<string, PendingPairing>();
+
+	// Start WebSocket server
+	const httpServer = createServer();
+	const wss = new WebSocketServer({ server: httpServer });
+
+	wss.on("connection", (ws) => {
+		ws.on("message", async (raw) => {
+			try {
+				const msg = JSON.parse(raw.toString()) as {
+					type: string;
+					deviceId?: string;
+					deviceName?: string;
+					platform?: "desktop" | "mobile";
+					publicKey?: string;
+					reason?: string;
+				};
+
+				if (msg.type === "pair-request") {
+					const pairReq = msg as PairRequestMsg;
+					// Someone wants to pair with us — generate our keypair and respond
+					const ourKeypair = generateEphemeralKeypair();
+					const sharedSecret = deriveSharedSecret(
+						ourKeypair.privateKey,
+						base64ToPubKey(pairReq.publicKey),
+					);
+					const sasCode = computeSasCode(
+						sharedSecret,
+						identity.deviceId,
+						pairReq.deviceId,
+					);
+
+					const pending: PendingPairing = {
+						ws,
+						theirDeviceId: pairReq.deviceId,
+						theirDeviceName: pairReq.deviceName,
+						theirPlatform: pairReq.platform,
+						theirPublicKey: base64ToPubKey(pairReq.publicKey),
+						sasCode,
+						sharedSecret,
+						ourPrivateKey: ourKeypair.privateKey,
+					};
+					pendingPairings.set(pairReq.deviceId, pending);
+
+					// Send our public key back
+					const challenge: PairChallengeMsg = {
+						type: "pair-challenge",
+						deviceId: identity.deviceId,
+						deviceName: identity.deviceName,
+						platform: "desktop",
+						publicKey: pubKeyToBase64(ourKeypair.publicKey),
+					};
+					ws.send(JSON.stringify(challenge));
+
+					// Notify renderer to show SAS code confirmation UI
+					mainWin.webContents.send("sync:pair-request-received", {
+						deviceId: pairReq.deviceId,
+						deviceName: pairReq.deviceName,
+						platform: pairReq.platform,
+						sasCode,
+					});
+				}
+
+				if (msg.type === "pair-accept") {
+					const pairAccept = msg as PairAcceptMsg;
+					// The other side confirmed — finalize pairing
+					const pending = outgoingPairings.get(pairAccept.deviceId);
+					if (!pending) return;
+					outgoingPairings.delete(pairAccept.deviceId);
+
+					await addTrustedPeer(db, {
+						deviceId: pending.theirDeviceId,
+						deviceName: pending.theirDeviceName,
+						platform: pending.theirPlatform,
+						publicKey: pending.theirPublicKey,
+					});
+
+					mainWin.webContents.send("sync:pair-confirmed", {
+						deviceId: pending.theirDeviceId,
+						deviceName: pending.theirDeviceName,
+						platform: pending.theirPlatform,
+					});
+				}
+
+				if (msg.type === "pair-reject") {
+					const pairReject = msg as PairRejectMsg;
+					outgoingPairings.delete(pairReject.deviceId);
+					mainWin.webContents.send("sync:pair-rejected", {
+						deviceId: pairReject.deviceId,
+						reason: pairReject.reason,
+					});
+				}
+
+				if (msg.type === "sync-request") {
+					const syncReq = msg as SyncRequestMsg;
+					// Only serve trusted peers
+					const peer = await getTrustedPeerByDeviceId(db, syncReq.deviceId);
+					if (!peer) {
+						ws.close();
+						return;
+					}
+
+					const changes = sqlite
+						.prepare(`
+						SELECT "table" as tbl, pk, cid, val, col_version, db_version, hex(site_id) as site_id, cl, seq
+						FROM crsql_changes
+						WHERE site_id = crsql_site_id()
+					`)
+						.all() as Array<CRChange & { tbl: string }>;
+
+					const mapped: CRChange[] = changes.map((c) => ({
+						...c,
+						table: c.tbl,
+					}));
+
+					const reply: SyncChangesMsg = {
+						type: "sync-changes",
+						deviceId: identity.deviceId,
+						changes: mapped,
+					};
+					ws.send(JSON.stringify(reply));
+				}
+
+				if (msg.type === "sync-changes") {
+					const syncChanges = msg as SyncChangesMsg;
+					const peer = await getTrustedPeerByDeviceId(db, syncChanges.deviceId);
+					if (!peer) {
+						ws.close();
+						return;
+					}
+
+					const applyStmt = sqlite.prepare(
+						"INSERT INTO crsql_changes VALUES (?, ?, ?, ?, ?, ?, unhex(?), ?, ?)",
+					);
+					const applyAll = sqlite.transaction((rows: CRChange[]) => {
+						for (const c of rows) {
+							applyStmt.run(
+								c.table,
+								c.pk,
+								c.cid,
+								c.val,
+								c.col_version,
+								c.db_version,
+								c.site_id,
+								c.cl,
+								c.seq,
+							);
+						}
+					});
+					applyAll(syncChanges.changes);
+
+					const done: SyncDoneMsg = {
+						type: "sync-done",
+						deviceId: identity.deviceId,
+					};
+					ws.send(JSON.stringify(done));
+
+					mainWin.webContents.send("sync:sync-complete", {
+						deviceId: syncChanges.deviceId,
+					});
+				}
+			} catch {
+				// ignore malformed messages
+			}
+		});
+	});
+
+	httpServer.listen(SYNC_PORT);
+
+	// Advertise via mDNS
+	bonjour.publish({
+		name: `${identity.deviceName}-${identity.deviceId.slice(0, 8)}`,
+		type: MDNS_SERVICE_TYPE,
+		port: SYNC_PORT,
+		txt: {
+			deviceId: identity.deviceId,
+			deviceName: identity.deviceName,
+			platform: "desktop",
+			version: app.getVersion(),
+		},
+	});
+
+	// IPC: get device info
+	ipcMain.handle("sync:get-device-info", () => ({
+		...identity,
+		platform: "desktop" as const,
+	}));
+
+	// IPC: start discovery
+	ipcMain.handle("sync:start-discovery", () => {
+		browser = bonjour.find({ type: MDNS_SERVICE_TYPE });
+		browser.on("up", (service) => {
+			const txt = service.txt as Record<string, string>;
+			if (txt.deviceId === identity.deviceId) return; // ignore self
+			mainWin.webContents.send("sync:peer-discovered", {
+				deviceId: txt.deviceId,
+				deviceName: txt.deviceName,
+				platform: txt.platform,
+				host: service.addresses?.[0] ?? service.host,
+				port: service.port,
+			});
+		});
+		browser.on("down", (service) => {
+			const txt = service.txt as Record<string, string>;
+			if (txt.deviceId) {
+				mainWin.webContents.send("sync:peer-lost", { deviceId: txt.deviceId });
+			}
+		});
+	});
+
+	// IPC: stop discovery
+	ipcMain.handle("sync:stop-discovery", () => {
+		browser?.stop();
+		browser = null;
+	});
+
+	// IPC: initiate pairing with a discovered peer
+	ipcMain.handle(
+		"sync:initiate-pair",
+		(_event, { host, port }: { host: string; port: number }) => {
+			const ws = new WebSocket(`ws://${host}:${port}`);
+			const ourKeypair = generateEphemeralKeypair();
+
+			ws.on("open", () => {
+				const msg: PairRequestMsg = {
+					type: "pair-request",
+					deviceId: identity.deviceId,
+					deviceName: identity.deviceName,
+					platform: "desktop",
+					publicKey: pubKeyToBase64(ourKeypair.publicKey),
+				};
+				ws.send(JSON.stringify(msg));
+			});
+
+			ws.on("message", async (raw) => {
+				try {
+					const msg = JSON.parse(raw.toString()) as { type: string };
+					if (msg.type === "pair-challenge") {
+						const challenge = msg as PairChallengeMsg;
+						const sharedSecret = deriveSharedSecret(
+							ourKeypair.privateKey,
+							base64ToPubKey(challenge.publicKey),
+						);
+						const sasCode = computeSasCode(
+							sharedSecret,
+							identity.deviceId,
+							challenge.deviceId,
+						);
+
+						const pending: PendingPairing = {
+							ws,
+							theirDeviceId: challenge.deviceId,
+							theirDeviceName: challenge.deviceName,
+							theirPlatform: challenge.platform,
+							theirPublicKey: base64ToPubKey(challenge.publicKey),
+							sasCode,
+							sharedSecret,
+							ourPrivateKey: ourKeypair.privateKey,
+						};
+						outgoingPairings.set(challenge.deviceId, pending);
+
+						// Show SAS code to user
+						mainWin.webContents.send("sync:pair-challenge", {
+							deviceId: challenge.deviceId,
+							deviceName: challenge.deviceName,
+							sasCode,
+						});
+					}
+				} catch {
+					// ignore
+				}
+			});
+		},
+	);
+
+	// IPC: user confirms the SAS code (incoming pair)
+	ipcMain.handle(
+		"sync:confirm-pair",
+		async (_event, { deviceId }: { deviceId: string }) => {
+			const pending = pendingPairings.get(deviceId);
+			if (!pending) return;
+			pendingPairings.delete(deviceId);
+
+			await addTrustedPeer(db, {
+				deviceId: pending.theirDeviceId,
+				deviceName: pending.theirDeviceName,
+				platform: pending.theirPlatform,
+				publicKey: pending.theirPublicKey,
+			});
+
+			const accept: PairAcceptMsg = {
+				type: "pair-accept",
+				deviceId: identity.deviceId,
+			};
+			pending.ws.send(JSON.stringify(accept));
+
+			mainWin.webContents.send("sync:pair-confirmed", {
+				deviceId: pending.theirDeviceId,
+				deviceName: pending.theirDeviceName,
+				platform: pending.theirPlatform,
+			});
+		},
+	);
+
+	// IPC: user rejects the SAS code (incoming pair)
+	ipcMain.handle(
+		"sync:reject-pair",
+		async (
+			_event,
+			{ deviceId, reason }: { deviceId: string; reason?: string },
+		) => {
+			const pending = pendingPairings.get(deviceId);
+			if (!pending) return;
+			pendingPairings.delete(deviceId);
+
+			const reject: PairRejectMsg = {
+				type: "pair-reject",
+				deviceId: identity.deviceId,
+				reason,
+			};
+			pending.ws.send(JSON.stringify(reject));
+		},
+	);
+
+	// IPC: sync with a peer (desktop-initiated, acts as client)
+	ipcMain.handle(
+		"sync:sync-with-peer",
+		(_event, { host, port }: { host: string; port: number }) => {
+			const hostStr = `${host}:${port}`;
+			return new Promise<void>((resolve, reject) => {
+				const ws = new WebSocket(`ws://${host}:${port}`);
+
+				ws.on("open", () => {
+					const req: SyncRequestMsg = {
+						type: "sync-request",
+						deviceId: identity.deviceId,
+					};
+					ws.send(JSON.stringify(req));
+				});
+
+				ws.on("message", (raw) => {
+					try {
+						const msg = JSON.parse(raw.toString()) as { type: string };
+
+						if (msg.type === "sync-changes") {
+							const syncChanges = msg as SyncChangesMsg;
+
+							const applyStmt = sqlite.prepare(
+								"INSERT INTO crsql_changes VALUES (?, ?, ?, ?, ?, ?, unhex(?), ?, ?)",
+							);
+							const applyAll = sqlite.transaction((rows: CRChange[]) => {
+								for (const c of rows) {
+									applyStmt.run(
+										c.table,
+										c.pk,
+										c.cid,
+										c.val,
+										c.col_version,
+										c.db_version,
+										c.site_id,
+										c.cl,
+										c.seq,
+									);
+								}
+							});
+							applyAll(syncChanges.changes);
+
+							// Store the host so trusted device sync button works next time
+							updateSyncPeerHost(db, syncChanges.deviceId, hostStr).catch(() => {});
+
+							// Now send our changes back
+							const changes = sqlite
+								.prepare(`
+								SELECT "table" as tbl, pk, cid, val, col_version, db_version, hex(site_id) as site_id, cl, seq
+								FROM crsql_changes
+								WHERE site_id = crsql_site_id()
+							`)
+								.all() as Array<CRChange & { tbl: string }>;
+
+							const mapped: CRChange[] = changes.map((c) => ({
+								...c,
+								table: c.tbl,
+							}));
+
+							const reply: SyncChangesMsg = {
+								type: "sync-changes",
+								deviceId: identity.deviceId,
+								changes: mapped,
+							};
+							ws.send(JSON.stringify(reply));
+						}
+
+						if (msg.type === "sync-done") {
+							const done = msg as SyncDoneMsg;
+							mainWin.webContents.send("sync:sync-complete", {
+								deviceId: done.deviceId,
+							});
+							resolve();
+							ws.close();
+						}
+					} catch {
+						// ignore
+					}
+				});
+
+				ws.on("error", (err) => reject(err));
+			});
+		},
+	);
+
+	return () => {
+		bonjour.unpublishAll();
+		bonjour.destroy();
+		wss.close();
+		httpServer.close();
+	};
+}
+
+function setupAutoUpdater(sqlite: InstanceType<typeof Database>) {
 	if (isDev) {
 		ipcMain.on("check-for-updates", () => {
 			win.webContents.send("update-not-available");
@@ -27,6 +521,25 @@ function setupAutoUpdater() {
 	// Auto-download updates without user interaction
 	autoUpdater.autoDownload = true;
 	autoUpdater.autoInstallOnAppQuit = true;
+
+	// Read and apply pre_release setting from DB
+	try {
+		const setting = sqlite
+			.prepare(`SELECT value FROM app_settings WHERE key = 'pre_release'`)
+			.get() as { value: string } | undefined;
+		if (setting?.value === "true") {
+			autoUpdater.allowPrerelease = true;
+		}
+	} catch {
+		// ignore
+	}
+
+	ipcMain.handle(
+		"updater:set-prerelease",
+		(_event, { allow }: { allow: boolean }) => {
+			autoUpdater.allowPrerelease = allow;
+		},
+	);
 
 	autoUpdater.on("update-available", (info) => {
 		win.webContents.send("update-available", {
@@ -120,7 +633,23 @@ app.whenReady().then(() => {
 		? path.join(__dirname, "../../../../packages/db/migrations")
 		: path.join(process.resourcesPath, "migrations");
 
+	// PRAGMA foreign_keys is a no-op inside a transaction, so we must disable
+	// FK enforcement on the connection BEFORE Drizzle starts its migration transaction.
+	sqlite.pragma("foreign_keys = OFF");
 	migrate(db, { migrationsFolder });
+	sqlite.pragma("foreign_keys = ON");
+
+	// Load cr-sqlite extension and register all user data tables as CRDTs.
+	try {
+		sqlite.loadExtension(extensionPath);
+		for (const table of CRDT_TABLES) {
+			sqlite.prepare("SELECT crsql_as_crr(?)").run(table);
+		}
+		sqlite.prepare("SELECT crsql_db_version()").get(); // sanity check
+		console.log("[cr-sqlite] CRDT tables registered");
+	} catch (err) {
+		console.error("[cr-sqlite] Failed to initialise:", err);
+	}
 
 	// Seeding default app settings
 	db.insert(schema.appSettings)
@@ -149,7 +678,8 @@ app.whenReady().then(() => {
 	);
 
 	createWindow();
-	setupAutoUpdater();
+	setupAutoUpdater(sqlite);
+	setupSyncServer(win, db, app.getPath("userData"), sqlite);
 
 	// Auto-check for updates shortly after launch (production only)
 	if (!isDev) {

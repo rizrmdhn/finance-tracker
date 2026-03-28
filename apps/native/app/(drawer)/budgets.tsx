@@ -1,10 +1,12 @@
 import type { BudgetWithSpent } from "@finance-tracker/types";
 import { createId } from "@paralleldrive/cuid2";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { useFocusEffect } from "expo-router";
 import { PencilIcon, Trash2Icon } from "lucide-react-native";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { View } from "react-native";
+import { requestWidgetUpdate } from "react-native-android-widget";
 import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { Container } from "@/components/container";
 import CreateBudgetDialog from "@/components/form/create-budget-dialog";
@@ -20,6 +22,7 @@ import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
 import { getCurrentMonthRange } from "@/lib/utils";
 import { saveWidgetData } from "@/lib/widget-storage";
+import { BudgetWidget } from "@/widgets/BudgetWidget";
 
 export default function Budgets() {
 	const { t } = useTranslation();
@@ -48,6 +51,13 @@ export default function Budgets() {
 		trpc.appSetting.get.queryOptions({ key: "currency" }),
 	);
 
+	// Refetch whenever the screen comes into focus (e.g. opened from widget tap)
+	useFocusEffect(
+		useCallback(() => {
+			refetch();
+		}, [refetch]),
+	);
+
 	useEffect(() => {
 		if (isLoading || budgets.length === 0) return;
 		const currency = currencySetting?.value ?? "IDR";
@@ -55,7 +65,7 @@ export default function Budgets() {
 			IDR: "id-ID",
 			USD: "en-US",
 		};
-		saveWidgetData({
+		const widgetPayload = {
 			budgets: budgets.map((b) => ({
 				id: b.id,
 				amount: b.amount,
@@ -70,6 +80,15 @@ export default function Budgets() {
 			language: languageSetting?.value ?? "id",
 			currency,
 			currencyLocale: currencyLocaleMap[currency] ?? "id-ID",
+		};
+		saveWidgetData(widgetPayload);
+
+		// Push fresh data to the home-screen widget
+		requestWidgetUpdate({
+			widgetName: "BudgetWidget",
+			renderWidget: () => <BudgetWidget data={{ ...widgetPayload, lastUpdated: Date.now() }} />,
+		}).catch(() => {
+			// No widget on home screen — ignore
 		});
 	}, [budgets, isLoading, languageSetting, currencySetting]);
 

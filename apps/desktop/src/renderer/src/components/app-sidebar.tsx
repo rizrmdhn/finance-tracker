@@ -19,6 +19,7 @@ import {
 	Target,
 	Trash,
 	Wallet,
+	Wifi,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -38,6 +39,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
 		{ to: "/categories", label: t("sidebar.categories"), icon: Tag },
 		{ to: "/budgets", label: t("sidebar.budgets"), icon: Target },
 		{ to: "/trash", label: t("sidebar.trash"), icon: Trash },
+		{ to: "/sync", label: t("sync.title"), icon: Wifi },
 	] as const;
 
 	return (

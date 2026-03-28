@@ -97,6 +97,7 @@ function DrawerLayout() {
 		},
 		{ name: "budgets", title: t("sidebar.budgets"), icon: "flag-outline" },
 		{ name: "trash", title: t("sidebar.trash"), icon: "trash-outline" },
+		{ name: "sync", title: t("sync.title"), icon: "wifi-outline" },
 		{
 			name: "settings",
 			title: t("sidebar.settings"),

@@ -18,12 +18,12 @@ function isNewerVersion(latest: string, current: string): boolean {
 	return lPat > cPat;
 }
 
-export function useGithubRelease(repo: string) {
+export function useGithubRelease(repo: string, includePreRelease = false) {
 	const currentVersion = Constants.expoConfig?.version;
 
 	const { data, isFetching, isError, error, refetch } = useQuery<GithubRelease>(
 		{
-			queryKey: ["github-release", repo],
+			queryKey: ["github-release", repo, includePreRelease],
 			queryFn: async () => {
 				const res = await fetch(
 					`https://api.github.com/repos/${repo}/releases?per_page=20`,
@@ -33,10 +33,13 @@ export function useGithubRelease(repo: string) {
 					tag_name: string;
 					html_url: string;
 					body: string | null;
+					prerelease: boolean;
 					assets: { name: string; browser_download_url: string }[];
 				}[];
 
-				const release = json[0];
+				const release = includePreRelease
+					? json[0]
+					: json.find((r) => !r.prerelease);
 				if (!release) throw new Error("No release found");
 
 				const latestVersion = release.tag_name.replace(/^mobile\/v/, "");

@@ -23,6 +23,7 @@ declare global {
 			onUpdateDownloaded: (callback: () => void) => void;
 			onUpdateError: (callback: (message: string) => void) => void;
 			installUpdate: () => void;
+			setAllowPrerelease: (allow: boolean) => Promise<void>;
 			removeAllListeners: (channel: string) => void;
 		};
 	}
