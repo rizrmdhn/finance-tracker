@@ -14,6 +14,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import {
 	Loader2,
 	Monitor,
+	RefreshCw,
 	Smartphone,
 	Unplug,
 	Wifi,
@@ -63,6 +64,7 @@ function RouteComponent() {
 		open: false,
 	});
 	const [pairingDeviceId, setPairingDeviceId] = useState<string | null>(null);
+	const [syncingDeviceId, setSyncingDeviceId] = useState<string | null>(null);
 
 	const { data: trustedPeers = [], isLoading } = useQuery(
 		trpc.peer.list.queryOptions(),
@@ -140,6 +142,10 @@ function RouteComponent() {
 			globalErrorToast(t("sync.toast.pairRejected"));
 		});
 
+		window.electronSync.onSyncComplete(async () => {
+			await queryClient.invalidateQueries();
+		});
+
 		return () => {
 			window.electronSync?.removeAllListeners("sync:peer-discovered");
 			window.electronSync?.removeAllListeners("sync:peer-lost");
@@ -147,6 +153,7 @@ function RouteComponent() {
 			window.electronSync?.removeAllListeners("sync:pair-request-received");
 			window.electronSync?.removeAllListeners("sync:pair-confirmed");
 			window.electronSync?.removeAllListeners("sync:pair-rejected");
+			window.electronSync?.removeAllListeners("sync:sync-complete");
 		};
 	}, [queryClient, t]);
 
@@ -179,6 +186,18 @@ function RouteComponent() {
 		await window.electronSync?.rejectPair(pairingDialog.deviceId);
 		setPairingDialog({ open: false });
 		setPairingDeviceId(null);
+	}
+
+	async function handleSync(peer: DiscoveredPeer) {
+		setSyncingDeviceId(peer.deviceId);
+		try {
+			await window.electronSync?.syncWithPeer({ host: peer.host, port: peer.port });
+			globalSuccessToast(t("sync.toast.syncComplete"));
+		} catch {
+			globalErrorToast(t("sync.toast.syncFailed"));
+		} finally {
+			setSyncingDeviceId(null);
+		}
 	}
 
 	const trustedDeviceIds = new Set(trustedPeers.map((p) => p.deviceId));
@@ -325,7 +344,22 @@ function RouteComponent() {
 									{t(`sync.${peer.platform}`)}
 								</Badge>
 								{trustedDeviceIds.has(peer.deviceId) ? (
-									<Badge variant="secondary">Paired</Badge>
+									<div className="flex items-center gap-2">
+										<Badge variant="secondary">{t("sync.paired")}</Badge>
+										<Button
+											size="sm"
+											variant="outline"
+											onClick={() => handleSync(peer)}
+											disabled={syncingDeviceId === peer.deviceId}
+										>
+											{syncingDeviceId === peer.deviceId ? (
+												<Loader2 className="size-4 animate-spin" />
+											) : (
+												<RefreshCw className="size-4" />
+											)}
+											{t("sync.syncNow")}
+										</Button>
+									</div>
 								) : (
 									<Button
 										size="sm"

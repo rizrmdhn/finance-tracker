@@ -237,6 +237,9 @@ export const en = {
 			resetOnboardingDescription:
 				"Show the onboarding screen again when the app opens",
 			failedToCheck: "Failed to check for updates: {{message}}",
+			preRelease: "Pre-release updates",
+			preReleaseDescription:
+				"Opt in to receive alpha and beta updates before stable release.",
 		},
 		dataManagement: {
 			title: "Data Management",
@@ -437,12 +440,19 @@ export const en = {
 		connectToDesktop: "Connect to Desktop",
 		connectDescription: "Enter your desktop's local IP address to pair over WiFi",
 		connect: "Connect",
+		syncNow: "Sync Now",
+		syncing: "Syncing...",
+		paired: "Paired",
+		syncWithDesktop: "Sync with Desktop",
+		syncDescription: "Enter your desktop IP address to sync data.",
 		toast: {
 			paired: "Device paired successfully",
 			pairFailed: "Failed to pair device",
 			unpaired: "Device unpaired",
 			unpairFailed: "Failed to unpair device",
 			pairRejected: "Pairing was rejected by the other device",
+			syncComplete: "Sync complete",
+			syncFailed: "Sync failed",
 		},
 	},
 } satisfies Dictionary;

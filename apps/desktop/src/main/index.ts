@@ -6,12 +6,20 @@ import path from "node:path";
 import { appRouter, createTRPCContext } from "@finance-tracker/api";
 import { APP_SETTINGS_DEFAULTS, CRDT_TABLES } from "@finance-tracker/constants";
 import * as schema from "@finance-tracker/db";
-import { addTrustedPeer, processRecurrences } from "@finance-tracker/queries";
+import {
+	addTrustedPeer,
+	getTrustedPeerByDeviceId,
+	processRecurrences,
+} from "@finance-tracker/queries";
 import type {
+	CRChange,
 	PairAcceptMsg,
 	PairChallengeMsg,
 	PairRejectMsg,
 	PairRequestMsg,
+	SyncChangesMsg,
+	SyncDoneMsg,
+	SyncRequestMsg,
 } from "@finance-tracker/sync";
 import {
 	base64ToPubKey,
@@ -74,6 +82,7 @@ function setupSyncServer(
 	mainWin: BrowserWindow,
 	db: schema.AnyDatabase,
 	userData: string,
+	sqlite: InstanceType<typeof Database>,
 ) {
 	const identity = loadOrCreateDeviceIdentity(userData);
 	const bonjour = new Bonjour();
@@ -172,6 +181,75 @@ function setupSyncServer(
 					mainWin.webContents.send("sync:pair-rejected", {
 						deviceId: pairReject.deviceId,
 						reason: pairReject.reason,
+					});
+				}
+
+				if (msg.type === "sync-request") {
+					const syncReq = msg as SyncRequestMsg;
+					// Only serve trusted peers
+					const peer = await getTrustedPeerByDeviceId(db, syncReq.deviceId);
+					if (!peer) {
+						ws.close();
+						return;
+					}
+
+					const changes = sqlite
+						.prepare(`
+						SELECT "table" as tbl, pk, cid, val, col_version, db_version, hex(site_id) as site_id, cl, seq
+						FROM crsql_changes
+						WHERE site_id = crsql_site_id()
+					`)
+						.all() as Array<CRChange & { tbl: string }>;
+
+					const mapped: CRChange[] = changes.map((c) => ({
+						...c,
+						table: c.tbl,
+					}));
+
+					const reply: SyncChangesMsg = {
+						type: "sync-changes",
+						deviceId: identity.deviceId,
+						changes: mapped,
+					};
+					ws.send(JSON.stringify(reply));
+				}
+
+				if (msg.type === "sync-changes") {
+					const syncChanges = msg as SyncChangesMsg;
+					const peer = await getTrustedPeerByDeviceId(db, syncChanges.deviceId);
+					if (!peer) {
+						ws.close();
+						return;
+					}
+
+					const applyStmt = sqlite.prepare(
+						"INSERT INTO crsql_changes VALUES (?, ?, ?, ?, ?, ?, unhex(?), ?, ?)",
+					);
+					const applyAll = sqlite.transaction((rows: CRChange[]) => {
+						for (const c of rows) {
+							applyStmt.run(
+								c.table,
+								c.pk,
+								c.cid,
+								c.val,
+								c.col_version,
+								c.db_version,
+								c.site_id,
+								c.cl,
+								c.seq,
+							);
+						}
+					});
+					applyAll(syncChanges.changes);
+
+					const done: SyncDoneMsg = {
+						type: "sync-done",
+						deviceId: identity.deviceId,
+					};
+					ws.send(JSON.stringify(done));
+
+					mainWin.webContents.send("sync:sync-complete", {
+						deviceId: syncChanges.deviceId,
 					});
 				}
 			} catch {
@@ -337,6 +415,88 @@ function setupSyncServer(
 		},
 	);
 
+	// IPC: sync with a peer (desktop-initiated, acts as client)
+	ipcMain.handle(
+		"sync:sync-with-peer",
+		(_event, { host, port }: { host: string; port: number }) => {
+			return new Promise<void>((resolve, reject) => {
+				const ws = new WebSocket(`ws://${host}:${port}`);
+
+				ws.on("open", () => {
+					const req: SyncRequestMsg = {
+						type: "sync-request",
+						deviceId: identity.deviceId,
+					};
+					ws.send(JSON.stringify(req));
+				});
+
+				ws.on("message", (raw) => {
+					try {
+						const msg = JSON.parse(raw.toString()) as { type: string };
+
+						if (msg.type === "sync-changes") {
+							const syncChanges = msg as SyncChangesMsg;
+
+							const applyStmt = sqlite.prepare(
+								"INSERT INTO crsql_changes VALUES (?, ?, ?, ?, ?, ?, unhex(?), ?, ?)",
+							);
+							const applyAll = sqlite.transaction((rows: CRChange[]) => {
+								for (const c of rows) {
+									applyStmt.run(
+										c.table,
+										c.pk,
+										c.cid,
+										c.val,
+										c.col_version,
+										c.db_version,
+										c.site_id,
+										c.cl,
+										c.seq,
+									);
+								}
+							});
+							applyAll(syncChanges.changes);
+
+							// Now send our changes back
+							const changes = sqlite
+								.prepare(`
+								SELECT "table" as tbl, pk, cid, val, col_version, db_version, hex(site_id) as site_id, cl, seq
+								FROM crsql_changes
+								WHERE site_id = crsql_site_id()
+							`)
+								.all() as Array<CRChange & { tbl: string }>;
+
+							const mapped: CRChange[] = changes.map((c) => ({
+								...c,
+								table: c.tbl,
+							}));
+
+							const reply: SyncChangesMsg = {
+								type: "sync-changes",
+								deviceId: identity.deviceId,
+								changes: mapped,
+							};
+							ws.send(JSON.stringify(reply));
+						}
+
+						if (msg.type === "sync-done") {
+							const done = msg as SyncDoneMsg;
+							mainWin.webContents.send("sync:sync-complete", {
+								deviceId: done.deviceId,
+							});
+							resolve();
+							ws.close();
+						}
+					} catch {
+						// ignore
+					}
+				});
+
+				ws.on("error", (err) => reject(err));
+			});
+		},
+	);
+
 	return () => {
 		bonjour.unpublishAll();
 		bonjour.destroy();
@@ -345,7 +505,7 @@ function setupSyncServer(
 	};
 }
 
-function setupAutoUpdater() {
+function setupAutoUpdater(sqlite: InstanceType<typeof Database>) {
 	if (isDev) {
 		ipcMain.on("check-for-updates", () => {
 			win.webContents.send("update-not-available");
@@ -356,6 +516,25 @@ function setupAutoUpdater() {
 	// Auto-download updates without user interaction
 	autoUpdater.autoDownload = true;
 	autoUpdater.autoInstallOnAppQuit = true;
+
+	// Read and apply pre_release setting from DB
+	try {
+		const setting = sqlite
+			.prepare(`SELECT value FROM app_settings WHERE key = 'pre_release'`)
+			.get() as { value: string } | undefined;
+		if (setting?.value === "true") {
+			autoUpdater.allowPrerelease = true;
+		}
+	} catch {
+		// ignore
+	}
+
+	ipcMain.handle(
+		"updater:set-prerelease",
+		(_event, { allow }: { allow: boolean }) => {
+			autoUpdater.allowPrerelease = allow;
+		},
+	);
 
 	autoUpdater.on("update-available", (info) => {
 		win.webContents.send("update-available", {
@@ -490,8 +669,8 @@ app.whenReady().then(() => {
 	);
 
 	createWindow();
-	setupAutoUpdater();
-	setupSyncServer(win, db, app.getPath("userData"));
+	setupAutoUpdater(sqlite);
+	setupSyncServer(win, db, app.getPath("userData"), sqlite);
 
 	// Auto-check for updates shortly after launch (production only)
 	if (!isDev) {

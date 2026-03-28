@@ -56,4 +56,37 @@ export type SyncMessage =
 	| PairAcceptMsg
 	| PairRejectMsg
 	| HelloMsg
-	| HelloAckMsg;
+	| HelloAckMsg
+	| SyncRequestMsg
+	| SyncChangesMsg
+	| SyncDoneMsg;
+
+// ---- Sync messages ----
+
+export interface CRChange {
+	table: string;
+	pk: string;
+	cid: string;
+	val: unknown;
+	col_version: number;
+	db_version: number;
+	site_id: string; // hex-encoded
+	cl: number;
+	seq: number;
+}
+
+export interface SyncRequestMsg {
+	type: "sync-request";
+	deviceId: string;
+}
+
+export interface SyncChangesMsg {
+	type: "sync-changes";
+	deviceId: string;
+	changes: CRChange[];
+}
+
+export interface SyncDoneMsg {
+	type: "sync-done";
+	deviceId: string;
+}

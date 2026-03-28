@@ -224,6 +224,8 @@ export interface Dictionary {
 			resetOnboarding: string;
 			resetOnboardingDescription: string;
 			failedToCheck: string;
+			preRelease: string;
+			preReleaseDescription: string;
 		};
 		dataManagement: {
 			title: string;
@@ -408,12 +410,19 @@ export interface Dictionary {
 		connectToDesktop: string;
 		connectDescription: string;
 		connect: string;
+		syncNow: string;
+		syncing: string;
+		paired: string;
+		syncWithDesktop: string;
+		syncDescription: string;
 		toast: {
 			paired: string;
 			pairFailed: string;
 			unpaired: string;
 			unpairFailed: string;
 			pairRejected: string;
+			syncComplete: string;
+			syncFailed: string;
 		};
 	};
 }

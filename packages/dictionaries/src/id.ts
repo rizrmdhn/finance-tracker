@@ -238,6 +238,9 @@ export const id = {
 			resetOnboardingDescription:
 				"Tampilkan kembali layar onboarding saat aplikasi dibuka",
 			failedToCheck: "Gagal memeriksa pembaruan: {{message}}",
+			preRelease: "Pembaruan pra-rilis",
+			preReleaseDescription:
+				"Ikut serta untuk menerima pembaruan alpha dan beta sebelum rilis stabil.",
 		},
 		dataManagement: {
 			title: "Manajemen Data",
@@ -437,12 +440,19 @@ export const id = {
 		connectToDesktop: "Hubungkan ke Desktop",
 		connectDescription: "Masukkan alamat IP lokal desktop Anda untuk pasangkan melalui WiFi",
 		connect: "Hubungkan",
+		syncNow: "Sinkronkan",
+		syncing: "Menyinkronkan...",
+		paired: "Terpasangkan",
+		syncWithDesktop: "Sinkron dengan Desktop",
+		syncDescription: "Masukkan alamat IP desktop Anda untuk menyinkronkan data.",
 		toast: {
 			paired: "Perangkat berhasil dipasangkan",
 			pairFailed: "Gagal memasangkan perangkat",
 			unpaired: "Perangkat diputus pasangannya",
 			unpairFailed: "Gagal memutus pasangan perangkat",
 			pairRejected: "Pemasangan ditolak oleh perangkat lain",
+			syncComplete: "Sinkronisasi selesai",
+			syncFailed: "Sinkronisasi gagal",
 		},
 	},
 } satisfies Dictionary;

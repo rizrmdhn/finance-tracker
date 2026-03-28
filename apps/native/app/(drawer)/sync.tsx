@@ -8,7 +8,13 @@ import {
 import { createId } from "@paralleldrive/cuid2";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as SecureStore from "expo-secure-store";
-import { Monitor, Smartphone, Unplug, Wifi } from "lucide-react-native";
+import {
+	Monitor,
+	RefreshCw,
+	Smartphone,
+	Unplug,
+	Wifi,
+} from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, ScrollView, View } from "react-native";
@@ -24,6 +30,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Text } from "@/components/ui/text";
+import { sqlite } from "@/lib/db";
 import { useThemeColor } from "@/lib/theme";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { trpc } from "@/lib/trpc";
@@ -83,6 +90,8 @@ export default function SyncScreen() {
 		deviceName: string;
 	} | null>(null);
 	const [host, setHost] = useState("");
+	const [syncHost, setSyncHost] = useState("");
+	const [isSyncing, setIsSyncing] = useState(false);
 	const [pairingState, setPairingState] = useState<PairingState>({
 		status: "idle",
 	});
@@ -261,6 +270,122 @@ export default function SyncScreen() {
 		setHost("");
 	}
 
+	async function handleSync() {
+		const trimmedHost = syncHost.trim();
+		if (!trimmedHost || !deviceInfo) return;
+		const url = trimmedHost.startsWith("ws://")
+			? trimmedHost
+			: `ws://${trimmedHost}:47821`;
+
+		setIsSyncing(true);
+
+		return new Promise<void>((resolve) => {
+			const ws = new WebSocket(url);
+
+			ws.onopen = () => {
+				ws.send(
+					JSON.stringify({
+						type: "sync-request",
+						deviceId: deviceInfo.deviceId,
+					}),
+				);
+			};
+
+			ws.onmessage = async (event) => {
+				const msg = JSON.parse(event.data as string);
+
+				if (msg.type === "sync-changes") {
+					// Apply received changes
+					for (const c of msg.changes as Array<{
+						table: string;
+						pk: string;
+						cid: string;
+						val: unknown;
+						col_version: number;
+						db_version: number;
+						site_id: string;
+						cl: number;
+						seq: number;
+					}>) {
+						try {
+							await sqlite.execute(
+								"INSERT INTO crsql_changes VALUES (?, ?, ?, ?, ?, ?, unhex(?), ?, ?)",
+								[
+									c.table,
+									c.pk,
+									c.cid,
+									c.val as string | number | null,
+									c.col_version,
+									c.db_version,
+									c.site_id,
+									c.cl,
+									c.seq,
+								],
+							);
+						} catch {
+							// ignore individual change errors
+						}
+					}
+
+					// Send our own changes
+					const result = await sqlite.execute(
+						`SELECT "table" as tbl, pk, cid, val, col_version, db_version, hex(site_id) as site_id, cl, seq FROM crsql_changes WHERE site_id = crsql_site_id()`,
+					);
+					const changes = (result.rows ?? []).map((r) => {
+						const row = r as {
+							tbl: string;
+							pk: string;
+							cid: string;
+							val: unknown;
+							col_version: number;
+							db_version: number;
+							site_id: string;
+							cl: number;
+							seq: number;
+						};
+						return {
+							table: row.tbl,
+							pk: row.pk,
+							cid: row.cid,
+							val: row.val,
+							col_version: row.col_version,
+							db_version: row.db_version,
+							site_id: row.site_id,
+							cl: row.cl,
+							seq: row.seq,
+						};
+					});
+
+					ws.send(
+						JSON.stringify({
+							type: "sync-changes",
+							deviceId: deviceInfo.deviceId,
+							changes,
+						}),
+					);
+				}
+
+				if (msg.type === "sync-done") {
+					ws.close();
+					globalSuccessToast(t("sync.toast.syncComplete"));
+					await queryClient.invalidateQueries();
+					setIsSyncing(false);
+					resolve();
+				}
+			};
+
+			ws.onerror = () => {
+				globalErrorToast(t("sync.toast.syncFailed"));
+				setIsSyncing(false);
+				resolve();
+			};
+
+			ws.onclose = () => {
+				setIsSyncing(false);
+			};
+		});
+	}
+
 	const isPairingDialogOpen =
 		pairingState.status === "waiting_sas" ||
 		pairingState.status === "confirming" ||
@@ -379,6 +504,38 @@ export default function SyncScreen() {
 							))}
 						</View>
 					)}
+				</View>
+			</View>
+
+			<Separator />
+
+			{/* Sync with Desktop */}
+			<View className="flex flex-col gap-3">
+				<Text className="font-medium text-sm">{t("sync.syncWithDesktop")}</Text>
+				<Text className="text-muted-foreground text-xs">
+					{t("sync.syncDescription")}
+				</Text>
+				<View className="flex flex-row items-center gap-2">
+					<Input
+						className="flex-1"
+						placeholder="192.168.1.x"
+						value={syncHost}
+						onChangeText={setSyncHost}
+						autoCapitalize="none"
+						autoCorrect={false}
+						keyboardType="url"
+						editable={!isSyncing}
+					/>
+					<Button onPress={handleSync} disabled={!syncHost.trim() || isSyncing}>
+						{isSyncing ? (
+							<ActivityIndicator size="small" color="white" />
+						) : (
+							<RefreshCw size={16} color="white" />
+						)}
+						<Text className="text-primary-foreground text-sm">
+							{t("sync.syncNow")}
+						</Text>
+					</Button>
 				</View>
 			</View>
 

@@ -16,6 +16,8 @@ declare global {
 			initiatePair: (peer: { host: string; port: number }) => Promise<void>;
 			confirmPair: (deviceId: string) => Promise<void>;
 			rejectPair: (deviceId: string, reason?: string) => Promise<void>;
+			syncWithPeer: (peer: { host: string; port: number }) => Promise<void>;
+			onSyncComplete: (callback: (info: { deviceId: string }) => void) => void;
 			onPeerDiscovered: (
 				callback: (peer: {
 					deviceId: string;
@@ -77,6 +79,28 @@ declare global {
 				filename?: string;
 				error?: string;
 			}>;
+		};
+		electronUpdater: {
+			checkForUpdates: () => void;
+			onUpdateAvailable: (
+				callback: (info: {
+					version: string;
+					releaseNotes: string | null;
+				}) => void,
+			) => void;
+			onUpdateNotAvailable: (callback: () => void) => void;
+			onDownloadProgress: (
+				callback: (progress: {
+					percent: number;
+					transferred: number;
+					total: number;
+				}) => void,
+			) => void;
+			onUpdateDownloaded: (callback: () => void) => void;
+			onUpdateError: (callback: (message: string) => void) => void;
+			installUpdate: () => void;
+			setAllowPrerelease: (allow: boolean) => Promise<void>;
+			removeAllListeners: (channel: string) => void;
 		};
 	}
 }

@@ -64,6 +64,13 @@ if (!("electronSync" in window)) {
 		rejectPair: (deviceId: string, reason?: string): Promise<void> =>
 			ipcRenderer.invoke("sync:reject-pair", { deviceId, reason }),
 
+		syncWithPeer: (peer: { host: string; port: number }): Promise<void> =>
+			ipcRenderer.invoke("sync:sync-with-peer", peer),
+
+		onSyncComplete: (callback: (info: { deviceId: string }) => void) => {
+			ipcRenderer.on("sync:sync-complete", (_event, info) => callback(info));
+		},
+
 		onPeerDiscovered: (
 			callback: (peer: {
 				deviceId: string;
@@ -161,6 +168,8 @@ if (!("electronUpdater" in window)) {
 		installUpdate: () => {
 			ipcRenderer.send("install-update");
 		},
+		setAllowPrerelease: (allow: boolean): Promise<void> =>
+			ipcRenderer.invoke("updater:set-prerelease", { allow }),
 		removeAllListeners: (channel: string) => {
 			ipcRenderer.removeAllListeners(channel);
 		},
