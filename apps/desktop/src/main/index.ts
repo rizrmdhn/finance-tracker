@@ -10,6 +10,7 @@ import {
 	addTrustedPeer,
 	getTrustedPeerByDeviceId,
 	processRecurrences,
+	updateSyncPeerHost,
 } from "@finance-tracker/queries";
 import type {
 	CRChange,
@@ -419,6 +420,7 @@ function setupSyncServer(
 	ipcMain.handle(
 		"sync:sync-with-peer",
 		(_event, { host, port }: { host: string; port: number }) => {
+			const hostStr = `${host}:${port}`;
 			return new Promise<void>((resolve, reject) => {
 				const ws = new WebSocket(`ws://${host}:${port}`);
 
@@ -456,6 +458,9 @@ function setupSyncServer(
 								}
 							});
 							applyAll(syncChanges.changes);
+
+							// Store the host so trusted device sync button works next time
+							updateSyncPeerHost(db, syncChanges.deviceId, hostStr).catch(() => {});
 
 							// Now send our changes back
 							const changes = sqlite
@@ -628,9 +633,13 @@ app.whenReady().then(() => {
 		? path.join(__dirname, "../../../../packages/db/migrations")
 		: path.join(process.resourcesPath, "migrations");
 
+	// PRAGMA foreign_keys is a no-op inside a transaction, so we must disable
+	// FK enforcement on the connection BEFORE Drizzle starts its migration transaction.
+	sqlite.pragma("foreign_keys = OFF");
 	migrate(db, { migrationsFolder });
+	sqlite.pragma("foreign_keys = ON");
 
-	// Load cr-sqlite extension and register all user data tables as CRDTs
+	// Load cr-sqlite extension and register all user data tables as CRDTs.
 	try {
 		sqlite.loadExtension(extensionPath);
 		for (const table of CRDT_TABLES) {

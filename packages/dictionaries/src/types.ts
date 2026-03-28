@@ -415,6 +415,16 @@ export interface Dictionary {
 		paired: string;
 		syncWithDesktop: string;
 		syncDescription: string;
+		connectToDevice: string;
+		connectToDeviceDescription: string;
+		hostSyncSession: string;
+		hostSyncDescription: string;
+		yourIpAddress: string;
+		startHosting: string;
+		stopHosting: string;
+		hosting: string;
+		syncEnterIp: string;
+		syncEnterIpDescription: string;
 		toast: {
 			paired: string;
 			pairFailed: string;

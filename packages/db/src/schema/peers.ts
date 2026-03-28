@@ -1,4 +1,5 @@
 import { createId } from "@paralleldrive/cuid2";
+import { relations } from "drizzle-orm";
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 /** Devices we've successfully paired with (our trust store) */
@@ -19,6 +20,14 @@ export const syncPeers = sqliteTable("sync_peers", {
 		.primaryKey()
 		.references(() => trustedPeers.deviceId, { onDelete: "cascade" }),
 	siteId: text("site_id"), // remote crsql_site_id (hex) — set after first sync
+	lastKnownHost: text("last_known_host"), // "ip:port" — updated after each successful sync
 	lastSyncedVersion: integer("last_synced_version").notNull().default(0),
 	lastSeenAt: integer("last_seen_at"),
 });
+
+export const trustedPeersRelations = relations(trustedPeers, ({ one }) => ({
+	syncPeer: one(syncPeers, {
+		fields: [trustedPeers.deviceId],
+		references: [syncPeers.deviceId],
+	}),
+}));

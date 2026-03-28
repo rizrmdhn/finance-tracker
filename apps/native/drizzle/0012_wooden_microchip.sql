@@ -1,0 +1,1 @@
+ALTER TABLE `sync_peers` ADD `last_known_host` text;

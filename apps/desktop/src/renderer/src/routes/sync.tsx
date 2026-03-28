@@ -8,6 +8,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@finance-tracker/ui/components/dialog";
+import { Input } from "@finance-tracker/ui/components/input";
 import { Separator } from "@finance-tracker/ui/components/separator";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
@@ -49,6 +50,10 @@ type PairingDialogState =
 			sasCode: string;
 	  };
 
+type SyncIpDialogState =
+	| { open: false }
+	| { open: true; deviceId: string; deviceName: string };
+
 function RouteComponent() {
 	const { t } = useTranslation();
 	const queryClient = useQueryClient();
@@ -65,6 +70,10 @@ function RouteComponent() {
 	});
 	const [pairingDeviceId, setPairingDeviceId] = useState<string | null>(null);
 	const [syncingDeviceId, setSyncingDeviceId] = useState<string | null>(null);
+	const [syncIpDialog, setSyncIpDialog] = useState<SyncIpDialogState>({
+		open: false,
+	});
+	const [syncIpInput, setSyncIpInput] = useState("");
 
 	const { data: trustedPeers = [], isLoading } = useQuery(
 		trpc.peer.list.queryOptions(),
@@ -80,12 +89,14 @@ function RouteComponent() {
 		}),
 	);
 
-	// Load device info on mount
+	const updateHostMutation = useMutation(
+		trpc.peer.updateHost.mutationOptions(),
+	);
+
 	useEffect(() => {
 		window.electronSync?.getDeviceInfo().then(setDeviceInfo);
 	}, []);
 
-	// Register sync event listeners
 	useEffect(() => {
 		if (!window.electronSync) return;
 
@@ -188,10 +199,77 @@ function RouteComponent() {
 		setPairingDeviceId(null);
 	}
 
-	async function handleSync(peer: DiscoveredPeer) {
+	async function handleSyncNearby(peer: DiscoveredPeer) {
 		setSyncingDeviceId(peer.deviceId);
 		try {
-			await window.electronSync?.syncWithPeer({ host: peer.host, port: peer.port });
+			await window.electronSync?.syncWithPeer({
+				host: peer.host,
+				port: peer.port,
+			});
+			updateHostMutation.mutate({
+				deviceId: peer.deviceId,
+				host: `${peer.host}:${peer.port}`,
+			});
+			await queryClient.invalidateQueries();
+			globalSuccessToast(t("sync.toast.syncComplete"));
+		} catch {
+			globalErrorToast(t("sync.toast.syncFailed"));
+		} finally {
+			setSyncingDeviceId(null);
+		}
+	}
+
+	async function handleSyncTrusted(peer: (typeof trustedPeers)[number]) {
+		const storedHost = peer.syncPeer?.lastKnownHost;
+		// Also check if this peer is currently visible via mDNS
+		const discovered = discoveredPeers.get(peer.deviceId);
+		const host =
+			storedHost ??
+			(discovered ? `${discovered.host}:${discovered.port}` : null);
+
+		if (!host) {
+			setSyncIpDialog({
+				open: true,
+				deviceId: peer.deviceId,
+				deviceName: peer.deviceName,
+			});
+			return;
+		}
+
+		const [ip, portStr] = host.split(":");
+		const port = portStr ? Number.parseInt(portStr, 10) : 47821;
+
+		setSyncingDeviceId(peer.deviceId);
+		try {
+			await window.electronSync?.syncWithPeer({ host: ip, port });
+			updateHostMutation.mutate({ deviceId: peer.deviceId, host });
+			await queryClient.invalidateQueries();
+			globalSuccessToast(t("sync.toast.syncComplete"));
+		} catch {
+			globalErrorToast(t("sync.toast.syncFailed"));
+		} finally {
+			setSyncingDeviceId(null);
+		}
+	}
+
+	async function handleSyncWithIp() {
+		if (!syncIpDialog.open || !syncIpInput.trim()) return;
+		const hostInput = syncIpInput.trim();
+		const [ip, portStr] = hostInput.includes(":")
+			? hostInput.split(":")
+			: [hostInput, "47821"];
+		const port = Number.parseInt(portStr, 10);
+		const host = `${ip}:${port}`;
+		const capturedDeviceId = syncIpDialog.deviceId;
+
+		setSyncingDeviceId(capturedDeviceId);
+		setSyncIpDialog({ open: false });
+		setSyncIpInput("");
+
+		try {
+			await window.electronSync?.syncWithPeer({ host: ip, port });
+			updateHostMutation.mutate({ deviceId: capturedDeviceId, host });
+			await queryClient.invalidateQueries();
 			globalSuccessToast(t("sync.toast.syncComplete"));
 		} catch {
 			globalErrorToast(t("sync.toast.syncFailed"));
@@ -262,22 +340,40 @@ function RouteComponent() {
 									<span className="text-muted-foreground text-xs">
 										{t("sync.pairedOn")}{" "}
 										{new Date(peer.pairedAt).toLocaleDateString()}
+										{peer.syncPeer?.lastKnownHost && (
+											<span className="ml-2 font-mono">
+												{peer.syncPeer.lastKnownHost}
+											</span>
+										)}
 									</span>
 								</div>
-								<Badge variant="outline" className="mr-2 ml-auto">
-									{t(`sync.${peer.platform}`)}
-								</Badge>
-								<Button
-									variant="ghost"
-									size="sm"
-									onClick={() =>
-										removePeerMutation.mutate({ deviceId: peer.deviceId })
-									}
-									disabled={removePeerMutation.isPending}
-								>
-									<Unplug className="size-4" />
-									{t("sync.unpair")}
-								</Button>
+								<div className="ml-auto flex items-center gap-2">
+									<Badge variant="outline">{t(`sync.${peer.platform}`)}</Badge>
+									<Button
+										size="sm"
+										variant="outline"
+										onClick={() => handleSyncTrusted(peer)}
+										disabled={syncingDeviceId === peer.deviceId}
+									>
+										{syncingDeviceId === peer.deviceId ? (
+											<Loader2 className="size-4 animate-spin" />
+										) : (
+											<RefreshCw className="size-4" />
+										)}
+										{t("sync.syncNow")}
+									</Button>
+									<Button
+										variant="ghost"
+										size="sm"
+										onClick={() =>
+											removePeerMutation.mutate({ deviceId: peer.deviceId })
+										}
+										disabled={removePeerMutation.isPending}
+									>
+										<Unplug className="size-4" />
+										{t("sync.unpair")}
+									</Button>
+								</div>
 							</div>
 						))}
 					</div>
@@ -286,7 +382,7 @@ function RouteComponent() {
 
 			<Separator />
 
-			{/* Nearby Devices */}
+			{/* Nearby Devices (for discovery & pairing new devices) */}
 			<section className="flex flex-col gap-3">
 				<div className="flex items-center justify-between">
 					<h2 className="font-medium text-sm">{t("sync.nearbyDevices")}</h2>
@@ -349,7 +445,7 @@ function RouteComponent() {
 										<Button
 											size="sm"
 											variant="outline"
-											onClick={() => handleSync(peer)}
+											onClick={() => handleSyncNearby(peer)}
 											disabled={syncingDeviceId === peer.deviceId}
 										>
 											{syncingDeviceId === peer.deviceId ? (
@@ -383,9 +479,9 @@ function RouteComponent() {
 				open={pairingDialog.open}
 				onOpenChange={(open) => {
 					if (!open) {
-						if (pairingDialog.open && pairingDialog.direction === "incoming") {
+						if (pairingDialog.open && pairingDialog.direction === "incoming")
 							handleRejectPair();
-						} else {
+						else {
 							setPairingDialog({ open: false });
 							setPairingDeviceId(null);
 						}
@@ -407,8 +503,8 @@ function RouteComponent() {
 							</p>
 							<div className="flex gap-2">
 								{pairingDialog.sasCode.split("").map((digit, i) => (
+									// index key is fine here — static 6-digit code, never reordered
 									<div
-										// index key is fine here — static 6-digit code, never reordered
 										key={i}
 										className="flex h-14 w-10 items-center justify-center rounded-lg border-2 font-bold font-mono text-2xl"
 									>
@@ -447,6 +543,45 @@ function RouteComponent() {
 							</p>
 						</DialogFooter>
 					)}
+				</DialogContent>
+			</Dialog>
+
+			{/* Sync IP Dialog (for trusted devices without stored host) */}
+			<Dialog
+				open={syncIpDialog.open}
+				onOpenChange={(open) => {
+					if (!open) {
+						setSyncIpDialog({ open: false });
+						setSyncIpInput("");
+					}
+				}}
+			>
+				<DialogContent className="max-w-sm">
+					<DialogHeader>
+						<DialogTitle>{t("sync.syncEnterIp")}</DialogTitle>
+						<DialogDescription>
+							{t("sync.syncEnterIpDescription")}
+						</DialogDescription>
+					</DialogHeader>
+					<Input
+						placeholder="192.168.1.x"
+						value={syncIpInput}
+						onChange={(e) => setSyncIpInput(e.target.value)}
+					/>
+					<DialogFooter>
+						<Button
+							variant="outline"
+							onClick={() => {
+								setSyncIpDialog({ open: false });
+								setSyncIpInput("");
+							}}
+						>
+							{t("common.cancel")}
+						</Button>
+						<Button onClick={handleSyncWithIp} disabled={!syncIpInput.trim()}>
+							{t("sync.syncNow")}
+						</Button>
+					</DialogFooter>
 				</DialogContent>
 			</Dialog>
 		</div>

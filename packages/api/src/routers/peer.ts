@@ -3,6 +3,7 @@ import {
 	getTrustedPeerByDeviceId,
 	getTrustedPeers,
 	removeTrustedPeer,
+	updateSyncPeerHost,
 } from "@finance-tracker/queries";
 import { tryCatchAsync } from "@finance-tracker/utils";
 import { z } from "zod";
@@ -48,6 +49,16 @@ export const peerRouter = createTRPCRouter({
 		.mutation(async ({ ctx, input }) => {
 			const [data, err] = await tryCatchAsync(() =>
 				removeTrustedPeer(ctx.db, input.deviceId),
+			);
+			if (err) throw toTRPCError(err);
+			return data;
+		}),
+
+	updateHost: publicProcedure
+		.input(z.object({ deviceId: z.string(), host: z.string() }))
+		.mutation(async ({ ctx, input }) => {
+			const [data, err] = await tryCatchAsync(() =>
+				updateSyncPeerHost(ctx.db, input.deviceId, input.host),
 			);
 			if (err) throw toTRPCError(err);
 			return data;

@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 export async function getTrustedPeers(db: AnyDatabase) {
 	return await db.query.trustedPeers.findMany({
 		orderBy: (t, { desc }) => [desc(t.pairedAt)],
+		with: { syncPeer: true },
 	});
 }
 
@@ -63,6 +64,18 @@ export async function updateSyncPeerLastSeen(
 	await db
 		.update(syncPeers)
 		.set({ lastSeenAt: Date.now() })
+		.where(eq(syncPeers.deviceId, deviceId))
+		.run();
+}
+
+export async function updateSyncPeerHost(
+	db: AnyDatabase,
+	deviceId: string,
+	host: string,
+) {
+	await db
+		.update(syncPeers)
+		.set({ lastKnownHost: host, lastSeenAt: Date.now() })
 		.where(eq(syncPeers.deviceId, deviceId))
 		.run();
 }

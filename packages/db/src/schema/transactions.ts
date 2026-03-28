@@ -20,15 +20,9 @@ export const transactions = sqliteTable(
 			.$default(() => createId()),
 		amount: real("amount").notNull().default(0),
 		note: text("note"),
-		categoryId: text("category_id")
-			.references(() => categories.id)
-			.notNull()
-			.default(""),
-		accountId: text("account_id")
-			.references(() => accounts.id)
-			.notNull()
-			.default(""),
-		toAccountId: text("to_account_id").references(() => accounts.id),
+		categoryId: text("category_id").notNull().default(""),
+		accountId: text("account_id").notNull().default(""),
+		toAccountId: text("to_account_id"),
 		tags: text("tags"),
 		date: integer("date").notNull().default(0),
 		...timestamp,

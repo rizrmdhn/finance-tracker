@@ -12,7 +12,6 @@ export const recurrences = sqliteTable(
 			.primaryKey()
 			.$default(() => createId()),
 		templateTransactionId: text("template_transaction_id")
-			.references(() => transactions.id)
 			.notNull()
 			.default(""),
 		frequency: text("frequency", {

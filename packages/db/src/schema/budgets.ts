@@ -17,10 +17,7 @@ export const budgets = sqliteTable(
 		id: text("id")
 			.primaryKey()
 			.$default(() => createId()),
-		categoryId: text("category_id")
-			.references(() => categories.id)
-			.notNull()
-			.default(""),
+		categoryId: text("category_id").notNull().default(""),
 		amount: real("amount").notNull().default(0),
 		currency: text("currency", { enum: SUPPORTED_CURRENCIES })
 			.notNull()
