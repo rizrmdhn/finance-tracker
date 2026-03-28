@@ -12,6 +12,7 @@ import * as SecureStore from "expo-secure-store";
 import {
 	Monitor,
 	RefreshCw,
+	ScanLine,
 	Server,
 	Smartphone,
 	Unplug,
@@ -20,6 +21,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, ScrollView, View } from "react-native";
+import Zeroconf from "react-native-zeroconf";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -61,6 +63,22 @@ async function getOrCreateDeviceIdentity(): Promise<{
 }
 
 // ── Types ────────────────────────────────────────────────────────────────────
+
+// ── Discovered mDNS service ───────────────────────────────────────────────────
+
+interface DiscoveredService {
+	deviceId: string;
+	deviceName: string;
+	platform: string;
+	host: string;
+	port: number;
+}
+
+// ── Zeroconf singleton ────────────────────────────────────────────────────────
+
+const zeroconf = new Zeroconf();
+
+// ── Pairing state ─────────────────────────────────────────────────────────────
 
 type PairingState =
 	| { status: "idle" }
@@ -203,6 +221,8 @@ export default function SyncScreen() {
 	>({ open: false });
 	const [syncIpInput, setSyncIpInput] = useState("");
 	const [isHosting, setIsHosting] = useState(false);
+	const [isScanning, setIsScanning] = useState(false);
+	const [nearbyDevices, setNearbyDevices] = useState<DiscoveredService[]>([]);
 
 	const wsRef = useRef<WebSocket | null>(null);
 	const keypairRef = useRef<{ privateKey: string; publicKey: string } | null>(
@@ -246,16 +266,15 @@ export default function SyncScreen() {
 		return () => {
 			wsRef.current?.close();
 			serverRef.current?.stop();
+			zeroconf.stop();
+			zeroconf.removeAllListeners();
 		};
 	}, []);
 
 	// ── Pairing (as client, connect by IP) ────────────────────────────────
 
-	function handleConnect() {
-		if (!pairHost.trim() || !deviceInfo) return;
-		const url = pairHost.trim().startsWith("ws://")
-			? pairHost.trim()
-			: `ws://${pairHost.trim()}:47821`;
+	function initiatePair(url: string) {
+		if (!deviceInfo) return;
 
 		setPairingState({ status: "connecting" });
 		const keypair = generateEphemeralKeypair();
@@ -313,14 +332,13 @@ export default function SyncScreen() {
 						platform: state.peerPlatform === "desktop" ? "desktop" : "mobile",
 						publicKey: keypairRef.current?.publicKey ?? "",
 					});
-					// Store the host so we can sync directly later
-					const host = pairHost
-						.trim()
+					// Derive a plain host string from the ws url for storing
+					const rawHost = url
 						.replace(/^ws:\/\//, "")
 						.replace(/:47821$/, "");
 					updateHostMutation.mutate({
 						deviceId: state.peerId,
-						host: `${host}:47821`,
+						host: `${rawHost}:47821`,
 					});
 				}
 				setPairingState({ status: "done" });
@@ -342,6 +360,14 @@ export default function SyncScreen() {
 		ws.onclose = () => {
 			wsRef.current = null;
 		};
+	}
+
+	function handleConnect() {
+		if (!pairHost.trim() || !deviceInfo) return;
+		const url = pairHost.trim().startsWith("ws://")
+			? pairHost.trim()
+			: `ws://${pairHost.trim()}:47821`;
+		initiatePair(url);
 	}
 
 	function handleConfirmPair() {
@@ -431,6 +457,57 @@ export default function SyncScreen() {
 		} finally {
 			setSyncingDeviceId(null);
 		}
+	}
+
+	// ── mDNS Nearby Devices ───────────────────────────────────────────────
+
+	function handleStartScanning() {
+		if (!deviceInfo) return;
+		setNearbyDevices([]);
+		setIsScanning(true);
+
+		zeroconf.removeAllListeners();
+
+		zeroconf.on("resolved", (service) => {
+			const txt = service.txt ?? {};
+			const resolvedDeviceId = txt.deviceId ?? "";
+			// Filter out self
+			if (resolvedDeviceId === deviceInfo.deviceId) return;
+			const ip = service.addresses[0] ?? service.host;
+			const discovered: DiscoveredService = {
+				deviceId: resolvedDeviceId,
+				deviceName: txt.deviceName ?? service.name,
+				platform: txt.platform ?? "unknown",
+				host: ip,
+				port: service.port,
+			};
+			setNearbyDevices((prev) => {
+				const without = prev.filter((d) => d.deviceId !== resolvedDeviceId);
+				return [...without, discovered];
+			});
+		});
+
+		zeroconf.on("removed", (service) => {
+			const removedId = service.txt?.deviceId ?? "";
+			if (removedId) {
+				setNearbyDevices((prev) =>
+					prev.filter((d) => d.deviceId !== removedId),
+				);
+			}
+		});
+
+		zeroconf.scan("financetracker", "tcp", "local.");
+	}
+
+	function handleStopScanning() {
+		zeroconf.stop();
+		zeroconf.removeAllListeners();
+		setIsScanning(false);
+	}
+
+	function handlePairDiscovered(service: DiscoveredService) {
+		const url = `ws://${service.host}:${service.port}`;
+		initiatePair(url);
 	}
 
 	// ── Hosting (act as WS server) ────────────────────────────────────────
@@ -589,9 +666,29 @@ export default function SyncScreen() {
 
 		serverRef.current = server;
 		setIsHosting(true);
+
+		// Advertise over mDNS so other Finance Tracker devices can discover this device
+		const serviceName = `${deviceInfo.deviceName}-${deviceInfo.deviceId.slice(0, 8)}`;
+		zeroconf.publishService(
+			"financetracker",
+			"tcp",
+			"local.",
+			serviceName,
+			47821,
+			{
+				deviceId: deviceInfo.deviceId,
+				deviceName: deviceInfo.deviceName,
+				platform: "mobile",
+				version: "1.5.0",
+			},
+		);
 	}
 
 	function handleStopHosting() {
+		if (deviceInfo) {
+			const serviceName = `${deviceInfo.deviceName}-${deviceInfo.deviceId.slice(0, 8)}`;
+			zeroconf.unpublishService(serviceName);
+		}
 		serverRef.current?.stop();
 		serverRef.current = null;
 		setIsHosting(false);
@@ -692,6 +789,111 @@ export default function SyncScreen() {
 									</View>
 								</View>
 							))}
+						</View>
+					)}
+				</View>
+
+				<Separator />
+
+				{/* Nearby Devices */}
+				<View className="flex flex-col gap-3">
+					<View className="flex flex-row items-center justify-between">
+						<Text className="font-medium text-sm">
+							{t("sync.nearbyDevices")}
+						</Text>
+						<Button
+							size="sm"
+							variant={isScanning ? "destructive" : "outline"}
+							onPress={isScanning ? handleStopScanning : handleStartScanning}
+						>
+							<ScanLine
+								size={14}
+								color={isScanning ? "white" : mutedForeground}
+							/>
+							<Text
+								className={
+									isScanning
+										? "text-destructive-foreground text-sm"
+										: "text-sm"
+								}
+							>
+								{isScanning
+									? t("sync.stopScanning")
+									: t("sync.startScanning")}
+							</Text>
+						</Button>
+					</View>
+					{isScanning && nearbyDevices.length === 0 && (
+						<View className="flex flex-row items-center gap-2">
+							<ActivityIndicator size="small" />
+							<Text className="text-muted-foreground text-sm">
+								{t("sync.scanningForDevices")}
+							</Text>
+						</View>
+					)}
+					{!isScanning && nearbyDevices.length === 0 && (
+						<Text className="text-muted-foreground text-sm">
+							{t("sync.noNearbyDevices")}
+						</Text>
+					)}
+					{nearbyDevices.length > 0 && (
+						<View className="flex flex-col gap-2">
+							{nearbyDevices.map((service) => {
+								const trusted = trustedPeers.find(
+									(p) => p.deviceId === service.deviceId,
+								);
+								return (
+									<View
+										key={service.deviceId}
+										className="flex flex-row items-center gap-3 rounded-lg border border-border p-4"
+									>
+										{service.platform === "desktop" ? (
+											<Monitor size={20} color={mutedForeground} />
+										) : (
+											<Smartphone size={20} color={mutedForeground} />
+										)}
+										<View className="flex flex-1 flex-col gap-0.5">
+											<Text className="font-medium text-sm">
+												{service.deviceName}
+											</Text>
+											<Text className="font-mono text-muted-foreground text-xs">
+												{service.host}:{service.port}
+											</Text>
+										</View>
+										{trusted ? (
+											<Button
+												size="sm"
+												variant="outline"
+												onPress={() =>
+													doSync(
+														service.deviceId,
+														`${service.host}:${service.port}`,
+													)
+												}
+												disabled={syncingDeviceId === service.deviceId}
+											>
+												{syncingDeviceId === service.deviceId ? (
+													<ActivityIndicator size="small" />
+												) : (
+													<RefreshCw size={14} color={mutedForeground} />
+												)}
+												<Text className="text-sm">{t("sync.syncNow")}</Text>
+											</Button>
+										) : (
+											<Button
+												size="sm"
+												onPress={() => handlePairDiscovered(service)}
+												disabled={pairingState.status !== "idle"}
+											>
+												<Wifi size={14} color="white" />
+												<Text className="text-primary-foreground text-sm">
+													{t("sync.pair")}
+												</Text>
+											</Button>
+										)}
+									</View>
+								);
+							})}
 						</View>
 					)}
 				</View>
