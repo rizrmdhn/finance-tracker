@@ -3,6 +3,7 @@ import { appSettingsRouter } from "./routers/app-settings";
 import { budgetRouter } from "./routers/budget";
 import { categoryRouter } from "./routers/category";
 import { exchangeRateRouter } from "./routers/exchange-rate";
+import { peerRouter } from "./routers/peer";
 import { recurrenceRouter } from "./routers/recurrence";
 import { transactionRouter } from "./routers/transaction";
 import { createCallerFactory, createTRPCRouter } from "./trpc";
@@ -20,6 +21,7 @@ export const appRouter = createTRPCRouter({
 	budget: budgetRouter,
 	recurrence: recurrenceRouter,
 	exchangeRate: exchangeRateRouter,
+	peer: peerRouter,
 });
 
 // export type definition of API

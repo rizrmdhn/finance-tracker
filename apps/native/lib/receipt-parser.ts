@@ -19,8 +19,8 @@ const AMOUNT_PATTERN =
 
 // Date candidates — find substrings that look like dates
 const DATE_CANDIDATE_PATTERNS = [
-	/\d{2}[/-]\d{2}[/\-]\d{4}/, // DD/MM/YYYY or DD-MM-YYYY
-	/\d{4}[/-]\d{2}[/\-]\d{2}/, // YYYY-MM-DD
+	/\d{2}[/-]\d{2}[/-]\d{4}/, // DD/MM/YYYY or DD-MM-YYYY
+	/\d{4}[/-]\d{2}[/-]\d{2}/, // YYYY-MM-DD
 	/\d{1,2}\s+\w{3,}\s+\d{4}/, // DD Mon YYYY (English or Indonesian)
 ];
 

@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TrashRouteImport } from './routes/trash'
 import { Route as TransactionsRouteImport } from './routes/transactions'
+import { Route as SyncRouteImport } from './routes/sync'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as RecurringRouteImport } from './routes/recurring'
 import { Route as CategoriesRouteImport } from './routes/categories'
@@ -28,6 +29,11 @@ const TrashRoute = TrashRouteImport.update({
 const TransactionsRoute = TransactionsRouteImport.update({
   id: '/transactions',
   path: '/transactions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SyncRoute = SyncRouteImport.update({
+  id: '/sync',
+  path: '/sync',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -78,6 +84,7 @@ export interface FileRoutesByFullPath {
   '/categories': typeof CategoriesRoute
   '/recurring': typeof RecurringRoute
   '/settings': typeof SettingsRoute
+  '/sync': typeof SyncRoute
   '/transactions': typeof TransactionsRoute
   '/trash': typeof TrashRouteWithChildren
   '/trash/categories': typeof TrashCategoriesRoute
@@ -90,6 +97,7 @@ export interface FileRoutesByTo {
   '/categories': typeof CategoriesRoute
   '/recurring': typeof RecurringRoute
   '/settings': typeof SettingsRoute
+  '/sync': typeof SyncRoute
   '/transactions': typeof TransactionsRoute
   '/trash': typeof TrashRouteWithChildren
   '/trash/categories': typeof TrashCategoriesRoute
@@ -103,6 +111,7 @@ export interface FileRoutesById {
   '/categories': typeof CategoriesRoute
   '/recurring': typeof RecurringRoute
   '/settings': typeof SettingsRoute
+  '/sync': typeof SyncRoute
   '/transactions': typeof TransactionsRoute
   '/trash': typeof TrashRouteWithChildren
   '/trash/categories': typeof TrashCategoriesRoute
@@ -117,6 +126,7 @@ export interface FileRouteTypes {
     | '/categories'
     | '/recurring'
     | '/settings'
+    | '/sync'
     | '/transactions'
     | '/trash'
     | '/trash/categories'
@@ -129,6 +139,7 @@ export interface FileRouteTypes {
     | '/categories'
     | '/recurring'
     | '/settings'
+    | '/sync'
     | '/transactions'
     | '/trash'
     | '/trash/categories'
@@ -141,6 +152,7 @@ export interface FileRouteTypes {
     | '/categories'
     | '/recurring'
     | '/settings'
+    | '/sync'
     | '/transactions'
     | '/trash'
     | '/trash/categories'
@@ -154,6 +166,7 @@ export interface RootRouteChildren {
   CategoriesRoute: typeof CategoriesRoute
   RecurringRoute: typeof RecurringRoute
   SettingsRoute: typeof SettingsRoute
+  SyncRoute: typeof SyncRoute
   TransactionsRoute: typeof TransactionsRoute
   TrashRoute: typeof TrashRouteWithChildren
 }
@@ -172,6 +185,13 @@ declare module '@tanstack/react-router' {
       path: '/transactions'
       fullPath: '/transactions'
       preLoaderRoute: typeof TransactionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sync': {
+      id: '/sync'
+      path: '/sync'
+      fullPath: '/sync'
+      preLoaderRoute: typeof SyncRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -252,6 +272,7 @@ const rootRouteChildren: RootRouteChildren = {
   CategoriesRoute: CategoriesRoute,
   RecurringRoute: RecurringRoute,
   SettingsRoute: SettingsRoute,
+  SyncRoute: SyncRoute,
   TransactionsRoute: TransactionsRoute,
   TrashRoute: TrashRouteWithChildren,
 }

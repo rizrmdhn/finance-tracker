@@ -377,4 +377,43 @@ export interface Dictionary {
 		scanAgain: string;
 		notDetected: string;
 	};
+	sync: {
+		title: string;
+		description: string;
+		heading: string;
+		subheading: string;
+		thisDevice: string;
+		trustedDevices: string;
+		noTrustedDevices: string;
+		noTrustedDevicesDescription: string;
+		nearbyDevices: string;
+		scanningForDevices: string;
+		noNearbyDevices: string;
+		startScanning: string;
+		stopScanning: string;
+		pair: string;
+		unpair: string;
+		desktop: string;
+		mobile: string;
+		lastSeen: string;
+		never: string;
+		pairedOn: string;
+		confirmPairing: string;
+		confirmPairingDescription: string;
+		verificationCode: string;
+		verificationCodeDescription: string;
+		confirm: string;
+		reject: string;
+		pairingInProgress: string;
+		connectToDesktop: string;
+		connectDescription: string;
+		connect: string;
+		toast: {
+			paired: string;
+			pairFailed: string;
+			unpaired: string;
+			unpairFailed: string;
+			pairRejected: string;
+		};
+	};
 }

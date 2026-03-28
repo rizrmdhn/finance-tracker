@@ -4,6 +4,7 @@ export * from "./budget";
 export * from "./category";
 export * from "./errors";
 export * from "./exchange-rate";
+export * from "./peer";
 export * from "./recurrence";
 export * from "./recurrence-job";
 export * from "./transaction";

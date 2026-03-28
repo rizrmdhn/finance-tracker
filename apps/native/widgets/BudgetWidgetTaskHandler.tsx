@@ -1,6 +1,9 @@
 "use no memo";
 
-import { getAppSettingByKey, getBudgetsWithSpent } from "@finance-tracker/queries";
+import {
+	getAppSettingByKey,
+	getBudgetsWithSpent,
+} from "@finance-tracker/queries";
 import type { WidgetTaskHandlerProps } from "react-native-android-widget";
 import { db } from "../lib/db";
 import { getCurrentMonthRange } from "../lib/utils";

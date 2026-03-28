@@ -220,7 +220,11 @@ export function ReceiptScanner({
 						<Text>{t("receiptScanner.confirmAndFill")}</Text>
 					</Button>
 
-					<Button variant="outline" onPress={resetToIdle} className="flex-row gap-2">
+					<Button
+						variant="outline"
+						onPress={resetToIdle}
+						className="flex-row gap-2"
+					>
 						<Icon as={RotateCcw} className="size-4 text-foreground" />
 						<Text>{t("receiptScanner.scanAgain")}</Text>
 					</Button>

@@ -2,9 +2,10 @@ import "@/global.css";
 import "@/lib/i18n";
 import { useReactQueryDevTools } from "@dev-plugins/react-query";
 import { seedDatabase } from "@finance-tracker/db";
+import { CRDT_TABLES } from "@finance-tracker/constants";
 import { PortalHost } from "@rn-primitives/portal";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
-import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
+import { useMigrations } from "drizzle-orm/op-sqlite/migrator";
 import { Stack } from "expo-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -17,14 +18,20 @@ import { OnboardingScreen } from "@/components/onboarding-screen";
 import { SplashScreen } from "@/components/splash-screen";
 import { Text } from "@/components/ui/text";
 import { AppThemeProvider } from "@/contexts/app-theme-context";
-import migrations from "@/drizzle/migrations";
+import bundledMigrations from "@/drizzle/migrations";
 import { useNavigationPersistence } from "@/hooks/use-navigation-persistence";
-import { db } from "@/lib/db";
+import { db, sqlite } from "@/lib/db";
 import { queryClient, trpc } from "@/lib/trpc";
 
 export const unstable_settings = {
 	initialRouteName: "(drawer)",
 };
+
+async function setupCRDT() {
+	for (const table of CRDT_TABLES) {
+		await sqlite.execute(`SELECT crsql_as_crr('${table}')`);
+	}
+}
 
 function StackLayout() {
 	useNavigationPersistence();
@@ -38,13 +45,15 @@ function StackLayout() {
 
 function MigratedApp() {
 	const { i18n } = useTranslation();
-	const { success, error } = useMigrations(db, migrations);
+	const { success, error } = useMigrations(db, bundledMigrations);
 	const [isSeeded, setIsSeeded] = useState(false);
 
 	useEffect(() => {
 		if (!success) return;
-		seedDatabase(db);
-		setIsSeeded(true);
+		setupCRDT()
+			.then(() => seedDatabase(db))
+			.then(() => setIsSeeded(true))
+			.catch((e: unknown) => console.error("[cr-sqlite] setup failed:", e));
 	}, [success]);
 
 	const { data: onboarding, isLoading } = useQuery({

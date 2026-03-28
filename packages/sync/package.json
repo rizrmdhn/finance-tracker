@@ -1,0 +1,15 @@
+{
+	"name": "@finance-tracker/sync",
+	"version": "0.0.1",
+	"private": true,
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"dependencies": {
+		"@noble/curves": "^1.9.2",
+		"@noble/hashes": "^1.8.0"
+	},
+	"devDependencies": {
+		"typescript": "^5"
+	}
+}

@@ -57,3 +57,7 @@ TODO.md
 agents.md
 AGENTS.md
 CLAUDE.md
+
+# Test Scripts
+test-scripts/
+test-peer.mjs

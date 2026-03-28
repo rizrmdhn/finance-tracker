@@ -14,6 +14,7 @@ export default defineConfig({
 					"@finance-tracker/db",
 					"@finance-tracker/schema",
 					"@finance-tracker/queries",
+					"@finance-tracker/sync",
 				],
 			},
 		},
