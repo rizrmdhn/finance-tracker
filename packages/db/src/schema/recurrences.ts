@@ -13,11 +13,14 @@ export const recurrences = sqliteTable(
 			.$default(() => createId()),
 		templateTransactionId: text("template_transaction_id")
 			.references(() => transactions.id)
-			.notNull(),
+			.notNull()
+			.default(""),
 		frequency: text("frequency", {
 			enum: RECURRENCE_FREQUENCIES,
-		}).notNull(),
-		nextRunAt: integer("next_run_at").notNull(), // unix ms
+		})
+			.notNull()
+			.default("daily"),
+		nextRunAt: integer("next_run_at").notNull().default(0), // unix ms
 		endDate: integer("end_date"), // unix ms, nullable
 		isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
 		...timestamp,

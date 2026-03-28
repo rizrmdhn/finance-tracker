@@ -12,10 +12,10 @@ export const accounts = sqliteTable("accounts", {
 	id: text("id")
 		.primaryKey()
 		.$default(() => createId()),
-	name: text("name").notNull(),
-	icon: text("icon", { enum: ICON_NAMES }).notNull(),
-	color: text("color", { enum: COLOR_VALUES }).notNull(),
-	type: text("type", { enum: ACCOUNT_TYPES }).notNull(),
+	name: text("name").notNull().default(""),
+	icon: text("icon", { enum: ICON_NAMES }).notNull().default("Wallet"),
+	color: text("color", { enum: COLOR_VALUES }).notNull().default("#ef4444"),
+	type: text("type", { enum: ACCOUNT_TYPES }).notNull().default("cash"),
 	initialBalance: integer("initial_balance").notNull().default(0),
 	currency: text("currency", { enum: SUPPORTED_CURRENCIES })
 		.notNull()

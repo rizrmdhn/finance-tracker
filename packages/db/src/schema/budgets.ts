@@ -19,13 +19,16 @@ export const budgets = sqliteTable(
 			.$default(() => createId()),
 		categoryId: text("category_id")
 			.references(() => categories.id)
-			.notNull(),
-		amount: real("amount").notNull(),
+			.notNull()
+			.default(""),
+		amount: real("amount").notNull().default(0),
 		currency: text("currency", { enum: SUPPORTED_CURRENCIES })
 			.notNull()
 			.default("IDR"),
-		period: text("period", { enum: ["monthly", "weekly"] }).notNull(),
-		startDate: integer("start_date").notNull(), // Unix timestamp
+		period: text("period", { enum: ["monthly", "weekly"] })
+			.notNull()
+			.default("monthly"),
+		startDate: integer("start_date").notNull().default(0), // Unix timestamp
 		...timestamp,
 	},
 	(table) => [index("idx_budgets_category_id").on(table.categoryId)],
