@@ -54,10 +54,10 @@ Definition of Done:
 
 ## Milestone 3 - tRPC Transport Split
 
-- [ ] Create shared tRPC client factory.
-- [ ] Electron runtime path uses IPC link.
-- [ ] Browser runtime path uses HTTP link (if standalone web is required).
-- [ ] Keep query client and error handling shared.
+- [x] Create shared tRPC client factory.
+- [x] Electron runtime path uses IPC link.
+- [x] Browser runtime path uses HTTP link (if standalone web is required).
+- [x] Keep query client and error handling shared.
 - [ ] Validate query/mutation parity across key screens.
 
 Definition of Done:
@@ -122,7 +122,7 @@ Mitigation:
 
 - [x] PR 1: apps/web scaffold + UI copy (no behavior change).
 - [x] PR 2: adapter layer + direct electron usage removal.
-- [ ] PR 3: tRPC transport factory split.
+- [x] PR 3: tRPC transport factory split.
 - [ ] PR 4: desktop wrapper loading switch + build wiring.
 - [ ] PR 5: old renderer cleanup + docs.
 
