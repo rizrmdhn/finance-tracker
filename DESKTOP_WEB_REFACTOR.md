@@ -27,11 +27,11 @@ Refactor desktop so Electron is only a wrapper, and move app UI/router to apps/w
 
 ## Milestone 1 - Scaffold apps/web
 
-- [ ] Create apps/web package with Vite + React + TanStack Router setup.
-- [ ] Copy current desktop renderer UI/routes into apps/web.
-- [ ] Port styling, aliases, and route generation config.
-- [ ] Verify apps/web starts and renders base shell.
-- [ ] Add apps/web scripts to workspace and turbo pipeline.
+- [x] Create apps/web package with Vite + React + TanStack Router setup.
+- [x] Copy current desktop renderer UI/routes into apps/web.
+- [x] Port styling, aliases, and route generation config.
+- [x] Verify apps/web starts and renders base shell.
+- [x] Add apps/web scripts to workspace and turbo pipeline.
 
 Definition of Done:
 
@@ -120,7 +120,7 @@ Mitigation:
 
 ## Suggested PR Breakdown
 
-- [ ] PR 1: apps/web scaffold + UI copy (no behavior change).
+- [x] PR 1: apps/web scaffold + UI copy (no behavior change).
 - [ ] PR 2: adapter layer + direct electron usage removal.
 - [ ] PR 3: tRPC transport factory split.
 - [ ] PR 4: desktop wrapper loading switch + build wiring.
