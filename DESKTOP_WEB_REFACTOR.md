@@ -80,10 +80,10 @@ Definition of Done:
 
 ## Milestone 5 - Cleanup and Docs
 
-- [ ] Remove obsolete desktop renderer source after parity signoff.
-- [ ] Update root README app descriptions and run commands.
-- [ ] Add architecture note explaining runtime boundaries.
-- [ ] Add troubleshooting notes for IPC-only desktop tRPC.
+- [x] Remove obsolete desktop renderer source after parity signoff.
+- [x] Update root README app descriptions and run commands.
+- [x] Add architecture note explaining runtime boundaries.
+- [x] Add troubleshooting notes for IPC-only desktop tRPC.
 
 Definition of Done:
 
@@ -124,7 +124,7 @@ Mitigation:
 - [x] PR 2: adapter layer + direct electron usage removal.
 - [x] PR 3: tRPC transport factory split.
 - [x] PR 4: desktop wrapper loading switch + build wiring.
-- [ ] PR 5: old renderer cleanup + docs.
+- [x] PR 5: old renderer cleanup + docs.
 
 ## Issue Labels
 
