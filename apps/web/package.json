@@ -40,6 +40,7 @@
     "sonner": "catalog:",
     "superjson": "catalog:",
     "tailwindcss": "catalog:",
+    "trpc-electron": "^0.1.2",
     "zod": "catalog:"
   },
   "devDependencies": {

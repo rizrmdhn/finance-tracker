@@ -4,6 +4,7 @@ import type { TRPCLink } from "@trpc/client";
 import { createTRPCClient, httpBatchLink, loggerLink } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import SuperJSON from "superjson";
+import { ipcLink } from "trpc-electron/renderer";
 import { globalErrorToast } from "./toast";
 
 function createTrpcClient(transportLink: TRPCLink<AppRouter>) {
@@ -36,9 +37,10 @@ function createTrpcClient(transportLink: TRPCLink<AppRouter>) {
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3001/trpc";
 
+const isElectron = typeof window !== "undefined" && !!window.electronApp;
+
 export const { queryClient, trpcClient, trpc } = createTrpcClient(
-	httpBatchLink({
-		url: API_URL,
-		transformer: SuperJSON,
-	}),
+	isElectron
+		? ipcLink({ transformer: SuperJSON })
+		: httpBatchLink({ url: API_URL, transformer: SuperJSON }),
 );

@@ -4,7 +4,7 @@
 	"main": "out/main/index.js",
 	"scripts": {
 		"dev": "electron-vite dev",
-		"build": "electron-vite build",
+		"build": "(cd ../web && bun run build) && electron-vite build && rm -rf out/renderer && cp -r ../web/dist out/renderer",
 		"rebuild": "electron-rebuild -f -w better-sqlite3",
 		"package": "bun run build && electron-builder --win",
 		"package:dir": "bun run build && electron-builder --win --dir",

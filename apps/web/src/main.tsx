@@ -1,6 +1,7 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import {
 	createBrowserHistory,
+	createMemoryHistory,
 	createRouter,
 	RouterProvider,
 } from "@tanstack/react-router";
@@ -9,9 +10,13 @@ import { SplashScreen } from "./components/splash-screen";
 import { queryClient, trpc } from "./lib/trpc";
 import { routeTree } from "./routeTree.gen";
 
+const isElectron = typeof window !== "undefined" && !!window.electronApp;
+
 const router = createRouter({
 	routeTree,
-	history: createBrowserHistory(),
+	history: isElectron
+		? createMemoryHistory({ initialEntries: ["/"] })
+		: createBrowserHistory(),
 	defaultPreload: "intent",
 	scrollRestoration: true,
 	context: { trpc, queryClient },

@@ -67,11 +67,11 @@ Definition of Done:
 
 ## Milestone 4 - Convert Desktop to Thin Wrapper
 
-- [ ] Remove renderer ownership from desktop build config.
-- [ ] Keep only Electron main + preload build outputs.
-- [ ] Development mode loads apps/web dev server URL.
-- [ ] Production mode loads apps/web built static output.
-- [ ] Keep existing tRPC IPC handler in main process.
+- [x] Remove renderer ownership from desktop build config.
+- [x] Keep only Electron main + preload build outputs.
+- [x] Development mode loads apps/web dev server URL.
+- [x] Production mode loads apps/web built static output.
+- [x] Keep existing tRPC IPC handler in main process.
 
 Definition of Done:
 
@@ -123,7 +123,7 @@ Mitigation:
 - [x] PR 1: apps/web scaffold + UI copy (no behavior change).
 - [x] PR 2: adapter layer + direct electron usage removal.
 - [x] PR 3: tRPC transport factory split.
-- [ ] PR 4: desktop wrapper loading switch + build wiring.
+- [x] PR 4: desktop wrapper loading switch + build wiring.
 - [ ] PR 5: old renderer cleanup + docs.
 
 ## Issue Labels
