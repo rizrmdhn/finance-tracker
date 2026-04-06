@@ -1,51 +1,27 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-
-declare global {
-	interface Window {
-		electronUpdater: {
-			checkForUpdates: () => void;
-			onUpdateAvailable: (
-				callback: (info: {
-					version: string;
-					releaseNotes: string | null;
-				}) => void,
-			) => void;
-			onUpdateNotAvailable: (callback: () => void) => void;
-			onDownloadProgress: (
-				callback: (progress: {
-					percent: number;
-					transferred: number;
-					total: number;
-				}) => void,
-			) => void;
-			onUpdateDownloaded: (callback: () => void) => void;
-			onUpdateError: (callback: (message: string) => void) => void;
-			installUpdate: () => void;
-			setAllowPrerelease: (allow: boolean) => Promise<void>;
-			removeAllListeners: (channel: string) => void;
-		};
-	}
-}
+import { platform } from "@/platform";
 
 export function UpdateNotifier() {
 	const { t } = useTranslation();
 
 	useEffect(() => {
-		window.electronUpdater?.onUpdateDownloaded(() => {
+		if (!platform.updater.isSupported) return;
+
+		platform.updater.onUpdateDownloaded(() => {
 			toast(t("update.toast.title"), {
 				description: t("update.toast.description"),
 				action: {
 					label: t("update.toast.action"),
-					onClick: () => window.electronUpdater.installUpdate(),
+					onClick: () => platform.updater.installUpdate(),
 				},
 				duration: Number.POSITIVE_INFINITY,
 			});
 		});
 
 		return () => {
-			window.electronUpdater?.removeAllListeners("update-downloaded");
+			platform.updater.removeAllListeners("update-downloaded");
 		};
 	}, [t]);
 

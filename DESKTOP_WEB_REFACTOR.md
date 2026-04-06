@@ -40,11 +40,11 @@ Definition of Done:
 
 ## Milestone 2 - Platform Adapter Layer
 
-- [ ] Create capability interface for desktop-only features.
-- [ ] Implement Electron adapter using preload APIs.
-- [ ] Implement browser adapter with fallbacks/feature disable.
-- [ ] Replace direct window.electron usages in UI with adapter calls.
-- [ ] Add capability guards in Settings/Sync/Import-Export UI.
+- [x] Create capability interface for desktop-only features.
+- [x] Implement Electron adapter using preload APIs.
+- [x] Implement browser adapter with fallbacks/feature disable.
+- [x] Replace direct window.electron usages in UI with adapter calls.
+- [x] Add capability guards in Settings/Sync/Import-Export UI.
 
 Definition of Done:
 
@@ -121,7 +121,7 @@ Mitigation:
 ## Suggested PR Breakdown
 
 - [x] PR 1: apps/web scaffold + UI copy (no behavior change).
-- [ ] PR 2: adapter layer + direct electron usage removal.
+- [x] PR 2: adapter layer + direct electron usage removal.
 - [ ] PR 3: tRPC transport factory split.
 - [ ] PR 4: desktop wrapper loading switch + build wiring.
 - [ ] PR 5: old renderer cleanup + docs.
