@@ -39,7 +39,7 @@ import { Bonjour } from "bonjour-service";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { readMigrationFiles } from "drizzle-orm/migrator";
-import { app, BrowserWindow, dialog, ipcMain } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, shell } from "electron";
 import { autoUpdater } from "electron-updater";
 import { createIPCHandler } from "trpc-electron/main";
 import { WebSocket, WebSocketServer } from "ws";
@@ -664,6 +664,13 @@ function createWindow() {
 
 	win.once("ready-to-show", () => {
 		win.show();
+	});
+
+	// target="_blank" links (e.g. a goal's product link) open in the default browser, never in
+	// an app window; only http(s) URLs are handed to the OS
+	win.webContents.setWindowOpenHandler(({ url }) => {
+		if (/^https?:\/\//i.test(url)) void shell.openExternal(url);
+		return { action: "deny" };
 	});
 
 	const WEB_DEV_URL = process.env.WEB_DEV_URL ?? "http://localhost:3000";
