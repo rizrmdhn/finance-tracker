@@ -564,7 +564,7 @@ export const en = {
 	trash: {
 		title: "Trash",
 		description:
-			"Manage deleted items. Restore or permanently delete trashed transactions, categories, and accounts.",
+			"Manage deleted items. Restore or permanently delete trashed transactions, categories, accounts, and goals.",
 		transactions: "Transactions",
 		categories: "Categories",
 		accounts: "Accounts",

@@ -564,7 +564,7 @@ export const id = {
 	trash: {
 		title: "Sampah",
 		description:
-			"Kelola item yang dihapus. Pulihkan atau hapus permanen transaksi, kategori, dan akun yang telah dihapus.",
+			"Kelola item yang dihapus. Pulihkan atau hapus permanen transaksi, kategori, akun, dan target tabungan yang telah dihapus.",
 		transactions: "Transaksi",
 		categories: "Kategori",
 		accounts: "Akun",

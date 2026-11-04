@@ -41,6 +41,13 @@ function RouteComponent() {
 				>
 					{t("trash.categories")}
 				</Link>
+				<Link
+					to="/trash/goals"
+					className={tabClass}
+					activeProps={{ className: activeTabClass }}
+				>
+					{t("trash.goals")}
+				</Link>
 			</div>
 			<Outlet />
 		</div>

@@ -25,7 +25,18 @@ import {
 	pickGoalPace,
 } from "@finance-tracker/utils";
 import { eachMonthOfInterval, max, startOfMonth, subMonths } from "date-fns";
-import { and, asc, desc, eq, gte, inArray, isNull, lt, or } from "drizzle-orm";
+import {
+	and,
+	asc,
+	desc,
+	eq,
+	gte,
+	inArray,
+	isNotNull,
+	isNull,
+	lt,
+	or,
+} from "drizzle-orm";
 import {
 	AccountAlreadyLinkedError,
 	AccountIsContributionSourceError,
@@ -314,6 +325,78 @@ export async function deleteGoal(db: AnyDatabase, id: string) {
 	if (!result) throw new Error("Failed to delete goal");
 
 	return result;
+}
+
+export async function getDeletedGoals(db: AnyDatabase) {
+	return await db.query.goals.findMany({
+		where: isNotNull(goals.deletedAt),
+		orderBy: desc(goals.deletedAt),
+	});
+}
+
+async function getDeletedGoalById(db: AnyDatabase, id: string) {
+	return await db.query.goals.findFirst({
+		where: and(eq(goals.id, id), isNotNull(goals.deletedAt)),
+	});
+}
+
+/**
+ * Brings a goal back from the trash. An active goal starts holding its linked account and
+ * allocation % again, so rules 1 and 5 are re-checked (other goals may have taken them since).
+ */
+export async function restoreGoal(db: AnyDatabase, id: string) {
+	return await withTransaction(db, async () => {
+		const goal = await getDeletedGoalById(db, id);
+
+		if (!goal) throw new NotFoundError("Goal", id);
+
+		if (goal.status === "active") {
+			if (goal.linkedAccountId)
+				await assertCanLinkAccount(db, goal.linkedAccountId, id);
+			await assertAllocationLimit(db, goal.allocationPercent, id);
+		}
+
+		const [result] = await db
+			.update(goals)
+			.set({ deletedAt: null })
+			.where(eq(goals.id, id))
+			.returning();
+
+		if (!result) throw new Error("Failed to restore goal");
+
+		return result;
+	});
+}
+
+/** Deletes a trashed goal for good, together with its contributions. */
+export async function permanentDeleteGoal(db: AnyDatabase, id: string) {
+	return await withTransaction(db, async () => {
+		const goal = await getDeletedGoalById(db, id);
+
+		if (!goal) throw new NotFoundError("Goal", id);
+
+		await db.delete(goalContributions).where(eq(goalContributions.goalId, id));
+		const [result] = await db.delete(goals).where(eq(goals.id, id)).returning();
+
+		if (!result) throw new Error("Failed to permanently delete goal");
+
+		return result;
+	});
+}
+
+/** Empties the goals trash, contributions of the trashed goals included. */
+export async function permanentDeleteAllGoals(db: AnyDatabase) {
+	return await withTransaction(db, async () => {
+		const trashed = await getDeletedGoals(db);
+		const ids = trashed.map((g) => g.id);
+
+		if (ids.length === 0) return [];
+
+		await db
+			.delete(goalContributions)
+			.where(inArray(goalContributions.goalId, ids));
+		return await db.delete(goals).where(inArray(goals.id, ids)).returning();
+	});
 }
 
 /**
