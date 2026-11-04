@@ -1,5 +1,6 @@
 import type {
 	CategoryType,
+	GoalStatus,
 	SupportedCurrency,
 } from "@finance-tracker/constants";
 import {
@@ -16,7 +17,17 @@ import type {
 } from "@finance-tracker/schema";
 import { eachMonthOfInterval, max, startOfMonth, subMonths } from "date-fns";
 import { and, asc, desc, eq, gte, isNull, lt, or } from "drizzle-orm";
-import { NotFoundError } from "./errors";
+import {
+	AccountAlreadyLinkedError,
+	AccountIsContributionSourceError,
+	AllocationLimitExceededError,
+	GoalNotActiveError,
+	InsufficientFreeBalanceError,
+	LinkedAccountContributionError,
+	NotFoundError,
+	RelationNotFoundError,
+	WithdrawalExceedsAllocationError,
+} from "./errors";
 import { getCachedRates } from "./exchange-rate";
 import { withTransaction } from "./utils/with-transaction";
 
@@ -116,6 +127,95 @@ async function getActiveAllocations(db: AnyDatabase) {
 		);
 }
 
+// Tolerance for float sums of amounts and percentages
+const EPSILON = 1e-9;
+
+/** Rule 1: linked to at most one active goal, and not already a contribution source. */
+async function assertCanLinkAccount(
+	db: AnyDatabase,
+	accountId: string,
+	goalId?: string,
+) {
+	const [account, activeGoals, allocations] = await Promise.all([
+		db.query.accounts.findFirst({
+			where: and(eq(accounts.id, accountId), isNull(accounts.deletedAt)),
+		}),
+		getActiveGoals(db),
+		getActiveAllocations(db),
+	]);
+
+	if (!account) throw new RelationNotFoundError("Goal", "Account", accountId);
+
+	const linkedGoal = activeGoals.find(
+		(g) => g.id !== goalId && g.linkedAccountId === accountId,
+	);
+	if (linkedGoal) throw new AccountAlreadyLinkedError(accountId, linkedGoal.id);
+
+	const allocated = allocations
+		.filter((a) => a.accountId === accountId)
+		.reduce((sum, a) => sum + a.amount, 0);
+	if (allocated > EPSILON)
+		throw new AccountIsContributionSourceError(accountId);
+}
+
+/** Rule 5: SUM(allocationPercent) of active goals ≤ 100. */
+async function assertAllocationLimit(
+	db: AnyDatabase,
+	allocationPercent: number,
+	goalId?: string,
+) {
+	const total = (await getActiveGoals(db))
+		.filter((g) => g.id !== goalId)
+		.reduce((sum, g) => sum + g.allocationPercent, allocationPercent);
+	if (total > 100 + EPSILON) throw new AllocationLimitExceededError(total);
+}
+
+/**
+ * Rule 2: no linked account (of any active goal, the goal's own included) as source.
+ * Rule 4: a deposit fits the source's free balance; a withdrawal what the goal holds from it.
+ */
+async function assertCanContribute(
+	db: AnyDatabase,
+	goal: { id: string; status: GoalStatus },
+	accountId: string,
+	amount: number,
+) {
+	if (goal.status !== "active")
+		throw new GoalNotActiveError(goal.id, goal.status);
+
+	const [balances, activeGoals, allocations] = await Promise.all([
+		getAccountBalances(db),
+		getActiveGoals(db),
+		getActiveAllocations(db),
+	]);
+
+	const account = balances.get(accountId);
+	if (!account)
+		throw new RelationNotFoundError("Goal contribution", "Account", accountId);
+
+	if (activeGoals.some((g) => g.linkedAccountId === accountId))
+		throw new LinkedAccountContributionError(accountId);
+
+	const fromAccount = allocations.filter((a) => a.accountId === accountId);
+	if (amount > 0) {
+		const freeBalance =
+			account.balance - fromAccount.reduce((sum, a) => sum + a.amount, 0);
+		if (amount > freeBalance + EPSILON)
+			throw new InsufficientFreeBalanceError(accountId, freeBalance, amount);
+	} else {
+		const held = fromAccount
+			.filter((a) => a.goalId === goal.id)
+			.reduce((sum, a) => sum + a.amount, 0);
+		if (-amount > held + EPSILON)
+			throw new WithdrawalExceedsAllocationError(
+				goal.id,
+				accountId,
+				held,
+				-amount,
+			);
+	}
+}
+
 export async function getGoals(db: AnyDatabase) {
 	return await db.query.goals.findMany({
 		where: isNull(goals.deletedAt),
@@ -133,11 +233,22 @@ export async function createGoal(db: AnyDatabase, input: GoalInput) {
 	const { initialFund, ...data } = input;
 
 	return await withTransaction(db, async () => {
+		if (data.linkedAccountId)
+			await assertCanLinkAccount(db, data.linkedAccountId);
+		await assertAllocationLimit(db, data.allocationPercent);
+
 		const [goal] = await db.insert(goals).values(data).returning();
 
 		if (!goal) throw new Error("Failed to create goal");
 
 		if (initialFund) {
+			// After the insert, so the goal's own linked account is caught as a source
+			await assertCanContribute(
+				db,
+				goal,
+				initialFund.accountId,
+				initialFund.amount,
+			);
 			await db.insert(goalContributions).values({
 				goalId: goal.id,
 				accountId: initialFund.accountId,
@@ -156,6 +267,18 @@ export async function updateGoal(db: AnyDatabase, input: GoalUpdateInput) {
 	const goal = await getGoalById(db, id);
 
 	if (!goal) throw new NotFoundError("Goal", id);
+
+	// Only re-check what the edit changes, so rule breaks merged in from other
+	// devices don't block unrelated edits
+	if (goal.status === "active") {
+		if (data.linkedAccountId && data.linkedAccountId !== goal.linkedAccountId)
+			await assertCanLinkAccount(db, data.linkedAccountId, id);
+		if (
+			data.allocationPercent !== undefined &&
+			data.allocationPercent > goal.allocationPercent
+		)
+			await assertAllocationLimit(db, data.allocationPercent, id);
+	}
 
 	const [result] = await db
 		.update(goals)
@@ -191,6 +314,8 @@ export async function addGoalContribution(
 	const goal = await getGoalById(db, input.goalId);
 
 	if (!goal) throw new NotFoundError("Goal", input.goalId);
+
+	await assertCanContribute(db, goal, input.accountId, input.amount);
 
 	const [result] = await db.insert(goalContributions).values(input).returning();
 

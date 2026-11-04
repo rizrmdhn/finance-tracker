@@ -380,9 +380,10 @@ describe("getGoalMonthlyProgress", () => {
 describe("getAccountAllocations", () => {
 	test("counts only allocations of active, non-deleted goals", async () => {
 		const wallet = await seedAccount(db, { initialBalance: 1000 });
-		const active = await createGoal(db, baseGoal);
-		const archived = await createGoal(db, baseGoal);
-		const deleted = await createGoal(db, baseGoal);
+		const goal = { ...baseGoal, allocationPercent: 30 };
+		const active = await createGoal(db, goal);
+		const archived = await createGoal(db, goal);
+		const deleted = await createGoal(db, goal);
 		const date = midMonth(1);
 		for (const [goal, amount] of [
 			[active, 300],
