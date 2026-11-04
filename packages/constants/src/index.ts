@@ -4,6 +4,7 @@ export * from "./category";
 export * from "./colors";
 export * from "./currency";
 export * from "./date";
+export * from "./goal";
 export * from "./icons";
 export * from "./recurrence";
 export * from "./sync";

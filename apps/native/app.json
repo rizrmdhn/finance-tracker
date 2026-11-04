@@ -38,6 +38,17 @@
 							"updatePeriodMillis": 1800000,
 							"resizeMode": "vertical|horizontal",
 							"previewImage": "./assets/images/budget-widget-preview.png"
+						},
+						{
+							"name": "GoalWidget",
+							"label": "Goals",
+							"description": "Shows your top goals and when you will reach them",
+							"minWidth": "180dp",
+							"minHeight": "110dp",
+							"targetWidth": "270dp",
+							"targetHeight": "270dp",
+							"updatePeriodMillis": 1800000,
+							"resizeMode": "vertical|horizontal"
 						}
 					]
 				}

@@ -14,11 +14,13 @@ import { Route as TransactionsRouteImport } from './routes/transactions'
 import { Route as SyncRouteImport } from './routes/sync'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as RecurringRouteImport } from './routes/recurring'
+import { Route as GoalsRouteImport } from './routes/goals'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as BudgetsRouteImport } from './routes/budgets'
 import { Route as AccountsRouteImport } from './routes/accounts'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TrashTransactionsRouteImport } from './routes/trash/transactions'
+import { Route as TrashGoalsRouteImport } from './routes/trash/goals'
 import { Route as TrashCategoriesRouteImport } from './routes/trash/categories'
 
 const TrashRoute = TrashRouteImport.update({
@@ -46,6 +48,11 @@ const RecurringRoute = RecurringRouteImport.update({
   path: '/recurring',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GoalsRoute = GoalsRouteImport.update({
+  id: '/goals',
+  path: '/goals',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CategoriesRoute = CategoriesRouteImport.update({
   id: '/categories',
   path: '/categories',
@@ -71,6 +78,11 @@ const TrashTransactionsRoute = TrashTransactionsRouteImport.update({
   path: '/transactions',
   getParentRoute: () => TrashRoute,
 } as any)
+const TrashGoalsRoute = TrashGoalsRouteImport.update({
+  id: '/goals',
+  path: '/goals',
+  getParentRoute: () => TrashRoute,
+} as any)
 const TrashCategoriesRoute = TrashCategoriesRouteImport.update({
   id: '/categories',
   path: '/categories',
@@ -82,12 +94,14 @@ export interface FileRoutesByFullPath {
   '/accounts': typeof AccountsRoute
   '/budgets': typeof BudgetsRoute
   '/categories': typeof CategoriesRoute
+  '/goals': typeof GoalsRoute
   '/recurring': typeof RecurringRoute
   '/settings': typeof SettingsRoute
   '/sync': typeof SyncRoute
   '/transactions': typeof TransactionsRoute
   '/trash': typeof TrashRouteWithChildren
   '/trash/categories': typeof TrashCategoriesRoute
+  '/trash/goals': typeof TrashGoalsRoute
   '/trash/transactions': typeof TrashTransactionsRoute
 }
 export interface FileRoutesByTo {
@@ -95,12 +109,14 @@ export interface FileRoutesByTo {
   '/accounts': typeof AccountsRoute
   '/budgets': typeof BudgetsRoute
   '/categories': typeof CategoriesRoute
+  '/goals': typeof GoalsRoute
   '/recurring': typeof RecurringRoute
   '/settings': typeof SettingsRoute
   '/sync': typeof SyncRoute
   '/transactions': typeof TransactionsRoute
   '/trash': typeof TrashRouteWithChildren
   '/trash/categories': typeof TrashCategoriesRoute
+  '/trash/goals': typeof TrashGoalsRoute
   '/trash/transactions': typeof TrashTransactionsRoute
 }
 export interface FileRoutesById {
@@ -109,12 +125,14 @@ export interface FileRoutesById {
   '/accounts': typeof AccountsRoute
   '/budgets': typeof BudgetsRoute
   '/categories': typeof CategoriesRoute
+  '/goals': typeof GoalsRoute
   '/recurring': typeof RecurringRoute
   '/settings': typeof SettingsRoute
   '/sync': typeof SyncRoute
   '/transactions': typeof TransactionsRoute
   '/trash': typeof TrashRouteWithChildren
   '/trash/categories': typeof TrashCategoriesRoute
+  '/trash/goals': typeof TrashGoalsRoute
   '/trash/transactions': typeof TrashTransactionsRoute
 }
 export interface FileRouteTypes {
@@ -124,12 +142,14 @@ export interface FileRouteTypes {
     | '/accounts'
     | '/budgets'
     | '/categories'
+    | '/goals'
     | '/recurring'
     | '/settings'
     | '/sync'
     | '/transactions'
     | '/trash'
     | '/trash/categories'
+    | '/trash/goals'
     | '/trash/transactions'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -137,12 +157,14 @@ export interface FileRouteTypes {
     | '/accounts'
     | '/budgets'
     | '/categories'
+    | '/goals'
     | '/recurring'
     | '/settings'
     | '/sync'
     | '/transactions'
     | '/trash'
     | '/trash/categories'
+    | '/trash/goals'
     | '/trash/transactions'
   id:
     | '__root__'
@@ -150,12 +172,14 @@ export interface FileRouteTypes {
     | '/accounts'
     | '/budgets'
     | '/categories'
+    | '/goals'
     | '/recurring'
     | '/settings'
     | '/sync'
     | '/transactions'
     | '/trash'
     | '/trash/categories'
+    | '/trash/goals'
     | '/trash/transactions'
   fileRoutesById: FileRoutesById
 }
@@ -164,6 +188,7 @@ export interface RootRouteChildren {
   AccountsRoute: typeof AccountsRoute
   BudgetsRoute: typeof BudgetsRoute
   CategoriesRoute: typeof CategoriesRoute
+  GoalsRoute: typeof GoalsRoute
   RecurringRoute: typeof RecurringRoute
   SettingsRoute: typeof SettingsRoute
   SyncRoute: typeof SyncRoute
@@ -208,6 +233,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RecurringRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/goals': {
+      id: '/goals'
+      path: '/goals'
+      fullPath: '/goals'
+      preLoaderRoute: typeof GoalsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/categories': {
       id: '/categories'
       path: '/categories'
@@ -243,6 +275,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TrashTransactionsRouteImport
       parentRoute: typeof TrashRoute
     }
+    '/trash/goals': {
+      id: '/trash/goals'
+      path: '/goals'
+      fullPath: '/trash/goals'
+      preLoaderRoute: typeof TrashGoalsRouteImport
+      parentRoute: typeof TrashRoute
+    }
     '/trash/categories': {
       id: '/trash/categories'
       path: '/categories'
@@ -255,11 +294,13 @@ declare module '@tanstack/react-router' {
 
 interface TrashRouteChildren {
   TrashCategoriesRoute: typeof TrashCategoriesRoute
+  TrashGoalsRoute: typeof TrashGoalsRoute
   TrashTransactionsRoute: typeof TrashTransactionsRoute
 }
 
 const TrashRouteChildren: TrashRouteChildren = {
   TrashCategoriesRoute: TrashCategoriesRoute,
+  TrashGoalsRoute: TrashGoalsRoute,
   TrashTransactionsRoute: TrashTransactionsRoute,
 }
 
@@ -270,6 +311,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountsRoute: AccountsRoute,
   BudgetsRoute: BudgetsRoute,
   CategoriesRoute: CategoriesRoute,
+  GoalsRoute: GoalsRoute,
   RecurringRoute: RecurringRoute,
   SettingsRoute: SettingsRoute,
   SyncRoute: SyncRoute,

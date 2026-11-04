@@ -1,9 +1,16 @@
 import type { AccountWithBalance } from "@finance-tracker/types";
+import { Badge } from "@finance-tracker/ui/components/badge";
 import { Button } from "@finance-tracker/ui/components/button";
 import { Skeleton } from "@finance-tracker/ui/components/skeleton";
+import { formatCurrency } from "@finance-tracker/utils";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { PencilIcon, Trash2Icon } from "lucide-react";
+import {
+	LinkIcon,
+	PencilIcon,
+	Trash2Icon,
+	TriangleAlertIcon,
+} from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ConfirmationDialog } from "@/components/confirmation-dialog";
@@ -37,6 +44,11 @@ function RouteComponent() {
 	const { data: accounts = [], isLoading } = useQuery(
 		trpc.account.listWithBalance.queryOptions(),
 	);
+	const { data: allocations = [] } = useQuery(
+		trpc.goal.getAccountAllocations.queryOptions(),
+	);
+	const { data: goals = [] } = useQuery(trpc.goal.list.queryOptions());
+	const allocationByAccount = new Map(allocations.map((a) => [a.accountId, a]));
 
 	const deleteMutation = useMutation(
 		trpc.account.delete.mutationOptions({
@@ -90,6 +102,10 @@ function RouteComponent() {
 			<div className="flex flex-col gap-2">
 				{accounts.map((account) => {
 					const Icon = account.icon ? ICON_MAP[account.icon] : null;
+					const allocation = allocationByAccount.get(account.id);
+					const linkedGoal = allocation?.isLinked
+						? goals.find((g) => g.id === allocation.linkedGoalId)
+						: undefined;
 					return (
 						<div
 							key={account.id}
@@ -106,15 +122,44 @@ function RouteComponent() {
 									style={{ backgroundColor: account.color ?? "#94a3b8" }}
 								/>
 							)}
-							<div className="flex flex-1 flex-col">
-								<span className="font-medium text-sm">{account.name}</span>
+							<div className="flex min-w-0 flex-1 flex-col">
+								<div className="flex min-w-0 flex-wrap items-center gap-1.5">
+									<span className="font-medium text-sm">{account.name}</span>
+									{linkedGoal && (
+										<Badge variant="outline">
+											<LinkIcon />
+											{t("goals.allocation.linkedTo", {
+												name: linkedGoal.name,
+											})}
+										</Badge>
+									)}
+									{allocation?.isOverAllocated && (
+										<Badge
+											variant="destructive"
+											title={t("goals.allocation.overAllocatedDescription")}
+										>
+											<TriangleAlertIcon />
+											{t("goals.allocation.overAllocated")}
+										</Badge>
+									)}
+								</div>
 								<span className="text-muted-foreground text-xs">
-									{new Intl.NumberFormat("id-ID", {
-										style: "currency",
-										currency: account.currency,
-										maximumFractionDigits: 0,
-									}).format(account.balance)}
+									{formatCurrency(account.balance, account.currency)}
 								</span>
+								{allocation && allocation.allocated > 0 && (
+									<span className="text-muted-foreground text-xs">
+										{t("goals.allocation.summary", {
+											allocated: formatCurrency(
+												allocation.allocated,
+												account.currency,
+											),
+											free: formatCurrency(
+												allocation.freeBalance,
+												account.currency,
+											),
+										})}
+									</span>
+								)}
 							</div>
 							<span className="text-muted-foreground text-xs capitalize">
 								{account.type}

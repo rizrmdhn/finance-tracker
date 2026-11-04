@@ -9,6 +9,7 @@ export interface SelectOption<T extends string = string> {
 	value: T;
 	label: string;
 	description?: string;
+	disabled?: boolean;
 }
 
 interface OptionSelectProps<T extends string> {
@@ -81,9 +82,10 @@ export function OptionSelect<T extends string>({
 							return (
 								<Pressable
 									onPress={() => handleSelect(item)}
-									className={`flex-row items-center justify-between px-4 py-3 ${isSelected ? "bg-accent" : ""}`}
+									disabled={item.disabled}
+									className={`flex-row items-center justify-between gap-3 px-4 py-3 ${isSelected ? "bg-accent" : ""} ${item.disabled ? "opacity-50" : ""}`}
 								>
-									<View>
+									<View className="flex-1">
 										<Text className="font-medium text-foreground text-sm">
 											{item.label}
 										</Text>

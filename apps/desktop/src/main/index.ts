@@ -722,7 +722,7 @@ function createWindow() {
 		win.show();
 	});
 
-	// Links (e.g. in release notes) would otherwise replace the app inside its
+	// Links (e.g. in release notes or a goal's product link) would otherwise replace the app inside its
 	// own window, with no way back since the menu is removed.
 	win.webContents.setWindowOpenHandler(({ url }) => {
 		openExternalLink(url);

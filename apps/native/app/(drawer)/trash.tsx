@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { View } from "react-native";
 import { Container } from "@/components/container";
 import { TrashCategories } from "@/components/trash-categories-tab";
+import { TrashGoals } from "@/components/trash-goals-tab";
 import { TrashTransactions } from "@/components/trash-transaction-tab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Text } from "@/components/ui/text";
@@ -10,7 +11,9 @@ import { Text } from "@/components/ui/text";
 export default function Trash() {
 	const { t } = useTranslation();
 
-	const [tab, setTab] = useState<"transactions" | "categories">("transactions");
+	const [tab, setTab] = useState<"transactions" | "categories" | "goals">(
+		"transactions",
+	);
 
 	return (
 		<Container>
@@ -18,7 +21,7 @@ export default function Trash() {
 				<Tabs
 					value={tab}
 					onValueChange={(value) =>
-						setTab(value as "transactions" | "categories")
+						setTab(value as "transactions" | "categories" | "goals")
 					}
 				>
 					<TabsList>
@@ -28,12 +31,18 @@ export default function Trash() {
 						<TabsTrigger value="categories">
 							<Text>{t("trash.categories")}</Text>
 						</TabsTrigger>
+						<TabsTrigger value="goals">
+							<Text>{t("trash.goals")}</Text>
+						</TabsTrigger>
 					</TabsList>
 					<TabsContent value="transactions">
 						<TrashTransactions />
 					</TabsContent>
 					<TabsContent value="categories">
 						<TrashCategories />
+					</TabsContent>
+					<TabsContent value="goals">
+						<TrashGoals />
 					</TabsContent>
 				</Tabs>
 			</View>
