@@ -523,6 +523,7 @@ describe("getGoalEstimate", () => {
 		// 600 surplus × 50% = 300/month → 3000 / (300 × 12 / 365.25) = 304.4 days
 		expect(estimate).toMatchObject({
 			remaining: 3000,
+			surplusMonthly: 600,
 			monthlyProgress: [],
 			pace: { source: "potential", rates: [300, 300, 300], showInsight: false },
 			monthlyRate: 300,
@@ -568,9 +569,22 @@ describe("getGoalEstimate", () => {
 		const { estimate } = await getGoalEstimate(db, goal.id, today);
 
 		expect(estimate).toMatchObject({
+			surplusMonthly: -600,
 			monthlyRate: -300,
 			completion: { status: "no-surplus", days: null },
 			duration: { main: null, min: null, max: null },
+		});
+	});
+
+	test("has no surplus without transaction history", async () => {
+		const goal = await createGoal(db, baseGoal);
+
+		const { estimate } = await getGoalEstimate(db, goal.id, today);
+
+		expect(estimate).toMatchObject({
+			monthlySurplus: [],
+			surplusMonthly: null,
+			completion: { status: "no-surplus" },
 		});
 	});
 
