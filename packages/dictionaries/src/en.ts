@@ -459,6 +459,9 @@ export const en = {
 		syncEnterIp: "Enter IP to Sync",
 		syncEnterIpDescription:
 			"Enter the device's local IP address to start syncing",
+		autoSync: "Auto sync",
+		autoSyncDescription:
+			"Sync with paired devices on the same WiFi when the app opens and after changes",
 		toast: {
 			paired: "Device paired successfully",
 			pairFailed: "Failed to pair device",
@@ -467,6 +470,7 @@ export const en = {
 			pairRejected: "Pairing was rejected by the other device",
 			syncComplete: "Sync complete",
 			syncFailed: "Sync failed",
+			autoSyncFailed: "Auto sync with {{name}} failed",
 		},
 		errors: {
 			untrusted:

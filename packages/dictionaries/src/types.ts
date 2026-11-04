@@ -425,6 +425,8 @@ export interface Dictionary {
 		hosting: string;
 		syncEnterIp: string;
 		syncEnterIpDescription: string;
+		autoSync: string;
+		autoSyncDescription: string;
 		toast: {
 			paired: string;
 			pairFailed: string;
@@ -433,6 +435,7 @@ export interface Dictionary {
 			pairRejected: string;
 			syncComplete: string;
 			syncFailed: string;
+			autoSyncFailed: string;
 		};
 		errors: {
 			untrusted: string;

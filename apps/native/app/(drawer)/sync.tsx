@@ -1,3 +1,4 @@
+import { APP_SETTINGS_DEFAULTS } from "@finance-tracker/constants";
 import {
 	base64ToPubKey,
 	computeSasCode,
@@ -29,7 +30,7 @@ import {
 } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, ScrollView, View } from "react-native";
+import { ActivityIndicator, ScrollView, Switch, View } from "react-native";
 import Zeroconf from "react-native-zeroconf";
 import { Button } from "@/components/ui/button";
 import {
@@ -46,6 +47,7 @@ import { Text } from "@/components/ui/text";
 import { type DeviceIdentity, getDeviceIdentity } from "@/lib/device-identity";
 import { SYNC_PORT, syncWithPeer } from "@/lib/sync-client";
 import { startSyncHost } from "@/lib/sync-host";
+import { withSyncLock } from "@/lib/sync-runner";
 import { useThemeColor } from "@/lib/theme";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { trpc } from "@/lib/trpc";
@@ -112,7 +114,7 @@ function toHost(input: string): string {
 // ── Component ────────────────────────────────────────────────────────────────
 
 export default function SyncScreen() {
-	const { t } = useTranslation();
+	const { t, i18n } = useTranslation();
 	const queryClient = useQueryClient();
 	const mutedForeground = useThemeColor("mutedForeground");
 
@@ -138,6 +140,21 @@ export default function SyncScreen() {
 
 	const { data: trustedPeers = [], isLoading } = useQuery(
 		trpc.peer.list.queryOptions(),
+	);
+
+	const { data: autoSyncSetting } = useQuery(
+		trpc.appSetting.get.queryOptions({ key: "auto_sync" }),
+	);
+	const autoSync =
+		(autoSyncSetting?.value ?? APP_SETTINGS_DEFAULTS.auto_sync) === "true";
+
+	const setSettingMutation = useMutation(
+		trpc.appSetting.set.mutationOptions({
+			onSuccess: (_, variables) =>
+				queryClient.invalidateQueries(
+					trpc.appSetting.get.queryOptions({ key: variables.key }),
+				),
+		}),
 	);
 
 	const addPeerMutation = useMutation(
@@ -468,11 +485,11 @@ export default function SyncScreen() {
 		if (!deviceInfo) return;
 		setSyncingDeviceId(peerDeviceId);
 		try {
-			await syncWithPeer({
-				host,
-				deviceId: deviceInfo.deviceId,
-				expectedPeerDeviceId: peerDeviceId,
-			});
+			const { deviceId } = deviceInfo;
+			// Waits for a running auto sync instead of colliding with it
+			await withSyncLock(() =>
+				syncWithPeer({ host, deviceId, expectedPeerDeviceId: peerDeviceId }),
+			);
 			await queryClient.invalidateQueries();
 			globalSuccessToast(t("sync.toast.syncComplete"));
 		} catch (err) {
@@ -616,6 +633,26 @@ export default function SyncScreen() {
 					<Text className="font-medium text-sm">
 						{t("sync.trustedDevices")}
 					</Text>
+					<View className="flex-row items-center justify-between gap-4">
+						<View className="flex-1 gap-0.5">
+							<Text className="text-foreground text-sm">
+								{t("sync.autoSync")}
+							</Text>
+							<Text className="text-muted-foreground text-xs">
+								{t("sync.autoSyncDescription")}
+							</Text>
+						</View>
+						<Switch
+							value={autoSync}
+							disabled={setSettingMutation.isPending}
+							onValueChange={(val) =>
+								setSettingMutation.mutate({
+									key: "auto_sync",
+									value: val ? "true" : "false",
+								})
+							}
+						/>
+					</View>
 					{isLoading ? (
 						<ActivityIndicator />
 					) : trustedPeers.length === 0 ? (
@@ -641,6 +678,14 @@ export default function SyncScreen() {
 										<Text className="text-muted-foreground text-xs">
 											{t("sync.pairedOn")}{" "}
 											{new Date(peer.pairedAt).toLocaleDateString()}
+										</Text>
+										<Text className="text-muted-foreground text-xs">
+											{t("sync.lastSeen")}:{" "}
+											{peer.syncPeer?.lastSeenAt
+												? new Date(peer.syncPeer.lastSeenAt).toLocaleString(
+														i18n.language,
+													)
+												: t("sync.never")}
 										</Text>
 									</View>
 									<View className="flex flex-row gap-1">

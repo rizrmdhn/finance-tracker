@@ -460,6 +460,9 @@ export const id = {
 		syncEnterIp: "Masukkan IP untuk Sinkronisasi",
 		syncEnterIpDescription:
 			"Masukkan alamat IP lokal perangkat untuk mulai sinkronisasi",
+		autoSync: "Sinkronisasi otomatis",
+		autoSyncDescription:
+			"Sinkronkan dengan perangkat terpasang di WiFi yang sama saat aplikasi dibuka dan setelah ada perubahan",
 		toast: {
 			paired: "Perangkat berhasil dipasangkan",
 			pairFailed: "Gagal memasangkan perangkat",
@@ -468,6 +471,7 @@ export const id = {
 			pairRejected: "Pemasangan ditolak oleh perangkat lain",
 			syncComplete: "Sinkronisasi selesai",
 			syncFailed: "Sinkronisasi gagal",
+			autoSyncFailed: "Sinkronisasi otomatis dengan {{name}} gagal",
 		},
 		errors: {
 			untrusted:
