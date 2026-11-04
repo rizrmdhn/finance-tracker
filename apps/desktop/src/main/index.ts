@@ -772,8 +772,14 @@ app.whenReady().then(() => {
 		? path.join(__dirname, "../../../../packages/db/migrations")
 		: path.join(process.resourcesPath, "migrations");
 
-	// cr-sqlite must be loaded before migrating: CRR tables are altered through crsql_begin_alter/commit_alter
-	sqlite.loadExtension(extensionPath);
+	// cr-sqlite must be loaded before migrating: CRR tables are altered through crsql_begin_alter/commit_alter.
+	// SQLite loads it with LoadLibrary, which cannot read inside app.asar, so use the unpacked copy.
+	sqlite.loadExtension(
+		extensionPath.replace(
+			`${path.sep}app.asar${path.sep}`,
+			`${path.sep}app.asar.unpacked${path.sep}`,
+		),
+	);
 
 	// PRAGMA foreign_keys is a no-op inside a transaction, so we must disable
 	// FK enforcement on the connection BEFORE the migration transaction starts.
@@ -944,6 +950,14 @@ app.whenReady().then(() => {
 			return { success: false, error: (error as Error).message };
 		}
 	});
+}).catch((err: unknown) => {
+	// Without this a startup failure leaves the process running with no window
+	console.error("[startup] failed:", err);
+	dialog.showErrorBox(
+		"Finance Tracker failed to start",
+		err instanceof Error ? (err.stack ?? err.message) : String(err),
+	);
+	app.exit(1);
 });
 
 app.on("window-all-closed", () => {
