@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, test } from "bun:test";
-import { goalContributions, goals, transactions } from "@finance-tracker/db";
-import { eq } from "drizzle-orm";
+import { goalContributions, transactions } from "@finance-tracker/db";
 import {
 	AccountAlreadyLinkedError,
 	AccountIsContributionSourceError,
@@ -14,6 +13,7 @@ import {
 } from "./errors";
 import {
 	addGoalContribution,
+	archiveGoal,
 	createGoal,
 	deleteGoal,
 	deleteGoalContribution,
@@ -128,13 +128,6 @@ describe("goal contributions", () => {
 });
 
 describe("goal guards", () => {
-	async function archive(goalId: string) {
-		await db
-			.update(goals)
-			.set({ status: "archived" })
-			.where(eq(goals.id, goalId));
-	}
-
 	function contribute(goalId: string, accountId: string, amount: number) {
 		return addGoalContribution(db, { goalId, accountId, amount, date: 1 });
 	}
@@ -159,7 +152,7 @@ describe("goal guards", () => {
 				updateGoal(db, { id: other.id, linkedAccountId: pocket.id }),
 			).rejects.toThrow(AccountAlreadyLinkedError);
 
-			await archive(owner.id);
+			await archiveGoal(db, owner.id);
 			const relinked = await updateGoal(db, {
 				id: other.id,
 				linkedAccountId: pocket.id,
@@ -180,7 +173,7 @@ describe("goal guards", () => {
 				updateGoal(db, { id: funded.id, linkedAccountId: wallet.id }),
 			).rejects.toThrow(AccountIsContributionSourceError);
 
-			await archive(funded.id);
+			await archiveGoal(db, funded.id);
 			const goal = await createGoal(db, {
 				...baseGoal,
 				linkedAccountId: wallet.id,
@@ -243,7 +236,7 @@ describe("goal guards", () => {
 				LinkedAccountContributionError,
 			);
 
-			await archive(owner.id);
+			await archiveGoal(db, owner.id);
 			const contribution = await contribute(goal.id, pocket.id, 100);
 			expect(contribution.amount).toBe(100);
 		});
@@ -319,7 +312,7 @@ describe("goal guards", () => {
 				InsufficientFreeBalanceError,
 			);
 
-			await archive(archived.id);
+			await archiveGoal(db, archived.id);
 			const contribution = await contribute(goal.id, wallet.id, 1000);
 			expect(contribution.amount).toBe(1000);
 		});
@@ -397,7 +390,7 @@ describe("goal guards", () => {
 				...baseGoal,
 				allocationPercent: 40,
 			});
-			await archive(archived.id);
+			await archiveGoal(db, archived.id);
 			await deleteGoal(db, deleted.id);
 
 			const goal = await createGoal(db, {
@@ -411,7 +404,7 @@ describe("goal guards", () => {
 	test("only active goals take contributions", async () => {
 		const wallet = await seedAccount(db, { initialBalance: 1000 });
 		const goal = await createGoal(db, baseGoal);
-		await archive(goal.id);
+		await archiveGoal(db, goal.id);
 
 		await expect(contribute(goal.id, wallet.id, 100)).rejects.toThrow(
 			GoalNotActiveError,
@@ -533,5 +526,66 @@ describe("purchaseGoal", () => {
 
 		expect(await db.select().from(transactions)).toEqual([]);
 		expect((await getGoalById(db, goal.id))?.status).toBe("active");
+	});
+});
+
+describe("archiveGoal", () => {
+	test("archives an active goal and releases its account, allocations and percent", async () => {
+		const pocket = await seedAccount(db, { initialBalance: 1000 });
+		const wallet = await seedAccount(db, { initialBalance: 5000 });
+		const goal = await createGoal(db, {
+			...baseGoal,
+			allocationPercent: 100,
+			linkedAccountId: pocket.id,
+			initialFund: { accountId: wallet.id, amount: 2000 },
+		});
+
+		const archived = await archiveGoal(db, goal.id);
+
+		expect(archived.status).toBe("archived");
+		expect(archived.purchasedAt).toBeNull();
+		// contributions stay, but no longer hold money
+		expect(await getGoalContributions(db, goal.id)).toHaveLength(1);
+		expect(await getAccountAllocations(db)).toEqual([
+			expect.objectContaining({
+				accountId: pocket.id,
+				isLinked: false,
+				freeBalance: 1000,
+			}),
+			expect.objectContaining({
+				accountId: wallet.id,
+				allocated: 0,
+				freeBalance: 5000,
+			}),
+		]);
+		const next = await createGoal(db, {
+			...baseGoal,
+			allocationPercent: 100,
+			linkedAccountId: pocket.id,
+		});
+		expect(next.linkedAccountId).toBe(pocket.id);
+	});
+
+	test("only archives active goals", async () => {
+		const wallet = await seedAccount(db, { initialBalance: 5000 });
+		const expense = await seedCategory(db, "expense");
+		const archived = await createGoal(db, baseGoal);
+		const purchased = await createGoal(db, baseGoal);
+		await archiveGoal(db, archived.id);
+		await purchaseGoal(db, {
+			goalId: purchased.id,
+			categoryId: expense.id,
+			date: 1,
+			payments: [{ accountId: wallet.id, amount: 100 }],
+		});
+
+		await expect(archiveGoal(db, archived.id)).rejects.toThrow(
+			GoalNotActiveError,
+		);
+		await expect(archiveGoal(db, purchased.id)).rejects.toThrow(
+			GoalNotActiveError,
+		);
+		expect((await getGoalById(db, purchased.id))?.status).toBe("purchased");
+		await expect(archiveGoal(db, "missing")).rejects.toThrow(NotFoundError);
 	});
 });
