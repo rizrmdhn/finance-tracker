@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test } from "bun:test";
-import { goalContributions, goals } from "@finance-tracker/db";
+import { goalContributions, goals, transactions } from "@finance-tracker/db";
 import { eq } from "drizzle-orm";
 import {
 	AccountAlreadyLinkedError,
@@ -8,6 +8,7 @@ import {
 	GoalNotActiveError,
 	InsufficientFreeBalanceError,
 	LinkedAccountContributionError,
+	NotFoundError,
 	RelationNotFoundError,
 	WithdrawalExceedsAllocationError,
 } from "./errors";
@@ -16,9 +17,11 @@ import {
 	createGoal,
 	deleteGoal,
 	deleteGoalContribution,
+	getAccountAllocations,
 	getGoalById,
 	getGoalContributions,
 	getGoals,
+	purchaseGoal,
 	updateGoal,
 } from "./goal";
 import {
@@ -413,5 +416,122 @@ describe("goal guards", () => {
 		await expect(contribute(goal.id, wallet.id, 100)).rejects.toThrow(
 			GoalNotActiveError,
 		);
+	});
+});
+
+describe("purchaseGoal", () => {
+	const date = Date.UTC(2026, 10, 1);
+
+	test("pays with one expense per account and releases the allocations", async () => {
+		const pocket = await seedAccount(db, { initialBalance: 1000 });
+		const wallet = await seedAccount(db, { initialBalance: 5000 });
+		const expense = await seedCategory(db, "expense");
+		const goal = await createGoal(db, {
+			...baseGoal,
+			targetAmount: 4000,
+			linkedAccountId: pocket.id,
+			initialFund: { accountId: wallet.id, amount: 2000 },
+		});
+
+		const purchased = await purchaseGoal(db, {
+			goalId: goal.id,
+			categoryId: expense.id,
+			date,
+			payments: [
+				{ accountId: pocket.id, amount: 1000 },
+				{ accountId: wallet.id, amount: 3000 },
+			],
+		});
+
+		expect(purchased).toMatchObject({ status: "purchased", purchasedAt: date });
+		const payments = await db.select().from(transactions);
+		expect(
+			payments.map(({ accountId, amount, categoryId, note, date }) => ({
+				accountId,
+				amount,
+				categoryId,
+				note,
+				date,
+			})),
+		).toEqual([
+			{
+				accountId: pocket.id,
+				amount: 1000,
+				categoryId: expense.id,
+				note: goal.name,
+				date,
+			},
+			{
+				accountId: wallet.id,
+				amount: 3000,
+				categoryId: expense.id,
+				note: goal.name,
+				date,
+			},
+		]);
+		// contributions stay, but no longer hold money
+		expect(await getGoalContributions(db, goal.id)).toHaveLength(1);
+		expect(await getAccountAllocations(db)).toEqual([
+			expect.objectContaining({
+				accountId: pocket.id,
+				balance: 0,
+				isLinked: false,
+				freeBalance: 0,
+			}),
+			expect.objectContaining({
+				accountId: wallet.id,
+				balance: 2000,
+				allocated: 0,
+				freeBalance: 2000,
+			}),
+		]);
+	});
+
+	test("only purchases active goals", async () => {
+		const wallet = await seedAccount(db, { initialBalance: 5000 });
+		const expense = await seedCategory(db, "expense");
+		const goal = await createGoal(db, baseGoal);
+		const input = {
+			goalId: goal.id,
+			categoryId: expense.id,
+			date,
+			payments: [{ accountId: wallet.id, amount: 100 }],
+		};
+		await purchaseGoal(db, input);
+
+		await expect(purchaseGoal(db, input)).rejects.toThrow(GoalNotActiveError);
+		await expect(
+			purchaseGoal(db, { ...input, goalId: "missing" }),
+		).rejects.toThrow(NotFoundError);
+		expect(await db.select().from(transactions)).toHaveLength(1);
+	});
+
+	test("rejects a category that isn't an expense, or an unknown account, and changes nothing", async () => {
+		const wallet = await seedAccount(db, { initialBalance: 5000 });
+		const expense = await seedCategory(db, "expense");
+		const income = await seedCategory(db, "income");
+		const goal = await createGoal(db, baseGoal);
+		const input = {
+			goalId: goal.id,
+			categoryId: expense.id,
+			date,
+			payments: [{ accountId: wallet.id, amount: 100 }],
+		};
+
+		await expect(
+			purchaseGoal(db, { ...input, categoryId: income.id }),
+		).rejects.toThrow(RelationNotFoundError);
+		await expect(
+			purchaseGoal(db, { ...input, categoryId: "missing" }),
+		).rejects.toThrow(RelationNotFoundError);
+		await expect(
+			purchaseGoal(db, {
+				...input,
+				payments: [...input.payments, { accountId: "missing", amount: 50 }],
+			}),
+		).rejects.toThrow(RelationNotFoundError);
+
+		expect(await db.select().from(transactions)).toEqual([]);
+		expect((await getGoalById(db, goal.id))?.status).toBe("active");
 	});
 });

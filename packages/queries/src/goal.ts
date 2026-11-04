@@ -6,6 +6,7 @@ import type {
 import {
 	type AnyDatabase,
 	accounts,
+	categories,
 	goalContributions,
 	goals,
 	transactions,
@@ -13,10 +14,11 @@ import {
 import type {
 	GoalContributionInput,
 	GoalInput,
+	GoalPurchaseInput,
 	GoalUpdateInput,
 } from "@finance-tracker/schema";
 import { eachMonthOfInterval, max, startOfMonth, subMonths } from "date-fns";
-import { and, asc, desc, eq, gte, isNull, lt, or } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, isNull, lt, or } from "drizzle-orm";
 import {
 	AccountAlreadyLinkedError,
 	AccountIsContributionSourceError,
@@ -305,6 +307,74 @@ export async function deleteGoal(db: AnyDatabase, id: string) {
 	if (!result) throw new Error("Failed to delete goal");
 
 	return result;
+}
+
+/**
+ * Buys an active goal: one expense per paying account, then `purchased`. Its contributions
+ * stay; they stop counting as allocations because the goal is no longer active.
+ */
+export async function purchaseGoal(db: AnyDatabase, input: GoalPurchaseInput) {
+	return await withTransaction(db, async () => {
+		const goal = await getGoalById(db, input.goalId);
+
+		if (!goal) throw new NotFoundError("Goal", input.goalId);
+		if (goal.status !== "active")
+			throw new GoalNotActiveError(goal.id, goal.status);
+
+		const accountIds = [...new Set(input.payments.map((p) => p.accountId))];
+		const [category, payingAccounts] = await Promise.all([
+			db.query.categories.findFirst({
+				where: and(
+					eq(categories.id, input.categoryId),
+					eq(categories.type, "expense"),
+					isNull(categories.deletedAt),
+				),
+			}),
+			db.query.accounts.findMany({
+				columns: { id: true },
+				where: and(
+					inArray(accounts.id, accountIds),
+					isNull(accounts.deletedAt),
+				),
+			}),
+		]);
+
+		if (!category)
+			throw new RelationNotFoundError(
+				"Goal purchase",
+				"Expense category",
+				input.categoryId,
+			);
+		const missingAccountId = accountIds.find(
+			(id) => !payingAccounts.some((a) => a.id === id),
+		);
+		if (missingAccountId)
+			throw new RelationNotFoundError(
+				"Goal purchase",
+				"Account",
+				missingAccountId,
+			);
+
+		await db.insert(transactions).values(
+			input.payments.map((payment) => ({
+				amount: payment.amount,
+				accountId: payment.accountId,
+				categoryId: input.categoryId,
+				note: goal.name,
+				date: input.date,
+			})),
+		);
+
+		const [result] = await db
+			.update(goals)
+			.set({ status: "purchased", purchasedAt: input.date })
+			.where(eq(goals.id, goal.id))
+			.returning();
+
+		if (!result) throw new Error("Failed to purchase goal");
+
+		return result;
+	});
 }
 
 export async function addGoalContribution(
