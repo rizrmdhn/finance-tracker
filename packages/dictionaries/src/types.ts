@@ -488,6 +488,9 @@ export interface Dictionary {
 		widget: {
 			title: string;
 			noGoals: string;
+			openApp: string;
+			staleMessage: string;
+			tapToRefresh: string;
 		};
 	};
 	recurrences: {
