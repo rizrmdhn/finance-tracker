@@ -55,17 +55,20 @@ jobs:
             args: --win
             artifact: |
               apps/desktop/dist/**/*.exe
-              apps/desktop/dist/latest.yml
+              apps/desktop/dist/*.yml
+              !apps/desktop/dist/builder-debug.yml
           - os: macos-latest
             args: --mac
             artifact: |
               apps/desktop/dist/**/*.dmg
-              apps/desktop/dist/latest-mac.yml
+              apps/desktop/dist/*.yml
+              !apps/desktop/dist/builder-debug.yml
           - os: ubuntu-latest
             args: --linux
             artifact: |
               apps/desktop/dist/**/*.AppImage
-              apps/desktop/dist/latest-linux.yml
+              apps/desktop/dist/*.yml
+              !apps/desktop/dist/builder-debug.yml
 
     runs-on: ${{ matrix.os }}
 
