@@ -1,6 +1,6 @@
-import { type AnyDatabase, accounts } from "@finance-tracker/db";
+import { type AnyDatabase, accounts, transactions } from "@finance-tracker/db";
 import type { AccountInput, AccountUpdateInput } from "@finance-tracker/schema";
-import { eq } from "drizzle-orm";
+import { eq, isNull } from "drizzle-orm";
 import { NotFoundError } from "./errors";
 
 export async function getAccounts(db: AnyDatabase) {
@@ -10,6 +10,7 @@ export async function getAccounts(db: AnyDatabase) {
 export async function getAccountsWithBalance(db: AnyDatabase) {
 	const allAccounts = await db.query.accounts.findMany();
 	const allTransactions = await db.query.transactions.findMany({
+		where: isNull(transactions.deletedAt),
 		with: { category: true },
 	});
 
