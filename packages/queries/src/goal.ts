@@ -1,16 +1,36 @@
+import type { SupportedCurrency } from "@finance-tracker/constants";
 import {
 	type AnyDatabase,
 	goalContributions,
 	goals,
+	transactions,
 } from "@finance-tracker/db";
 import type {
 	GoalContributionInput,
 	GoalInput,
 	GoalUpdateInput,
 } from "@finance-tracker/schema";
-import { and, asc, desc, eq, isNull } from "drizzle-orm";
+import { eachMonthOfInterval, max, startOfMonth, subMonths } from "date-fns";
+import { and, asc, desc, eq, gte, isNull, lt } from "drizzle-orm";
 import { NotFoundError } from "./errors";
+import { getCachedRates } from "./exchange-rate";
 import { withTransaction } from "./utils/with-transaction";
+
+/** Converts amounts to `target` with the cached rates, like `toDisplay` in getTransactionSummary. */
+async function getCurrencyConverter(
+	db: AnyDatabase,
+	target: SupportedCurrency,
+) {
+	// 1 target = rate source, so source → target is amount / rate
+	const rates = new Map(
+		(await getCachedRates(db, target)).map((r) => [r.target, r.rate]),
+	);
+	return (amount: number, source: SupportedCurrency) => {
+		if (source === target) return amount;
+		const rate = rates.get(source);
+		return rate ? amount / rate : amount;
+	};
+}
 
 export async function getGoals(db: AnyDatabase) {
 	return await db.query.goals.findMany({
@@ -125,4 +145,77 @@ export async function deleteGoalContribution(db: AnyDatabase, id: string) {
 	if (!result) throw new Error("Failed to delete goal contribution");
 
 	return result;
+}
+
+/**
+ * Income − expense per full month (current month excluded), oldest first, for the last
+ * `months` months — but never before the month of the first transaction, so a new user
+ * isn't dragged down by empty months. `savings` isn't subtracted and transfers are ignored.
+ */
+export async function getMonthlySurplus(
+	db: AnyDatabase,
+	input: { months: number; displayCurrency: SupportedCurrency },
+) {
+	const currentMonth = startOfMonth(new Date());
+
+	const firstTransaction = await db.query.transactions.findFirst({
+		columns: { date: true },
+		where: isNull(transactions.deletedAt),
+		orderBy: asc(transactions.date),
+	});
+
+	if (!firstTransaction) return [];
+
+	const from = max([
+		subMonths(currentMonth, input.months),
+		startOfMonth(firstTransaction.date),
+	]);
+
+	if (from >= currentMonth) return [];
+
+	const [periodTransactions, toDisplay] = await Promise.all([
+		db.query.transactions.findMany({
+			where: and(
+				gte(transactions.date, from.getTime()),
+				lt(transactions.date, currentMonth.getTime()),
+				isNull(transactions.deletedAt),
+			),
+			with: { category: true, account: true },
+		}),
+		getCurrencyConverter(db, input.displayCurrency),
+	]);
+
+	const income = new Map<number, number>();
+	const expense = new Map<number, number>();
+	for (const tx of periodTransactions) {
+		const totals =
+			tx.category?.type === "income"
+				? income
+				: tx.category?.type === "expense"
+					? expense
+					: undefined;
+		if (!totals) continue;
+
+		const month = startOfMonth(tx.date).getTime();
+		const amount = toDisplay(
+			tx.amount,
+			tx.account?.currency ?? input.displayCurrency,
+		);
+		totals.set(month, (totals.get(month) ?? 0) + amount);
+	}
+
+	return eachMonthOfInterval({
+		start: from,
+		end: subMonths(currentMonth, 1),
+	}).map((monthStart) => {
+		const month = monthStart.getTime();
+		const monthIncome = income.get(month) ?? 0;
+		const monthExpense = expense.get(month) ?? 0;
+		return {
+			month,
+			income: monthIncome,
+			expense: monthExpense,
+			surplus: monthIncome - monthExpense,
+		};
+	});
 }
