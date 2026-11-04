@@ -43,7 +43,7 @@ async function fetchAndSaveWidgetData() {
 	});
 }
 
-export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
+export async function budgetWidgetTaskHandler(props: WidgetTaskHandlerProps) {
 	switch (props.widgetAction) {
 		case "WIDGET_ADDED":
 		case "WIDGET_UPDATE":

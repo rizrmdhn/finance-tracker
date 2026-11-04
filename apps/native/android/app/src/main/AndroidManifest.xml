@@ -39,5 +39,12 @@
       </intent-filter>
       <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_budgetwidget"/>
     </receiver>
+    <receiver android:name=".widget.GoalWidget" android:exported="false" android:label="Goals">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+        <action android:name="com.rizrmdhn.finance_tracker.WIDGET_CLICK"/>
+      </intent-filter>
+      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_goalwidget"/>
+    </receiver>
   </application>
 </manifest>
