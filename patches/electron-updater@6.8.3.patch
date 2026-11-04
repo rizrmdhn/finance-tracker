@@ -1,0 +1,91 @@
+diff --git a/out/providers/GitHubProvider.js b/out/providers/GitHubProvider.js
+index 6795ee8..bd6dcc5 100644
+--- a/out/providers/GitHubProvider.js
++++ b/out/providers/GitHubProvider.js
+@@ -44,39 +44,50 @@ class GitHubProvider extends BaseGitHubProvider {
+             accept: "application/xml, application/atom+xml, text/xml, */*",
+         }, cancellationToken));
+         const feed = (0, builder_util_runtime_1.parseXml)(feedXml);
+-        // noinspection TypeScriptValidateJSTypes
+-        let latestRelease = feed.element("entry", false, `No published versions on GitHub`);
++        // [patched] Tags like `desktop/v2.0.0` appear URL-encoded (`desktop%2Fv2.0.0`) in the feed,
++        // and the feed also lists other tags in the repo (e.g. `mobile/v*`). Decode the tag and
++        // only consider entries matching `tagNamePrefix`, which is stripped before semver parsing.
++        const tagNamePrefix = this.options.tagNamePrefix || "";
++        const entryTag = (element) => {
++            // noinspection TypeScriptValidateJSTypes
++            const hrefElement = hrefRegExp.exec(element.element("link").attribute("href"));
++            return hrefElement === null ? null : decodeURIComponent(hrefElement[1]);
++        };
++        const tagVersion = (tagName) => (tagName.startsWith(tagNamePrefix) ? tagName.slice(tagNamePrefix.length) : tagName);
++        const entries = feed.getElements("entry").filter(element => {
++            const tagName = entryTag(element);
++            return tagName !== null && tagName.startsWith(tagNamePrefix);
++        });
++        if (entries.length === 0) {
++            throw (0, builder_util_runtime_1.newError)(`No published versions on GitHub`, "ERR_UPDATER_NO_PUBLISHED_VERSIONS");
++        }
++        let latestRelease = entries[0];
+         let tag = null;
+         try {
+             if (this.updater.allowPrerelease) {
+                 const currentChannel = ((_a = this.updater) === null || _a === void 0 ? void 0 : _a.channel) || ((_b = semver.prerelease(this.updater.currentVersion)) === null || _b === void 0 ? void 0 : _b[0]) || null;
+                 if (currentChannel === null) {
+-                    // noinspection TypeScriptValidateJSTypes
+-                    tag = hrefRegExp.exec(latestRelease.element("link").attribute("href"))[1];
++                    tag = entryTag(latestRelease);
+                 }
+                 else {
+-                    for (const element of feed.getElements("entry")) {
+-                        // noinspection TypeScriptValidateJSTypes
+-                        const hrefElement = hrefRegExp.exec(element.element("link").attribute("href"));
+-                        // If this is null then something is wrong and skip this release
+-                        if (hrefElement === null) {
+-                            continue;
+-                        }
++                    for (const element of entries) {
+                         // This Release's Tag
+-                        const hrefTag = hrefElement[1];
++                        const hrefTag = entryTag(element);
+                         //Get Channel from this release's tag
+-                        const hrefChannel = ((_c = semver.prerelease(hrefTag)) === null || _c === void 0 ? void 0 : _c[0]) || null;
++                        const hrefChannel = ((_c = semver.prerelease(tagVersion(hrefTag))) === null || _c === void 0 ? void 0 : _c[0]) || null;
+                         const shouldFetchVersion = !currentChannel || ["alpha", "beta"].includes(currentChannel);
+                         const isCustomChannel = hrefChannel !== null && !["alpha", "beta"].includes(String(hrefChannel));
+                         // Allow moving from alpha to beta but not down
+                         const channelMismatch = currentChannel === "beta" && hrefChannel === "alpha";
+                         if (shouldFetchVersion && !isCustomChannel && !channelMismatch) {
+                             tag = hrefTag;
++                            latestRelease = element;
+                             break;
+                         }
+                         const isNextPreRelease = hrefChannel && hrefChannel === currentChannel;
+                         if (isNextPreRelease) {
+                             tag = hrefTag;
++                            latestRelease = element;
+                             break;
+                         }
+                     }
+@@ -84,9 +95,8 @@ class GitHubProvider extends BaseGitHubProvider {
+             }
+             else {
+                 tag = await this.getLatestTagName(cancellationToken);
+-                for (const element of feed.getElements("entry")) {
+-                    // noinspection TypeScriptValidateJSTypes
+-                    if (hrefRegExp.exec(element.element("link").attribute("href"))[1] === tag) {
++                for (const element of entries) {
++                    if (entryTag(element) === tag) {
+                         latestRelease = element;
+                         break;
+                     }
+@@ -118,8 +128,8 @@ class GitHubProvider extends BaseGitHubProvider {
+         };
+         try {
+             let channel = this.channel;
+-            if (this.updater.allowPrerelease && ((_d = semver.prerelease(tag)) === null || _d === void 0 ? void 0 : _d[0])) {
+-                channel = this.getCustomChannelName(String((_e = semver.prerelease(tag)) === null || _e === void 0 ? void 0 : _e[0]));
++            if (this.updater.allowPrerelease && ((_d = semver.prerelease(tagVersion(tag))) === null || _d === void 0 ? void 0 : _d[0])) {
++                channel = this.getCustomChannelName(String((_e = semver.prerelease(tagVersion(tag))) === null || _e === void 0 ? void 0 : _e[0]));
+             }
+             rawData = await fetchData(channel);
+         }
