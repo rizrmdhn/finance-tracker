@@ -52,6 +52,23 @@ export const goalContributionSchema = z.object({
 	date: z.number({ error: "Date is required" }),
 });
 
+export const goalPurchaseSchema = z.object({
+	goalId: z.string({ error: "Goal is required" }),
+	payments: z
+		.array(
+			z.object({
+				accountId: z.string({ error: "Account is required" }),
+				amount: z
+					.number({ error: "Amount is required" })
+					.positive({ error: "Amount must be greater than 0" }),
+			}),
+		)
+		.min(1, { error: "Please add at least one payment" }),
+	date: z.number({ error: "Date is required" }),
+	categoryId: z.string({ error: "Category is required" }),
+});
+
 export type GoalInput = z.infer<typeof goalSchema>;
 export type GoalUpdateInput = z.infer<typeof goalUpdateSchema>;
 export type GoalContributionInput = z.infer<typeof goalContributionSchema>;
+export type GoalPurchaseInput = z.infer<typeof goalPurchaseSchema>;
