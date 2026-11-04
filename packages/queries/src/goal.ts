@@ -17,6 +17,12 @@ import type {
 	GoalPurchaseInput,
 	GoalUpdateInput,
 } from "@finance-tracker/schema";
+import {
+	estimateGoalCompletion,
+	getDurationParts,
+	getTargetDateGap,
+	pickGoalPace,
+} from "@finance-tracker/utils";
 import { eachMonthOfInterval, max, startOfMonth, subMonths } from "date-fns";
 import { and, asc, desc, eq, gte, inArray, isNull, lt, or } from "drizzle-orm";
 import {
@@ -520,7 +526,8 @@ export async function getMonthlySurplus(
 
 /**
  * Progress = linked account balance + contributions, all in the goal's currency.
- * Contributions are in their source account's currency.
+ * Contributions are in their source account's currency: per account, `total` is converted to
+ * the goal's currency, `held` stays in the account's `currency` (the most a withdrawal can take).
  */
 export async function getGoalProgress(db: AnyDatabase, goalId: string) {
 	const goal = await getGoalById(db, goalId);
@@ -546,18 +553,18 @@ export async function getGoalProgress(db: AnyDatabase, goalId: string) {
 		? toGoalCurrency(linked.balance, linked.currency)
 		: 0;
 
-	const totals = new Map<string, number>();
-	for (const row of contributionRows) {
-		const currency = balances.get(row.accountId)?.currency ?? goal.currency;
-		totals.set(
-			row.accountId,
-			(totals.get(row.accountId) ?? 0) + toGoalCurrency(row.amount, currency),
-		);
-	}
-	const contributions = [...totals].map(([accountId, total]) => ({
-		accountId,
-		total,
-	}));
+	const held = new Map<string, number>();
+	for (const row of contributionRows)
+		held.set(row.accountId, (held.get(row.accountId) ?? 0) + row.amount);
+	const contributions = [...held].map(([accountId, amount]) => {
+		const currency = balances.get(accountId)?.currency ?? goal.currency;
+		return {
+			accountId,
+			total: toGoalCurrency(amount, currency),
+			held: amount,
+			currency,
+		};
+	});
 
 	const total =
 		linkedBalance + contributions.reduce((sum, c) => sum + c.total, 0);
@@ -683,4 +690,84 @@ export async function getAccountAllocations(db: AnyDatabase) {
 			isOverAllocated: isLinked ? allocated > 0 : allocated > balance,
 		};
 	});
+}
+
+/** Months of history the potential pace is based on. */
+const SURPLUS_MONTHS = 6;
+
+/**
+ * Everything a goal card needs: the goal, its progress and — for active goals only — the
+ * completion estimate. Real pace once the goal has ≥ 3 months of data, otherwise potential pace
+ * (monthly surplus × allocation); amounts are in the goal's currency.
+ */
+export async function getGoalEstimate(
+	db: AnyDatabase,
+	goalId: string,
+	today = new Date(),
+) {
+	const goal = await getGoalById(db, goalId);
+
+	if (!goal) throw new NotFoundError("Goal", goalId);
+
+	const progress = await getGoalProgress(db, goalId);
+
+	if (goal.status !== "active") return { goal, progress, estimate: null };
+
+	const [monthlySurplus, monthlyProgress] = await Promise.all([
+		getMonthlySurplus(db, {
+			months: SURPLUS_MONTHS,
+			displayCurrency: goal.currency,
+		}),
+		getGoalMonthlyProgress(db, goalId),
+	]);
+
+	const remaining = Math.max(goal.targetAmount - progress.total, 0);
+	const pace = pickGoalPace({
+		realRates: monthlyProgress.map((m) => m.amount),
+		monthlySurplus: monthlySurplus.map((m) => m.surplus),
+		allocationPercent: goal.allocationPercent,
+	});
+	const monthlyRate =
+		pace.source === "real" ? pace.realMonthly : pace.potentialMonthly;
+	const completion = estimateGoalCompletion({
+		remaining,
+		monthlyRates: pace.rates,
+		today,
+	});
+	const durationOf = (days: number | null) =>
+		days === null ? null : getDurationParts(days);
+
+	return {
+		goal,
+		progress,
+		estimate: {
+			remaining,
+			monthlySurplus,
+			monthlyProgress,
+			pace,
+			monthlyRate,
+			completion,
+			duration: {
+				main: durationOf(completion.days),
+				min: durationOf(completion.range.minDays),
+				max: durationOf(completion.range.maxDays),
+			},
+			targetDateGap: goal.targetDate
+				? getTargetDateGap({
+						remaining,
+						targetDate: new Date(goal.targetDate),
+						monthlyRate: monthlyRate ?? 0,
+						today,
+					})
+				: null,
+		},
+	};
+}
+
+/** `getGoalEstimate` for every non-deleted goal, in list order. */
+export async function getGoalsOverview(db: AnyDatabase, today = new Date()) {
+	const allGoals = await getGoals(db);
+	return await Promise.all(
+		allGoals.map((goal) => getGoalEstimate(db, goal.id, today)),
+	);
 }
