@@ -3,6 +3,8 @@ import { median, percentile } from "./stats";
 
 const DAYS_PER_YEAR = 365.25;
 const DAYS_PER_MONTH = DAYS_PER_YEAR / 12;
+const MAX_DAYS_IN_DAYS_UNIT = 59;
+const DURATION_CAP_YEARS = 50;
 
 export type GoalEstimateStatus = "reached" | "estimated" | "no-surplus";
 
@@ -146,4 +148,38 @@ export function getTargetDateGap({
 	const gap = Math.max(requiredMonthly - monthlyRate, 0);
 
 	return { requiredMonthly, gap, onTrack: gap === 0, isPast: false };
+}
+
+export interface DurationParts {
+	unit: "days" | "months" | "yearsMonths" | "overCap";
+	years: number;
+	months: number;
+	days: number;
+}
+
+/**
+ * Splits a day count into display parts without false precision: days below 60, otherwise
+ * months rounded up (carried into years from 12), capped beyond 50 years.
+ */
+export function getDurationParts(days: number): DurationParts {
+	if (days <= MAX_DAYS_IN_DAYS_UNIT) {
+		return { unit: "days", years: 0, months: 0, days };
+	}
+
+	if (days > DURATION_CAP_YEARS * DAYS_PER_YEAR) {
+		return { unit: "overCap", years: DURATION_CAP_YEARS, months: 0, days: 0 };
+	}
+
+	const totalMonths = Math.ceil(days / DAYS_PER_MONTH);
+
+	if (totalMonths < 12) {
+		return { unit: "months", years: 0, months: totalMonths, days: 0 };
+	}
+
+	return {
+		unit: "yearsMonths",
+		years: Math.floor(totalMonths / 12),
+		months: totalMonths % 12,
+		days: 0,
+	};
 }

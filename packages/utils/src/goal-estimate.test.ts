@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
 	estimateGoalCompletion,
+	getDurationParts,
 	getTargetDateGap,
 	pickGoalPace,
 } from "./goal-estimate";
@@ -287,5 +288,96 @@ describe("getTargetDateGap", () => {
 			onTrack: true,
 			isPast: false,
 		});
+	});
+});
+
+describe("getDurationParts", () => {
+	test("0 days (reached) is days", () => {
+		expect(getDurationParts(0)).toEqual({
+			unit: "days",
+			years: 0,
+			months: 0,
+			days: 0,
+		});
+	});
+
+	test("59 days stays in days", () => {
+		expect(getDurationParts(59)).toEqual({
+			unit: "days",
+			years: 0,
+			months: 0,
+			days: 59,
+		});
+	});
+
+	test("60 days switches to months, rounded up", () => {
+		// 60 / 30.4375 = 1.97 → 2
+		expect(getDurationParts(60)).toEqual({
+			unit: "months",
+			years: 0,
+			months: 2,
+			days: 0,
+		});
+	});
+
+	test("months always round up", () => {
+		// 183 / 30.4375 = 6.01 → 7
+		expect(getDurationParts(183).months).toBe(7);
+	});
+
+	test("just under 11 months shows 11 months", () => {
+		// 334 / 30.4375 = 10.97 → 11
+		expect(getDurationParts(334)).toEqual({
+			unit: "months",
+			years: 0,
+			months: 11,
+			days: 0,
+		});
+	});
+
+	test("over 11 months rounds up to 12 and carries into 1 year", () => {
+		// 335 / 30.4375 = 11.006 → 12 → 1 year 0 months
+		expect(getDurationParts(335)).toEqual({
+			unit: "yearsMonths",
+			years: 1,
+			months: 0,
+			days: 0,
+		});
+		expect(getDurationParts(365)).toEqual({
+			unit: "yearsMonths",
+			years: 1,
+			months: 0,
+			days: 0,
+		});
+	});
+
+	test("years and months", () => {
+		// 457 / 30.4375 = 15.01 → 16 → 1 year 4 months
+		expect(getDurationParts(457)).toEqual({
+			unit: "yearsMonths",
+			years: 1,
+			months: 4,
+			days: 0,
+		});
+	});
+
+	test("exactly 50 years is still shown", () => {
+		// 18,262 days = 599.98 months → 600 → 50 years 0 months
+		expect(getDurationParts(18_262)).toEqual({
+			unit: "yearsMonths",
+			years: 50,
+			months: 0,
+			days: 0,
+		});
+	});
+
+	test("over 50 years is capped", () => {
+		expect(getDurationParts(18_263)).toEqual({
+			unit: "overCap",
+			years: 50,
+			months: 0,
+			days: 0,
+		});
+		expect(getDurationParts(1_000_000).unit).toBe("overCap");
 	});
 });
