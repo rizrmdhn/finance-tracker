@@ -487,6 +487,7 @@ export const en = {
 			confirm: "Delete",
 		},
 		allocation: {
+			summary: "{{allocated}} set aside for goals · {{free}} free",
 			freeBalance: "Free balance",
 			allocated: "Set aside for goals",
 			linkedTo: "Linked to {{name}}",

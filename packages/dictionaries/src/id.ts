@@ -487,6 +487,7 @@ export const id = {
 			confirm: "Hapus",
 		},
 		allocation: {
+			summary: "{{allocated}} disisihkan untuk target · {{free}} bebas",
 			freeBalance: "Saldo bebas",
 			allocated: "Disisihkan untuk target",
 			linkedTo: "Terhubung ke {{name}}",
