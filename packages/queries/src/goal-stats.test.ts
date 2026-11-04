@@ -1,10 +1,12 @@
 import { beforeEach, describe, expect, test } from "bun:test";
-import { exchangeRates } from "@finance-tracker/db";
+import { exchangeRates, goals } from "@finance-tracker/db";
 import { addDays, startOfMonth, subMonths } from "date-fns";
+import { eq } from "drizzle-orm";
 import {
 	addGoalContribution,
 	createGoal,
 	deleteGoalContribution,
+	getGoalMonthlyProgress,
 	getGoalProgress,
 	getMonthlySurplus,
 } from "./goal";
@@ -291,5 +293,84 @@ describe("getGoalProgress", () => {
 			contributions: [{ accountId: wallet.id, total: 80_000 }],
 			total: 240_000,
 		});
+	});
+});
+
+describe("getGoalMonthlyProgress", () => {
+	async function createGoalAt(monthsAgo: number, linkedAccountId?: string) {
+		const goal = await createGoal(db, { ...baseGoal, linkedAccountId });
+		await db
+			.update(goals)
+			.set({ createdAt: new Date(midMonth(monthsAgo)).toISOString() })
+			.where(eq(goals.id, goal.id));
+		return goal;
+	}
+
+	test("is empty for a goal created this month", async () => {
+		const goal = await createGoalAt(0);
+		expect(await getGoalMonthlyProgress(db, goal.id)).toEqual([]);
+	});
+
+	test("sums linked balance change and contributions per full month since creation", async () => {
+		const pocket = await seedAccount(db, { initialBalance: 1_000_000 });
+		const wallet = await seedAccount(db, { initialBalance: 1_000_000 });
+		const transfer = await seedCategory(db, "transfer");
+		const expense = await seedCategory(db, "expense");
+		const goal = await createGoalAt(2, pocket.id);
+
+		// before creation: ignored
+		await seedTransaction(db, {
+			accountId: wallet.id,
+			toAccountId: pocket.id,
+			categoryId: transfer.id,
+			amount: 999,
+			date: midMonth(3),
+		});
+		await seedTransaction(db, {
+			accountId: wallet.id,
+			toAccountId: pocket.id,
+			categoryId: transfer.id,
+			amount: 300,
+			date: midMonth(2),
+		});
+		await seedTransaction(db, {
+			accountId: pocket.id,
+			categoryId: expense.id,
+			amount: 50,
+			date: midMonth(2),
+		});
+		// unrelated account: ignored
+		await seedTransaction(db, {
+			accountId: wallet.id,
+			categoryId: expense.id,
+			amount: 777,
+			date: midMonth(1),
+		});
+		await addGoalContribution(db, {
+			goalId: goal.id,
+			accountId: wallet.id,
+			amount: 400,
+			date: midMonth(1),
+		});
+		// current month: excluded
+		await addGoalContribution(db, {
+			goalId: goal.id,
+			accountId: wallet.id,
+			amount: 123,
+			date: midMonth(0),
+		});
+
+		expect(await getGoalMonthlyProgress(db, goal.id)).toEqual([
+			{ month: monthStart(2), amount: 250 },
+			{ month: monthStart(1), amount: 400 },
+		]);
+	});
+
+	test("keeps at most the last 6 months", async () => {
+		const goal = await createGoalAt(10);
+		const result = await getGoalMonthlyProgress(db, goal.id);
+		expect(result.map((m) => m.month)).toEqual(
+			[6, 5, 4, 3, 2, 1].map(monthStart),
+		);
 	});
 });
