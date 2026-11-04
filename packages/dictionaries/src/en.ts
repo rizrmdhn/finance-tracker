@@ -328,6 +328,7 @@ export const en = {
 		noGoals: "No goals yet",
 		noGoalsDescription:
 			"Add something you're saving for, like a new phone or a holiday.",
+		inactiveGoals: "Purchased & archived ({{count}})",
 		status: {
 			active: "Active",
 			reached: "Reached",

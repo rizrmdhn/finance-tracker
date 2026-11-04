@@ -328,6 +328,7 @@ export const id = {
 		noGoals: "Belum ada target",
 		noGoalsDescription:
 			"Tambahkan sesuatu yang sedang Anda tabung, seperti ponsel baru atau liburan.",
+		inactiveGoals: "Sudah dibeli & diarsipkan ({{count}})",
 		status: {
 			active: "Aktif",
 			reached: "Tercapai",
