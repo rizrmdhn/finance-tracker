@@ -1,7 +1,7 @@
+import { SYNC_ERROR_TOAST_DURATION, syncErrorKey } from "@finance-tracker/sync";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { SYNC_ERROR_TOAST_DURATION, syncErrorKey } from "@/lib/sync-errors";
 import { globalErrorToast } from "@/lib/toast";
 import { platform } from "@/platform";
 

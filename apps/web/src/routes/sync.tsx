@@ -1,3 +1,4 @@
+import { SYNC_ERROR_TOAST_DURATION, syncErrorKey } from "@finance-tracker/sync";
 import { Badge } from "@finance-tracker/ui/components/badge";
 import { Button } from "@finance-tracker/ui/components/button";
 import {
@@ -24,7 +25,6 @@ import {
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { pageHead } from "@/lib/page-head";
-import { SYNC_ERROR_TOAST_DURATION, syncErrorKey } from "@/lib/sync-errors";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { trpc } from "@/lib/trpc";
 import { type DiscoveredPeer, platform } from "@/platform";

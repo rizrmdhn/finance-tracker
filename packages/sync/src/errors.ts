@@ -1,4 +1,4 @@
-import type { SyncErrorCode } from "@/platform";
+import type { SyncErrorCode } from "./protocol";
 
 const SYNC_ERROR_KEYS = {
 	untrusted: "sync.errors.untrusted",
@@ -16,7 +16,7 @@ const SYNC_ERROR_KEYS = {
 /** Sync errors carry guidance the user needs time to read. */
 export const SYNC_ERROR_TOAST_DURATION = 8000;
 
-/** Translation key with user guidance for a sync failure. */
+/** Translation key (see `@finance-tracker/dictionaries`) with user guidance for a sync failure. */
 export function syncErrorKey(code: SyncErrorCode) {
 	return SYNC_ERROR_KEYS[code] ?? SYNC_ERROR_KEYS.internal;
 }

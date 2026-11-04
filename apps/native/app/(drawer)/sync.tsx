@@ -3,12 +3,21 @@ import {
 	computeSasCode,
 	deriveSharedSecret,
 	generateEphemeralKeypair,
+	type PairAcceptMsg,
+	type PairChallengeMsg,
+	type PairingMessage,
+	type PairRejectMsg,
+	type PairRequestMsg,
+	type PlatformType,
 	pubKeyToBase64,
+	SYNC_ERROR_TOAST_DURATION,
+	SyncError,
+	secretToHex,
+	syncErrorKey,
 } from "@finance-tracker/sync";
 import { createId } from "@paralleldrive/cuid2";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Network from "expo-network";
-import * as SecureStore from "expo-secure-store";
 import {
 	Monitor,
 	RefreshCw,
@@ -34,35 +43,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Text } from "@/components/ui/text";
-import { sqlite } from "@/lib/db";
+import { type DeviceIdentity, getDeviceIdentity } from "@/lib/device-identity";
+import { SYNC_PORT, syncWithPeer } from "@/lib/sync-client";
+import { startSyncHost } from "@/lib/sync-host";
 import { useThemeColor } from "@/lib/theme";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { trpc } from "@/lib/trpc";
-import { type NativeWsServer, startNativeWsServer } from "@/lib/ws-server";
-
-// ── Device identity (persisted in SecureStore) ──────────────────────────────
-
-const DEVICE_ID_KEY = "sync_device_id";
-const DEVICE_NAME_KEY = "sync_device_name";
-
-async function getOrCreateDeviceIdentity(): Promise<{
-	deviceId: string;
-	deviceName: string;
-}> {
-	let deviceId = await SecureStore.getItemAsync(DEVICE_ID_KEY);
-	let deviceName = await SecureStore.getItemAsync(DEVICE_NAME_KEY);
-	if (!deviceId) {
-		deviceId = createId();
-		await SecureStore.setItemAsync(DEVICE_ID_KEY, deviceId);
-	}
-	if (!deviceName) {
-		deviceName = "My Phone";
-		await SecureStore.setItemAsync(DEVICE_NAME_KEY, deviceName);
-	}
-	return { deviceId, deviceName };
-}
-
-// ── Types ────────────────────────────────────────────────────────────────────
+import type { NativeWsServer, WsConnection } from "@/lib/ws-server";
 
 // ── Discovered mDNS service ───────────────────────────────────────────────────
 
@@ -83,120 +70,43 @@ const zeroconf = new Zeroconf();
 type PairingState =
 	| { status: "idle" }
 	| { status: "connecting" }
-	| {
-			status: "waiting_sas";
-			sasCode: string;
-			peerId: string;
-			peerName: string;
-			peerPlatform: string;
-	  }
-	| {
-			status: "confirming";
-			sasCode: string;
-			peerId: string;
-			peerName: string;
-			peerPlatform: string;
-	  }
+	| { status: "waiting_sas"; sasCode: string }
+	| { status: "confirming"; sasCode: string }
 	| { status: "done" };
 
-// ── Sync helper ──────────────────────────────────────────────────────────────
+/** The device on the other end of a pairing, once keys have been exchanged. */
+interface PairingPeer {
+	deviceId: string;
+	deviceName: string;
+	platform: PlatformType;
+	publicKey: string; // hex
+	sharedSecret: Uint8Array;
+}
 
-async function performSync(
-	url: string,
-	deviceId: string,
-	onMessage?: (msg: Record<string, unknown>) => void,
-): Promise<void> {
-	return new Promise((resolve, reject) => {
-		const ws = new WebSocket(url);
+/** We connected to a host. Trusted once our user confirmed and the host accepted. */
+interface OutgoingPairing {
+	ws: WebSocket;
+	host: string;
+	peer: PairingPeer | null;
+	confirmed: boolean;
+	accepted: boolean;
+	settled: boolean;
+}
 
-		ws.onopen = () => {
-			ws.send(JSON.stringify({ type: "sync-request", deviceId }));
-		};
+/** A device connected to our hosting server. Trusted once our user confirms. */
+interface IncomingPairing {
+	conn: WsConnection;
+	peer: PairingPeer;
+}
 
-		ws.onmessage = async (event) => {
-			const msg = JSON.parse(event.data as string) as Record<string, unknown>;
-			onMessage?.(msg);
+function toPlatform(platform: unknown): PlatformType {
+	return platform === "desktop" ? "desktop" : "mobile";
+}
 
-			if (msg.type === "sync-changes") {
-				const changes =
-					(msg.changes as Array<{
-						table: string;
-						pk: string;
-						cid: string;
-						val: unknown;
-						col_version: number;
-						db_version: number;
-						site_id: string;
-						cl: number;
-						seq: number;
-					}>) ?? [];
-
-				for (const c of changes) {
-					try {
-						await sqlite.execute(
-							"INSERT INTO crsql_changes VALUES (?, ?, ?, ?, ?, ?, unhex(?), ?, ?)",
-							[
-								c.table,
-								c.pk,
-								c.cid,
-								c.val as string | number | null,
-								c.col_version,
-								c.db_version,
-								c.site_id,
-								c.cl,
-								c.seq,
-							],
-						);
-					} catch {}
-				}
-
-				// Send our changes back
-				const result = await sqlite.execute(
-					`SELECT "table" as tbl, pk, cid, val, col_version, db_version, hex(site_id) as site_id, cl, seq FROM crsql_changes WHERE site_id = crsql_site_id()`,
-				);
-				const ourChanges = (result.rows ?? []).map((r) => {
-					const row = r as {
-						tbl: string;
-						pk: string;
-						cid: string;
-						val: unknown;
-						col_version: number;
-						db_version: number;
-						site_id: string;
-						cl: number;
-						seq: number;
-					};
-					return {
-						table: row.tbl,
-						pk: row.pk,
-						cid: row.cid,
-						val: row.val,
-						col_version: row.col_version,
-						db_version: row.db_version,
-						site_id: row.site_id,
-						cl: row.cl,
-						seq: row.seq,
-					};
-				});
-
-				ws.send(
-					JSON.stringify({
-						type: "sync-changes",
-						deviceId,
-						changes: ourChanges,
-					}),
-				);
-			}
-
-			if (msg.type === "sync-done") {
-				ws.close();
-				resolve();
-			}
-		};
-
-		ws.onerror = () => reject(new Error("WebSocket error"));
-		ws.onclose = () => resolve();
-	});
+/** Accepts `ip`, `ip:port` or `ws://ip:port`; returns `ip:port`. */
+function toHost(input: string): string {
+	const host = input.trim().replace(/^ws:\/\//, "");
+	return host.includes(":") ? host : `${host}:${SYNC_PORT}`;
 }
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -206,10 +116,7 @@ export default function SyncScreen() {
 	const queryClient = useQueryClient();
 	const mutedForeground = useThemeColor("mutedForeground");
 
-	const [deviceInfo, setDeviceInfo] = useState<{
-		deviceId: string;
-		deviceName: string;
-	} | null>(null);
+	const [deviceInfo, setDeviceInfo] = useState<DeviceIdentity | null>(null);
 	const [deviceIp, setDeviceIp] = useState<string | null>(null);
 	const [pairHost, setPairHost] = useState("");
 	const [pairingState, setPairingState] = useState<PairingState>({
@@ -224,10 +131,9 @@ export default function SyncScreen() {
 	const [isScanning, setIsScanning] = useState(false);
 	const [nearbyDevices, setNearbyDevices] = useState<DiscoveredService[]>([]);
 
-	const wsRef = useRef<WebSocket | null>(null);
-	const keypairRef = useRef<{ privateKey: string; publicKey: string } | null>(
-		null,
-	);
+	// Read from socket callbacks, which outlive the render that created them
+	const outgoingRef = useRef<OutgoingPairing | null>(null);
+	const incomingRef = useRef<IncomingPairing | null>(null);
 	const serverRef = useRef<NativeWsServer | null>(null);
 
 	const { data: trustedPeers = [], isLoading } = useQuery(
@@ -259,29 +165,80 @@ export default function SyncScreen() {
 	);
 
 	useEffect(() => {
-		getOrCreateDeviceIdentity().then(setDeviceInfo);
+		getDeviceIdentity().then(setDeviceInfo);
 		Network.getIpAddressAsync()
 			.then(setDeviceIp)
 			.catch(() => {});
 		return () => {
-			wsRef.current?.close();
+			outgoingRef.current?.ws.close();
 			serverRef.current?.stop();
 			zeroconf.stop();
 			zeroconf.removeAllListeners();
 		};
 	}, []);
 
-	// ── Pairing (as client, connect by IP) ────────────────────────────────
+	// ── Pairing (shared) ──────────────────────────────────────────────────
 
-	function initiatePair(url: string) {
+	function trustPeer(peer: PairingPeer) {
+		return addPeerMutation.mutateAsync({
+			deviceId: peer.deviceId,
+			deviceName: peer.deviceName,
+			platform: peer.platform,
+			publicKey: peer.publicKey,
+			sharedSecret: secretToHex(peer.sharedSecret),
+		});
+	}
+
+	function rejectMessage(): string {
+		return JSON.stringify({
+			type: "pair-reject",
+			deviceId: deviceInfo?.deviceId ?? "",
+			reason: "User rejected",
+		} satisfies PairRejectMsg);
+	}
+
+	// ── Pairing (as client, we connect to a hosting device) ───────────────
+
+	function settleOutgoing(outgoing: OutgoingPairing) {
+		outgoing.settled = true;
+		if (outgoingRef.current === outgoing) outgoingRef.current = null;
+		outgoing.ws.close();
+	}
+
+	function failOutgoing(outgoing: OutgoingPairing, message: string) {
+		settleOutgoing(outgoing);
+		globalErrorToast(message);
+		setPairingState({ status: "idle" });
+	}
+
+	async function completeOutgoing(outgoing: OutgoingPairing) {
+		const { peer, host } = outgoing;
+		if (!peer) return;
+		settleOutgoing(outgoing);
+		try {
+			await trustPeer(peer);
+			await updateHostMutation.mutateAsync({ deviceId: peer.deviceId, host });
+			setPairingState({ status: "done" });
+		} catch {
+			setPairingState({ status: "idle" }); // the mutation shows the error toast
+		}
+	}
+
+	function initiatePair(host: string) {
 		if (!deviceInfo) return;
 
 		setPairingState({ status: "connecting" });
 		const keypair = generateEphemeralKeypair();
-		keypairRef.current = keypair;
-
-		const ws = new WebSocket(url);
-		wsRef.current = ws;
+		const ws = new WebSocket(`ws://${host}`);
+		const outgoing: OutgoingPairing = {
+			ws,
+			host,
+			peer: null,
+			confirmed: false,
+			accepted: false,
+			settled: false,
+		};
+		outgoingRef.current = outgoing;
 
 		ws.onopen = () => {
 			ws.send(
@@ -291,114 +248,177 @@ export default function SyncScreen() {
 					deviceName: deviceInfo.deviceName,
 					platform: "mobile",
 					publicKey: pubKeyToBase64(keypair.publicKey),
-				}),
+				} satisfies PairRequestMsg),
 			);
 		};
 
-		ws.onmessage = async (event) => {
-			const msg = JSON.parse(event.data as string) as Record<string, unknown>;
+		// The host answers on the connection we opened
+		ws.onmessage = (event) => {
+			if (outgoing.settled) return;
+			try {
+				const msg = JSON.parse(event.data as string) as PairingMessage;
 
-			if (msg.type === "pair-challenge") {
-				const kp = keypairRef.current;
-				if (!kp || !deviceInfo) return;
-				const theirPubKeyHex = base64ToPubKey(msg.publicKey as string);
-				const sharedSecret = deriveSharedSecret(kp.privateKey, theirPubKeyHex);
-				const sasCode = computeSasCode(
-					sharedSecret,
-					deviceInfo.deviceId,
-					msg.deviceId as string,
-				);
-				setPairingState({
-					status: "waiting_sas",
-					sasCode,
-					peerId: msg.deviceId as string,
-					peerName: msg.deviceName as string,
-					peerPlatform: msg.platform as string,
-				});
-			}
-
-			if (msg.type === "pair-accept") {
-				if (
-					pairingState.status === "waiting_sas" ||
-					pairingState.status === "confirming"
+				if (msg.type === "pair-challenge") {
+					const publicKey = base64ToPubKey(msg.publicKey);
+					const sharedSecret = deriveSharedSecret(
+						keypair.privateKey,
+						publicKey,
+					);
+					outgoing.peer = {
+						deviceId: msg.deviceId,
+						deviceName: msg.deviceName,
+						platform: toPlatform(msg.platform),
+						publicKey,
+						sharedSecret,
+					};
+					setPairingState({
+						status: "waiting_sas",
+						sasCode: computeSasCode(
+							sharedSecret,
+							deviceInfo.deviceId,
+							msg.deviceId,
+						),
+					});
+				} else if (
+					msg.type === "pair-accept" &&
+					msg.deviceId === outgoing.peer?.deviceId
 				) {
-					const state = pairingState as Extract<
-						PairingState,
-						{ status: "waiting_sas" | "confirming" }
-					>;
-					await addPeerMutation.mutateAsync({
-						deviceId: state.peerId,
-						deviceName: state.peerName,
-						platform: state.peerPlatform === "desktop" ? "desktop" : "mobile",
-						publicKey: keypairRef.current?.publicKey ?? "",
-					});
-					// Derive a plain host string from the ws url for storing
-					const rawHost = url
-						.replace(/^ws:\/\//, "")
-						.replace(/:47821$/, "");
-					updateHostMutation.mutate({
-						deviceId: state.peerId,
-						host: `${rawHost}:47821`,
-					});
+					outgoing.accepted = true;
+					if (outgoing.confirmed) void completeOutgoing(outgoing);
+				} else if (msg.type === "pair-reject") {
+					failOutgoing(outgoing, t("sync.toast.pairRejected"));
 				}
-				setPairingState({ status: "done" });
-				ws.close();
-			}
-
-			if (msg.type === "pair-reject") {
-				globalErrorToast(t("sync.toast.pairRejected"));
-				setPairingState({ status: "idle" });
-				ws.close();
+			} catch (err) {
+				console.error("[sync] pairing failed:", err);
+				failOutgoing(outgoing, t("sync.toast.pairFailed"));
 			}
 		};
 
-		ws.onerror = () => {
-			globalErrorToast(t("sync.toast.pairFailed"));
-			setPairingState({ status: "idle" });
-		};
-
+		// `onerror` is always followed by `onclose`
 		ws.onclose = () => {
-			wsRef.current = null;
+			if (!outgoing.settled) failOutgoing(outgoing, t("sync.toast.pairFailed"));
 		};
 	}
 
 	function handleConnect() {
 		if (!pairHost.trim() || !deviceInfo) return;
-		const url = pairHost.trim().startsWith("ws://")
-			? pairHost.trim()
-			: `ws://${pairHost.trim()}:47821`;
-		initiatePair(url);
+		initiatePair(toHost(pairHost));
 	}
+
+	// ── Pairing (as host, a device connected to our server) ───────────────
+
+	function handleHostMessage(conn: WsConnection, raw: unknown) {
+		if (!deviceInfo) return;
+		const msg = raw as PairingMessage;
+
+		if (msg.type === "pair-request") {
+			if (incomingRef.current || outgoingRef.current) {
+				conn.send(rejectMessage()); // already pairing with someone
+				return;
+			}
+			try {
+				const keypair = generateEphemeralKeypair();
+				const publicKey = base64ToPubKey(msg.publicKey);
+				const sharedSecret = deriveSharedSecret(keypair.privateKey, publicKey);
+				incomingRef.current = {
+					conn,
+					peer: {
+						deviceId: msg.deviceId,
+						deviceName: msg.deviceName,
+						platform: toPlatform(msg.platform),
+						publicKey,
+						sharedSecret,
+					},
+				};
+				conn.send(
+					JSON.stringify({
+						type: "pair-challenge",
+						deviceId: deviceInfo.deviceId,
+						deviceName: deviceInfo.deviceName,
+						platform: "mobile",
+						publicKey: pubKeyToBase64(keypair.publicKey),
+					} satisfies PairChallengeMsg),
+				);
+				setPairingState({
+					status: "waiting_sas",
+					sasCode: computeSasCode(
+						sharedSecret,
+						deviceInfo.deviceId,
+						msg.deviceId,
+					),
+				});
+			} catch (err) {
+				console.error("[sync] invalid pair-request:", err);
+				incomingRef.current = null;
+			}
+			return;
+		}
+
+		// The initiator declined the SAS code
+		if (msg.type === "pair-reject" && incomingRef.current?.conn === conn) {
+			incomingRef.current = null;
+			globalErrorToast(t("sync.toast.pairRejected"));
+			setPairingState({ status: "idle" });
+		}
+	}
+
+	function handleHostConnectionClose(conn: WsConnection) {
+		if (incomingRef.current?.conn !== conn) return;
+		incomingRef.current = null;
+		globalErrorToast(t("sync.toast.pairFailed"));
+		setPairingState({ status: "idle" });
+	}
+
+	async function confirmIncoming(incoming: IncomingPairing) {
+		incomingRef.current = null;
+		try {
+			await trustPeer(incoming.peer);
+			incoming.conn.send(
+				JSON.stringify({
+					type: "pair-accept",
+					deviceId: deviceInfo?.deviceId ?? "",
+				} satisfies PairAcceptMsg),
+			);
+			setPairingState({ status: "done" });
+		} catch {
+			incoming.conn.send(rejectMessage());
+			incoming.conn.close();
+			setPairingState({ status: "idle" }); // the mutation shows the error toast
+		}
+	}
+
+	// ── Pairing dialog actions ────────────────────────────────────────────
 
 	function handleConfirmPair() {
 		if (pairingState.status !== "waiting_sas") return;
-		const { peerId, peerName, peerPlatform, sasCode } = pairingState;
-		setPairingState({
-			status: "confirming",
-			peerId,
-			peerName,
-			peerPlatform,
-			sasCode,
-		});
-		wsRef.current?.send(
-			JSON.stringify({ type: "pair-accept", deviceId: deviceInfo?.deviceId }),
-		);
+		setPairingState({ status: "confirming", sasCode: pairingState.sasCode });
+
+		const incoming = incomingRef.current;
+		if (incoming) {
+			void confirmIncoming(incoming);
+			return;
+		}
+		const outgoing = outgoingRef.current;
+		if (!outgoing) return;
+		outgoing.confirmed = true;
+		// Otherwise wait for the host's user to accept
+		if (outgoing.accepted) void completeOutgoing(outgoing);
 	}
 
 	function handleRejectPair() {
-		if (
-			pairingState.status !== "waiting_sas" &&
-			pairingState.status !== "confirming"
-		)
-			return;
-		wsRef.current?.send(
-			JSON.stringify({
-				type: "pair-reject",
-				deviceId: deviceInfo?.deviceId,
-				reason: "User rejected",
-			}),
-		);
-		wsRef.current?.close();
+		const incoming = incomingRef.current;
+		if (incoming) {
+			incomingRef.current = null;
+			incoming.conn.send(rejectMessage());
+			incoming.conn.close();
+		}
+		const outgoing = outgoingRef.current;
+		if (outgoing) {
+			if (outgoing.ws.readyState === WebSocket.OPEN) {
+				outgoing.ws.send(rejectMessage());
+			}
+			settleOutgoing(outgoing);
+		}
 		setPairingState({ status: "idle" });
 	}
 
@@ -428,32 +448,35 @@ export default function SyncScreen() {
 
 	async function handleSyncWithIp() {
 		if (!syncIpDialog.open || !syncIpInput.trim()) return;
-		const host = syncIpInput.trim().includes(":")
-			? syncIpInput.trim()
-			: `${syncIpInput.trim()}:47821`;
-		await doSync(syncIpDialog.deviceId, host);
+		await doSync(syncIpDialog.deviceId, toHost(syncIpInput));
 		setSyncIpDialog({ open: false });
 		setSyncIpInput("");
 	}
 
-	async function doSync(deviceId: string, host: string) {
+	function showSyncError(err: unknown) {
+		const code = err instanceof SyncError ? err.code : "internal";
+		console.error("[sync] sync failed:", code, err);
+		globalErrorToast(
+			t(syncErrorKey(code)),
+			t("sync.toast.syncFailed"),
+			SYNC_ERROR_TOAST_DURATION,
+		);
+	}
+
+	// syncWithPeer remembers the host on success
+	async function doSync(peerDeviceId: string, host: string) {
 		if (!deviceInfo) return;
-		setSyncingDeviceId(deviceId);
-		const url = host.startsWith("ws://") ? host : `ws://${host}`;
+		setSyncingDeviceId(peerDeviceId);
 		try {
-			let remoteDeviceId: string | null = null;
-			await performSync(url, deviceInfo.deviceId, (msg) => {
-				if (msg.type === "sync-changes" && !remoteDeviceId) {
-					remoteDeviceId = msg.deviceId as string;
-				}
+			await syncWithPeer({
+				host,
+				deviceId: deviceInfo.deviceId,
+				expectedPeerDeviceId: peerDeviceId,
 			});
-			if (remoteDeviceId) {
-				updateHostMutation.mutate({ deviceId: remoteDeviceId, host });
-			}
 			await queryClient.invalidateQueries();
 			globalSuccessToast(t("sync.toast.syncComplete"));
-		} catch {
-			globalErrorToast(t("sync.toast.syncFailed"));
+		} catch (err) {
+			showSyncError(err);
 		} finally {
 			setSyncingDeviceId(null);
 		}
@@ -506,165 +529,23 @@ export default function SyncScreen() {
 	}
 
 	function handlePairDiscovered(service: DiscoveredService) {
-		const url = `ws://${service.host}:${service.port}`;
-		initiatePair(url);
+		initiatePair(`${service.host}:${service.port}`);
 	}
 
 	// ── Hosting (act as WS server) ────────────────────────────────────────
 
 	function handleStartHosting() {
 		if (!deviceInfo) return;
-		const server = startNativeWsServer(47821, (conn) => {
-			// Handle both pairing and sync from incoming connections
-			let peerDeviceId: string | null = null;
-			let incomingKeypair: { privateKey: string; publicKey: string } | null =
-				null;
-
-			conn.onMessage(async (text) => {
-				const msg = JSON.parse(text) as Record<string, unknown>;
-
-				if (msg.type === "pair-request") {
-					const theirPubKeyHex = base64ToPubKey(msg.publicKey as string);
-					const kp = generateEphemeralKeypair();
-					incomingKeypair = kp;
-					peerDeviceId = msg.deviceId as string;
-
-					const sharedSecret = deriveSharedSecret(
-						kp.privateKey,
-						theirPubKeyHex,
-					);
-					const sasCode = computeSasCode(
-						sharedSecret,
-						msg.deviceId as string,
-						deviceInfo.deviceId,
-					);
-
-					conn.send(
-						JSON.stringify({
-							type: "pair-challenge",
-							deviceId: deviceInfo.deviceId,
-							deviceName: deviceInfo.deviceName,
-							platform: "mobile",
-							publicKey: pubKeyToBase64(kp.publicKey),
-							sasCode,
-						}),
-					);
-				}
-
-				if (msg.type === "pair-accept" && peerDeviceId && incomingKeypair) {
-					await addPeerMutation.mutateAsync({
-						deviceId: peerDeviceId,
-						deviceName: (msg.deviceName as string) ?? "Unknown",
-						platform:
-							(msg.platform as string) === "desktop" ? "desktop" : "mobile",
-						publicKey: incomingKeypair.publicKey,
-					});
-					conn.send(
-						JSON.stringify({
-							type: "pair-accept",
-							deviceId: deviceInfo.deviceId,
-						}),
-					);
-					conn.close();
-				}
-
-				if (msg.type === "sync-request") {
-					// Only serve trusted peers
-					const peerId = msg.deviceId as string;
-					const trusted = trustedPeers.find((p) => p.deviceId === peerId);
-					if (!trusted) {
-						conn.close();
-						return;
-					}
-					peerDeviceId = peerId;
-
-					const result = await sqlite.execute(
-						`SELECT "table" as tbl, pk, cid, val, col_version, db_version, hex(site_id) as site_id, cl, seq FROM crsql_changes WHERE site_id = crsql_site_id()`,
-					);
-					const changes = (result.rows ?? []).map((r) => {
-						const row = r as {
-							tbl: string;
-							pk: string;
-							cid: string;
-							val: unknown;
-							col_version: number;
-							db_version: number;
-							site_id: string;
-							cl: number;
-							seq: number;
-						};
-						return {
-							table: row.tbl,
-							pk: row.pk,
-							cid: row.cid,
-							val: row.val,
-							col_version: row.col_version,
-							db_version: row.db_version,
-							site_id: row.site_id,
-							cl: row.cl,
-							seq: row.seq,
-						};
-					});
-
-					conn.send(
-						JSON.stringify({
-							type: "sync-changes",
-							deviceId: deviceInfo.deviceId,
-							changes,
-						}),
-					);
-				}
-
-				if (msg.type === "sync-changes") {
-					const changes =
-						(msg.changes as Array<{
-							table: string;
-							pk: string;
-							cid: string;
-							val: unknown;
-							col_version: number;
-							db_version: number;
-							site_id: string;
-							cl: number;
-							seq: number;
-						}>) ?? [];
-					for (const c of changes) {
-						try {
-							await sqlite.execute(
-								"INSERT INTO crsql_changes VALUES (?, ?, ?, ?, ?, ?, unhex(?), ?, ?)",
-								[
-									c.table,
-									c.pk,
-									c.cid,
-									c.val as string | number | null,
-									c.col_version,
-									c.db_version,
-									c.site_id,
-									c.cl,
-									c.seq,
-								],
-							);
-						} catch {}
-					}
-					conn.send(
-						JSON.stringify({
-							type: "sync-done",
-							deviceId: deviceInfo.deviceId,
-						}),
-					);
-					conn.close();
-					await queryClient.invalidateQueries();
-					globalSuccessToast(t("sync.toast.syncComplete"));
-				}
-			});
-
-			conn.onClose(() => {
-				peerDeviceId = null;
-				incomingKeypair = null;
-			});
+		serverRef.current = startSyncHost({
+			deviceId: deviceInfo.deviceId,
+			onSyncComplete: () => {
+				void queryClient.invalidateQueries();
+				globalSuccessToast(t("sync.toast.syncComplete"));
+			},
+			onSyncError: showSyncError,
+			onOtherMessage: handleHostMessage,
+			onConnectionClose: handleHostConnectionClose,
 		});
-
-		serverRef.current = server;
 		setIsHosting(true);
 
 		// Advertise over mDNS so other Finance Tracker devices can discover this device
@@ -674,7 +555,7 @@ export default function SyncScreen() {
 			"tcp",
 			"local.",
 			serviceName,
-			47821,
+			SYNC_PORT,
 			{
 				deviceId: deviceInfo.deviceId,
 				deviceName: deviceInfo.deviceName,
@@ -812,14 +693,10 @@ export default function SyncScreen() {
 							/>
 							<Text
 								className={
-									isScanning
-										? "text-destructive-foreground text-sm"
-										: "text-sm"
+									isScanning ? "text-destructive-foreground text-sm" : "text-sm"
 								}
 							>
-								{isScanning
-									? t("sync.stopScanning")
-									: t("sync.startScanning")}
+								{isScanning ? t("sync.stopScanning") : t("sync.startScanning")}
 							</Text>
 						</Button>
 					</View>
@@ -1022,12 +899,21 @@ export default function SyncScreen() {
 								</Text>
 							</View>
 							{pairingState.status === "confirming" ? (
-								<View className="flex flex-row items-center justify-center gap-2">
-									<ActivityIndicator size="small" />
-									<Text className="text-muted-foreground text-sm">
-										{t("sync.pairingInProgress")}
-									</Text>
-								</View>
+								<DialogFooter className="flex-col gap-2">
+									<View className="flex flex-row items-center justify-center gap-2">
+										<ActivityIndicator size="small" />
+										<Text className="text-muted-foreground text-sm">
+											{t("sync.pairingInProgress")}
+										</Text>
+									</View>
+									<Button
+										variant="outline"
+										onPress={handleRejectPair}
+										className="w-full"
+									>
+										<Text className="text-sm">{t("common.cancel")}</Text>
+									</Button>
+								</DialogFooter>
 							) : (
 								<DialogFooter className="flex-col gap-2">
 									<Button onPress={handleConfirmPair} className="w-full">
