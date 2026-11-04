@@ -18,6 +18,7 @@ import { Container } from "@/components/container";
 import { AccountCombobox } from "@/components/form/account-combobox";
 import CreateTransactionDialog from "@/components/form/create-transaction-dialog";
 import { DateRangePicker } from "@/components/form/date-range-picker";
+import { GoalsOverviewWidget } from "@/components/goals-overview-widget";
 import { RecentTransactions } from "@/components/recent-transactions";
 import { SummaryCard } from "@/components/summary-card";
 import { Button } from "@/components/ui/button";
@@ -233,6 +234,8 @@ export default function Home() {
 			)}
 
 			<BudgetOverviewWidget from={dateRange.from} to={dateRange.to} />
+
+			<GoalsOverviewWidget />
 
 			<CreateTransactionDialog
 				open={state.transaction}
