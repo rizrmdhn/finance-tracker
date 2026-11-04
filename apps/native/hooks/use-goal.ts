@@ -12,6 +12,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import type { inferOutput } from "@trpc/tanstack-react-query";
 import { useTranslation } from "react-i18next";
+import { formatGoalTimeLeft } from "@/lib/goal-text";
 import { trpc } from "@/lib/trpc";
 
 export type GoalOverviewItem = inferOutput<typeof trpc.goal.overview>[number];
@@ -50,24 +51,7 @@ export function useGoalText() {
 		}
 	}
 
-	/** Time left until the estimate, e.g. "± 1 year 3 months left". */
-	function timeLeft(parts: DurationParts) {
-		switch (parts.unit) {
-			case "days":
-				return t("goals.estimate.daysLeft", { count: parts.days });
-			case "months":
-				return t("goals.estimate.monthsLeft", { count: parts.months });
-			case "yearsMonths":
-				return parts.months === 0
-					? t("goals.estimate.yearsLeft", { count: parts.years })
-					: t("goals.estimate.yearsMonthsLeft", {
-							years: years(parts.years),
-							months: months(parts.months),
-						});
-			case "overCap":
-				return t("goals.estimate.overCap", { years: parts.years });
-		}
-	}
+	const timeLeft = (parts: DurationParts) => formatGoalTimeLeft(t, parts);
 
 	/** "May 2027" */
 	function formatMonth(date: Date | number) {

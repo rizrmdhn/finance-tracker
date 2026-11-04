@@ -487,7 +487,7 @@ export const en = {
 			confirm: "Delete",
 		},
 		allocation: {
-			summary: "{{allocated}} set aside for goals · {{free}} free",
+			summary: "{{allocated}} set aside for goals Â· {{free}} free",
 			freeBalance: "Free balance",
 			allocated: "Set aside for goals",
 			linkedTo: "Linked to {{name}}",
@@ -530,6 +530,9 @@ export const en = {
 		widget: {
 			title: "Top Goals",
 			noGoals: "No active goals",
+			openApp: "Open the app to add one.",
+			staleMessage: "Data may be outdated",
+			tapToRefresh: "Tap to refresh",
 		},
 	},
 	recurrences: {

@@ -487,7 +487,7 @@ export const id = {
 			confirm: "Hapus",
 		},
 		allocation: {
-			summary: "{{allocated}} disisihkan untuk target · {{free}} bebas",
+			summary: "{{allocated}} disisihkan untuk target Â· {{free}} bebas",
 			freeBalance: "Saldo bebas",
 			allocated: "Disisihkan untuk target",
 			linkedTo: "Terhubung ke {{name}}",
@@ -530,6 +530,9 @@ export const id = {
 		widget: {
 			title: "Target Utama",
 			noGoals: "Belum ada target aktif",
+			openApp: "Buka aplikasi untuk menambah.",
+			staleMessage: "Data mungkin sudah lama",
+			tapToRefresh: "Ketuk untuk perbarui",
 		},
 	},
 	recurrences: {
