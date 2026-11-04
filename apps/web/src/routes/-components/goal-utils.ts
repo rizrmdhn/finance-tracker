@@ -1,6 +1,7 @@
 import {
 	APP_SETTINGS_DEFAULTS,
 	CURRENCY_LOCALE_MAP,
+	type GoalErrorCode,
 	LANGUAGE_LOCALE_MAP,
 	type SupportedCurrency,
 	type SupportedLanguage,
@@ -95,4 +96,62 @@ export function useGoalText() {
 	}
 
 	return { duration, timeLeft, formatMonth, formatDate };
+}
+
+/**
+ * Accounts with their goal allocation state. Rule 1: an account can be linked when no other
+ * active goal links it and nothing is set aside from it. Linked accounts can't fund goals.
+ */
+export function useGoalAccounts(goalId?: string) {
+	const { data: accounts = [] } = useQuery(trpc.account.list.queryOptions());
+	const { data: allocations = [] } = useQuery(
+		trpc.goal.getAccountAllocations.queryOptions(),
+	);
+
+	const byAccount = new Map(allocations.map((a) => [a.accountId, a]));
+	return accounts
+		.filter((account) => !account.deletedAt)
+		.map((account) => {
+			const allocation = byAccount.get(account.id);
+			const linkedElsewhere =
+				!!allocation?.isLinked && allocation.linkedGoalId !== goalId;
+			return {
+				account,
+				freeBalance: allocation?.freeBalance ?? 0,
+				isLinked: allocation?.isLinked ?? false,
+				canLink: !linkedElsewhere && (allocation?.allocated ?? 0) <= 0,
+			};
+		});
+}
+
+/**
+ * Rule 5: the share of the surplus other active goals leave free (≥ 0), and the priority that
+ * puts a new goal last.
+ */
+export function useGoalAllocation(goalId?: string) {
+	const { data: goals = [] } = useQuery(trpc.goal.list.queryOptions());
+	const others = goals.filter((g) => g.status === "active" && g.id !== goalId);
+
+	return {
+		availablePercent: Math.max(
+			100 - others.reduce((sum, g) => sum + g.allocationPercent, 0),
+			0,
+		),
+		nextPriority: Math.max(-1, ...others.map((g) => g.priority)) + 1,
+	};
+}
+
+/** The translated goal rule error, or `fallback(message)` for any other error. */
+export function useGoalErrorMessage() {
+	const { t } = useTranslation();
+	return (
+		error: {
+			message: string;
+			data?: { goalErrorCode: GoalErrorCode | null } | null;
+		},
+		fallback: (message: string) => string,
+	) => {
+		const code = error.data?.goalErrorCode;
+		return code ? t(`goals.errors.${code}`) : fallback(error.message);
+	};
 }

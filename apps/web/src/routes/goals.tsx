@@ -13,13 +13,23 @@ import {
 	EmptyTitle,
 } from "@finance-tracker/ui/components/empty";
 import { Skeleton } from "@finance-tracker/ui/components/skeleton";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { ChevronRightIcon, PiggyBankIcon, PlusIcon } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { ConfirmationDialog } from "@/components/confirmation-dialog";
+import useModalState from "@/hooks/use-modal-state";
 import { pageHead } from "@/lib/page-head";
-import { trpc } from "@/lib/trpc";
+import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
+import { queryClient, trpc } from "@/lib/trpc";
+import CreateGoalDialog from "./-components/create-goal-dialog";
+import EditGoalDialog from "./-components/edit-goal-dialog";
 import GoalCard from "./-components/goal-card";
+import {
+	type GoalOverviewItem,
+	useGoalErrorMessage,
+} from "./-components/goal-utils";
 
 export const Route = createFileRoute("/goals")({
 	component: GoalsComponent,
@@ -34,6 +44,14 @@ const GRID_CLASS = "grid gap-3 md:grid-cols-2 xl:grid-cols-3";
 
 function GoalsComponent() {
 	const { t } = useTranslation();
+	const goalErrorMessage = useGoalErrorMessage();
+	const { state, openModal, closeModal } = useModalState({
+		createGoal: false,
+		editGoal: false,
+		archiveGoal: false,
+		deleteGoal: false,
+	});
+	const [selected, setSelected] = useState<GoalOverviewItem | null>(null);
 
 	// In list order: priority, then creation date
 	const { data: overview = [], isLoading } = useQuery(
@@ -45,6 +63,58 @@ function GoalsComponent() {
 		(item) => item.goal.status !== "active",
 	);
 
+	const invalidateGoals = () =>
+		queryClient.invalidateQueries({ queryKey: trpc.goal.pathKey() });
+
+	const archiveMutation = useMutation(
+		trpc.goal.archive.mutationOptions({
+			onSuccess: async () => {
+				await invalidateGoals();
+				globalSuccessToast(t("goals.toast.archived"));
+				closeModal("archiveGoal");
+				setSelected(null);
+			},
+			onError: (error) => {
+				globalErrorToast(
+					goalErrorMessage(error, (message) =>
+						t("goals.toast.archiveFailed", { message }),
+					),
+				);
+			},
+		}),
+	);
+
+	const deleteMutation = useMutation(
+		trpc.goal.delete.mutationOptions({
+			onSuccess: async () => {
+				await invalidateGoals();
+				globalSuccessToast(t("goals.toast.deleted"));
+				closeModal("deleteGoal");
+				setSelected(null);
+			},
+			onError: (error) => {
+				globalErrorToast(
+					goalErrorMessage(error, (message) =>
+						t("goals.toast.deleteFailed", { message }),
+					),
+				);
+			},
+		}),
+	);
+
+	function openFor(modal: "editGoal" | "archiveGoal" | "deleteGoal") {
+		return (item: GoalOverviewItem) => {
+			setSelected(item);
+			openModal(modal);
+		};
+	}
+
+	const cardActions = {
+		onEdit: openFor("editGoal"),
+		onArchive: openFor("archiveGoal"),
+		onDelete: openFor("deleteGoal"),
+	};
+
 	return (
 		<div className="flex flex-col gap-6">
 			<div className="flex items-start justify-between gap-4">
@@ -54,7 +124,7 @@ function GoalsComponent() {
 						{t("goals.description")}
 					</p>
 				</div>
-				<Button>
+				<Button onClick={() => openModal("createGoal")}>
 					<PlusIcon />
 					{t("goals.addGoal")}
 				</Button>
@@ -92,7 +162,7 @@ function GoalsComponent() {
 						<EmptyDescription>{t("goals.noGoalsDescription")}</EmptyDescription>
 					</EmptyHeader>
 					<EmptyContent>
-						<Button variant="outline">
+						<Button variant="outline" onClick={() => openModal("createGoal")}>
 							<PlusIcon />
 							{t("goals.addGoal")}
 						</Button>
@@ -103,7 +173,7 @@ function GoalsComponent() {
 			{activeGoals.length > 0 && (
 				<div className={GRID_CLASS}>
 					{activeGoals.map((item) => (
-						<GoalCard key={item.goal.id} item={item} />
+						<GoalCard key={item.goal.id} item={item} {...cardActions} />
 					))}
 				</div>
 			)}
@@ -124,12 +194,60 @@ function GoalsComponent() {
 					<CollapsibleContent>
 						<div className={GRID_CLASS}>
 							{inactiveGoals.map((item) => (
-								<GoalCard key={item.goal.id} item={item} />
+								<GoalCard key={item.goal.id} item={item} {...cardActions} />
 							))}
 						</div>
 					</CollapsibleContent>
 				</Collapsible>
 			)}
+
+			<CreateGoalDialog
+				open={state.createGoal}
+				setIsOpen={(open) =>
+					open ? openModal("createGoal") : closeModal("createGoal")
+				}
+			/>
+
+			<EditGoalDialog
+				open={state.editGoal}
+				setIsOpen={(open) =>
+					open ? openModal("editGoal") : closeModal("editGoal")
+				}
+				goal={selected?.goal ?? null}
+			/>
+
+			<ConfirmationDialog
+				open={state.archiveGoal}
+				onOpenChange={(open) =>
+					open ? openModal("archiveGoal") : closeModal("archiveGoal")
+				}
+				title={t("goals.archive.title")}
+				description={t("goals.archive.description", {
+					name: selected?.goal.name,
+				})}
+				confirmText={t("goals.archive.confirm")}
+				isLoading={archiveMutation.isPending}
+				onConfirm={() => {
+					if (selected) archiveMutation.mutate({ id: selected.goal.id });
+				}}
+			/>
+
+			<ConfirmationDialog
+				open={state.deleteGoal}
+				onOpenChange={(open) =>
+					open ? openModal("deleteGoal") : closeModal("deleteGoal")
+				}
+				title={t("goals.delete.title")}
+				description={t("goals.delete.description", {
+					name: selected?.goal.name,
+				})}
+				confirmText={t("goals.delete.confirm")}
+				variant="destructive"
+				isLoading={deleteMutation.isPending}
+				onConfirm={() => {
+					if (selected) deleteMutation.mutate({ id: selected.goal.id });
+				}}
+			/>
 		</div>
 	);
 }

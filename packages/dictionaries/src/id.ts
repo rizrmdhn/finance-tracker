@@ -341,6 +341,7 @@ export const id = {
 			targetDate: "Tanggal target",
 			targetDateHelp:
 				"Opsional. Lihat berapa yang perlu ditabung setiap bulan agar tercapai tepat waktu.",
+			clearTargetDate: "Hapus tanggal target",
 			linkedAccount: "Akun terhubung",
 			linkedAccountPlaceholder: "Pilih akun",
 			noLinkedAccount: "Tanpa akun terhubung",
@@ -352,6 +353,7 @@ export const id = {
 			initialFundHelp:
 				"Uang yang sudah Anda kumpulkan. Uangnya tetap di akunnya dan disisihkan untuk target ini.",
 			initialFundAccount: "Dari akun",
+			initialFundAccountRequired: "Pilih akun tempat uang berada",
 			freeBalance: "Saldo bebas: {{amount}}",
 			allocationPercent: "Porsi dari surplus bulanan",
 			allocationPercentHelp:

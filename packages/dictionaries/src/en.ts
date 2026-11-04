@@ -341,6 +341,7 @@ export const en = {
 			targetDate: "Target date",
 			targetDateHelp:
 				"Optional. See how much you need to save each month to make it in time.",
+			clearTargetDate: "Clear target date",
 			linkedAccount: "Linked account",
 			linkedAccountPlaceholder: "Select an account",
 			noLinkedAccount: "No linked account",
@@ -352,6 +353,7 @@ export const en = {
 			initialFundHelp:
 				"Money you've already saved. It stays in its account and is set aside for this goal.",
 			initialFundAccount: "From account",
+			initialFundAccountRequired: "Select the account the money is in",
 			freeBalance: "Free balance: {{amount}}",
 			allocationPercent: "Share of monthly surplus",
 			allocationPercentHelp:
