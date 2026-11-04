@@ -5,7 +5,9 @@ import { eq } from "drizzle-orm";
 import {
 	addGoalContribution,
 	createGoal,
+	deleteGoal,
 	deleteGoalContribution,
+	getAccountAllocations,
 	getGoalMonthlyProgress,
 	getGoalProgress,
 	getMonthlySurplus,
@@ -372,5 +374,102 @@ describe("getGoalMonthlyProgress", () => {
 		expect(result.map((m) => m.month)).toEqual(
 			[6, 5, 4, 3, 2, 1].map(monthStart),
 		);
+	});
+});
+
+describe("getAccountAllocations", () => {
+	test("counts only allocations of active, non-deleted goals", async () => {
+		const wallet = await seedAccount(db, { initialBalance: 1000 });
+		const active = await createGoal(db, baseGoal);
+		const archived = await createGoal(db, baseGoal);
+		const deleted = await createGoal(db, baseGoal);
+		const date = midMonth(1);
+		for (const [goal, amount] of [
+			[active, 300],
+			[archived, 200],
+			[deleted, 100],
+		] as const)
+			await addGoalContribution(db, {
+				goalId: goal.id,
+				accountId: wallet.id,
+				amount,
+				date,
+			});
+		const removed = await addGoalContribution(db, {
+			goalId: active.id,
+			accountId: wallet.id,
+			amount: 50,
+			date,
+		});
+		await deleteGoalContribution(db, removed.id);
+		await db
+			.update(goals)
+			.set({ status: "archived" })
+			.where(eq(goals.id, archived.id));
+		await deleteGoal(db, deleted.id);
+
+		expect(await getAccountAllocations(db)).toEqual([
+			{
+				accountId: wallet.id,
+				balance: 1000,
+				allocated: 300,
+				freeBalance: 700,
+				isLinked: false,
+				linkedGoalId: null,
+				isOverAllocated: false,
+			},
+		]);
+	});
+
+	test("reserves linked accounts of active goals only", async () => {
+		const pocket = await seedAccount(db, { initialBalance: 500 });
+		const oldPocket = await seedAccount(db, { initialBalance: 400 });
+		const goal = await createGoal(db, {
+			...baseGoal,
+			linkedAccountId: pocket.id,
+		});
+		const archived = await createGoal(db, {
+			...baseGoal,
+			linkedAccountId: oldPocket.id,
+		});
+		await db
+			.update(goals)
+			.set({ status: "archived" })
+			.where(eq(goals.id, archived.id));
+
+		const result = await getAccountAllocations(db);
+		expect(result.find((a) => a.accountId === pocket.id)).toMatchObject({
+			freeBalance: 0,
+			isLinked: true,
+			linkedGoalId: goal.id,
+			isOverAllocated: false,
+		});
+		expect(result.find((a) => a.accountId === oldPocket.id)).toMatchObject({
+			freeBalance: 400,
+			isLinked: false,
+			linkedGoalId: null,
+		});
+	});
+
+	test("flags accounts whose balance dropped below their allocations", async () => {
+		const wallet = await seedAccount(db, { initialBalance: 100 });
+		const expense = await seedCategory(db, "expense");
+		const goal = await createGoal(db, baseGoal);
+		await addGoalContribution(db, {
+			goalId: goal.id,
+			accountId: wallet.id,
+			amount: 80,
+			date: midMonth(1),
+		});
+		await seedTransaction(db, {
+			accountId: wallet.id,
+			categoryId: expense.id,
+			amount: 50,
+			date: midMonth(0),
+		});
+
+		expect(await getAccountAllocations(db)).toMatchObject([
+			{ balance: 50, allocated: 80, freeBalance: -30, isOverAllocated: true },
+		]);
 	});
 });
