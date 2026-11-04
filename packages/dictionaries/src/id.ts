@@ -19,6 +19,7 @@ export const id = {
 		transactions: "Transaksi",
 		recurring: "Berulang",
 		budgets: "Anggaran",
+		goals: "Target Tabungan",
 		trash: "Sampah",
 		settings: "Pengaturan",
 	},
@@ -317,6 +318,211 @@ export const id = {
 			deleteFailed: "Gagal menghapus anggaran: {{message}}",
 		},
 	},
+	goals: {
+		title: "Target Tabungan",
+		description:
+			"Menabung untuk barang impian Anda dan lihat kapan tercapai, berdasarkan pemasukan dan pengeluaran Anda yang sebenarnya.",
+		addGoal: "Tambah Target",
+		goalCount_one: "{{count}} target",
+		goalCount_other: "{{count}} target",
+		noGoals: "Belum ada target",
+		noGoalsDescription:
+			"Tambahkan sesuatu yang sedang Anda tabung, seperti ponsel baru atau liburan.",
+		status: {
+			active: "Aktif",
+			reached: "Tercapai",
+			purchased: "Sudah dibeli",
+			archived: "Diarsipkan",
+		},
+		form: {
+			namePlaceholder: "mis. iPhone 17",
+			targetAmount: "Jumlah target",
+			targetDate: "Tanggal target",
+			targetDateHelp:
+				"Opsional. Lihat berapa yang perlu ditabung setiap bulan agar tercapai tepat waktu.",
+			linkedAccount: "Akun terhubung",
+			linkedAccountPlaceholder: "Pilih akun",
+			noLinkedAccount: "Tanpa akun terhubung",
+			linkedAccountHelp:
+				"Akun atau kantong khusus untuk target ini. Seluruh saldonya dihitung sebagai progres target.",
+			linkedAccountUnavailable:
+				"Sudah terhubung ke target lain atau dipakai untuk menyisihkan dana",
+			initialFund: "Dana awal",
+			initialFundHelp:
+				"Uang yang sudah Anda kumpulkan. Uangnya tetap di akunnya dan disisihkan untuk target ini.",
+			initialFundAccount: "Dari akun",
+			freeBalance: "Saldo bebas: {{amount}}",
+			allocationPercent: "Porsi dari surplus bulanan",
+			allocationPercentHelp:
+				"Bagian dari surplus bulanan Anda (pemasukan − pengeluaran) untuk target ini. Dipakai untuk perkiraan awal.",
+			allocationAvailable: "{{percent}}% surplus Anda belum dialokasikan",
+			priority: "Prioritas",
+			priorityHelp: "Target dengan angka lebih kecil ditampilkan lebih dulu.",
+			productUrl: "Tautan produk",
+			productUrlPlaceholder: "https://",
+			image: "Gambar",
+			uploadImage: "Unggah gambar",
+			removeImage: "Hapus gambar",
+		},
+		create: {
+			title: "Buat Target",
+		},
+		edit: {
+			title: "Edit Target",
+		},
+		card: {
+			progress: "{{current}} dari {{target}}",
+			percent: "{{percent}}%",
+			remaining: "Kurang {{amount}}",
+			openProduct: "Lihat produk",
+		},
+		estimate: {
+			daysLeft_one: "{{count}} hari lagi",
+			daysLeft_other: "{{count}} hari lagi",
+			monthsLeft_one: "± {{count}} bulan lagi",
+			monthsLeft_other: "± {{count}} bulan lagi",
+			yearsLeft_one: "± {{count}} tahun lagi",
+			yearsLeft_other: "± {{count}} tahun lagi",
+			yearsMonthsLeft: "± {{years}} {{months}} lagi",
+			overCap: "Lebih dari {{years}} tahun",
+			estimatedDate: "Perkiraan tercapai {{date}}",
+			rough: "Perkiraan kasar",
+			roughDescription:
+				"Berdasarkan data kurang dari 3 bulan, jadi masih bisa banyak berubah.",
+			initial: "Perkiraan awal",
+			range: "{{min}}–{{max}}",
+			basedOnSavings: "Berdasarkan rata-rata tabungan Anda {{amount}}/bulan",
+			basedOnSurplus:
+				"Berdasarkan {{percent}}% dari rata-rata surplus Anda {{amount}}/bulan",
+			noSurplus: "Belum bisa diperkirakan — pengeluaran melebihi pemasukan",
+			noHistory:
+				"Belum bisa diperkirakan — catat pemasukan dan pengeluaran terlebih dahulu",
+			reached: "Target tercapai!",
+			reachedDescription:
+				"Dana Anda sudah cukup. Tandai sudah dibeli setelah Anda membelinya.",
+		},
+		duration: {
+			days_one: "{{count}} hari",
+			days_other: "{{count}} hari",
+			months_one: "{{count}} bulan",
+			months_other: "{{count}} bulan",
+			years_one: "{{count}} tahun",
+			years_other: "{{count}} tahun",
+			yearsMonths: "{{years}} {{months}}",
+			overCap: "{{years}}+ tahun",
+		},
+		insight: {
+			potential:
+				"Surplus Anda memungkinkan {{amount}}/bulan untuk target ini, lebih banyak dari yang Anda sisihkan selama ini. Menyisihkan sebanyak itu akan membuatnya tercapai lebih cepat.",
+		},
+		targetDate: {
+			label: "Target: {{date}}",
+			onTrack: "Sesuai jadwal untuk {{date}}",
+			behind: "Butuh {{amount}}/bulan, kurang {{gap}}/bulan",
+			past: "Tanggal target ({{date}}) sudah lewat",
+		},
+		funding: {
+			title: "Sumber Dana",
+			linkedAccount: "Akun terhubung",
+			setAside: "Disisihkan",
+			total: "Total",
+			empty: "Belum ada dana. Hubungkan akun atau sisihkan dana untuk memulai.",
+		},
+		contributions: {
+			title: "Riwayat",
+			empty: "Belum ada dana yang disisihkan",
+			setAside: "Disisihkan",
+			withdrawn: "Ditarik",
+			delete: {
+				title: "Hapus Catatan",
+				description: "Hapus catatan ini? Progres target akan dihitung ulang.",
+				confirm: "Hapus",
+			},
+		},
+		contribution: {
+			setAside: "Sisihkan Dana",
+			setAsideDescription:
+				"Tandai uang di salah satu akun Anda untuk target ini. Uangnya tetap berada di akun tersebut.",
+			withdraw: "Tarik Dana",
+			withdrawDescription:
+				"Lepaskan dana yang disisihkan untuk target ini agar bisa dipakai lagi.",
+			freeBalance: "Saldo bebas: {{amount}}",
+			maxWithdraw: "Maksimal {{amount}} disisihkan dari akun ini",
+			notePlaceholder: "mis. Bonus akhir tahun",
+			noAccounts: "Tidak ada akun dengan saldo bebas",
+		},
+		purchase: {
+			action: "Tandai Sudah Dibeli",
+			title: "Tandai Sudah Dibeli",
+			description:
+				'Catat pembelian "{{name}}". Pengeluaran dibuat untuk setiap akun yang membayar.',
+			payments: "Pembayaran",
+			addPayment: "Tambah pembayaran",
+			removePayment: "Hapus pembayaran",
+			shortfall: "Bayar sisa {{amount}} dari",
+			total: "Total: {{amount}}",
+			category: "Kategori pengeluaran",
+			selectCategory: "Pilih kategori pengeluaran",
+			confirm: "Tandai Sudah Dibeli",
+		},
+		archive: {
+			action: "Arsipkan",
+			title: "Arsipkan Target",
+			description:
+				'Arsipkan "{{name}}"? Dana yang disisihkan untuknya akan dilepas. Tindakan ini tidak dapat dibatalkan.',
+			confirm: "Arsipkan",
+		},
+		delete: {
+			title: "Hapus Target",
+			description:
+				'Apakah Anda yakin ingin menghapus "{{name}}"? Dana yang disisihkan untuknya akan dilepas.',
+			confirm: "Hapus",
+		},
+		allocation: {
+			freeBalance: "Saldo bebas",
+			allocated: "Disisihkan untuk target",
+			linkedTo: "Terhubung ke {{name}}",
+			overAllocated: "Melebihi saldo",
+			overAllocatedDescription:
+				"Dana yang disisihkan untuk target lebih besar dari saldo akun ini. Tarik sebagian dana dari targetnya.",
+			overLimit:
+				"Target aktif memakai {{percent}}% surplus Anda, lebih dari 100%.",
+		},
+		errors: {
+			notActive: "Target ini sudah tidak aktif.",
+			accountAlreadyLinked: "Akun ini sudah terhubung ke target lain.",
+			accountIsContributionSource:
+				"Dana di akun ini sedang disisihkan untuk target, jadi akun ini tidak bisa dihubungkan.",
+			linkedAccountContribution:
+				"Akun ini terhubung ke target dan tidak bisa dipakai untuk menyisihkan dana.",
+			insufficientFreeBalance: "Saldo bebas di akun ini tidak cukup.",
+			withdrawalExceedsAllocation:
+				"Anda tidak bisa menarik lebih dari dana target ini yang berasal dari akun tersebut.",
+			allocationLimitExceeded:
+				"Total porsi target aktif tidak boleh melebihi 100% surplus Anda.",
+		},
+		toast: {
+			created: "Target berhasil dibuat",
+			createFailed: "Gagal membuat target: {{message}}",
+			updated: "Target berhasil diperbarui",
+			updateFailed: "Gagal memperbarui target: {{message}}",
+			deleted: "Target dihapus",
+			deleteFailed: "Gagal menghapus target: {{message}}",
+			setAside: "Dana berhasil disisihkan",
+			withdrawn: "Dana berhasil ditarik",
+			contributionFailed: "Gagal menyimpan: {{message}}",
+			contributionDeleted: "Catatan dihapus",
+			contributionDeleteFailed: "Gagal menghapus catatan: {{message}}",
+			purchased: "Target ditandai sudah dibeli",
+			purchaseFailed: "Gagal menandai sudah dibeli: {{message}}",
+			archived: "Target diarsipkan",
+			archiveFailed: "Gagal mengarsipkan target: {{message}}",
+		},
+		widget: {
+			title: "Target Utama",
+			noGoals: "Belum ada target aktif",
+		},
+	},
 	recurrences: {
 		title: "Transaksi Berulang",
 		ruleCount: "{{count}} aturan",
@@ -353,6 +559,7 @@ export const id = {
 		transactions: "Transaksi",
 		categories: "Kategori",
 		accounts: "Akun",
+		goals: "Target Tabungan",
 		emptyTrash: "Kosongkan Sampah",
 		restore: "Pulihkan",
 		permanentDelete: "Hapus Permanen",

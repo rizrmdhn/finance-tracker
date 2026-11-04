@@ -19,6 +19,7 @@ export const en = {
 		transactions: "Transactions",
 		recurring: "Recurring",
 		budgets: "Budgets",
+		goals: "Goals",
 		trash: "Trash",
 		settings: "Settings",
 	},
@@ -317,6 +318,211 @@ export const en = {
 			deleteFailed: "Failed to delete budget: {{message}}",
 		},
 	},
+	goals: {
+		title: "Goals",
+		description:
+			"Save toward the things you want and see when you'll reach them, based on your real income and spending.",
+		addGoal: "Add Goal",
+		goalCount_one: "{{count}} goal",
+		goalCount_other: "{{count}} goals",
+		noGoals: "No goals yet",
+		noGoalsDescription:
+			"Add something you're saving for, like a new phone or a holiday.",
+		status: {
+			active: "Active",
+			reached: "Reached",
+			purchased: "Purchased",
+			archived: "Archived",
+		},
+		form: {
+			namePlaceholder: "e.g. iPhone 17",
+			targetAmount: "Target amount",
+			targetDate: "Target date",
+			targetDateHelp:
+				"Optional. See how much you need to save each month to make it in time.",
+			linkedAccount: "Linked account",
+			linkedAccountPlaceholder: "Select an account",
+			noLinkedAccount: "No linked account",
+			linkedAccountHelp:
+				"A dedicated account or pocket for this goal. Its whole balance counts toward the goal.",
+			linkedAccountUnavailable:
+				"Linked to another goal or already used to set aside funds",
+			initialFund: "Initial fund",
+			initialFundHelp:
+				"Money you've already saved. It stays in its account and is set aside for this goal.",
+			initialFundAccount: "From account",
+			freeBalance: "Free balance: {{amount}}",
+			allocationPercent: "Share of monthly surplus",
+			allocationPercentHelp:
+				"Part of your monthly surplus (income − expenses) meant for this goal. Used for the initial estimate.",
+			allocationAvailable: "{{percent}}% of your surplus is still unassigned",
+			priority: "Priority",
+			priorityHelp: "Goals with a lower number are shown first.",
+			productUrl: "Product link",
+			productUrlPlaceholder: "https://",
+			image: "Image",
+			uploadImage: "Upload image",
+			removeImage: "Remove image",
+		},
+		create: {
+			title: "Create Goal",
+		},
+		edit: {
+			title: "Edit Goal",
+		},
+		card: {
+			progress: "{{current}} of {{target}}",
+			percent: "{{percent}}%",
+			remaining: "{{amount}} to go",
+			openProduct: "View product",
+		},
+		estimate: {
+			daysLeft_one: "{{count}} day left",
+			daysLeft_other: "{{count}} days left",
+			monthsLeft_one: "± {{count}} month left",
+			monthsLeft_other: "± {{count}} months left",
+			yearsLeft_one: "± {{count}} year left",
+			yearsLeft_other: "± {{count}} years left",
+			yearsMonthsLeft: "± {{years}} {{months}} left",
+			overCap: "More than {{years}} years",
+			estimatedDate: "Estimated {{date}}",
+			rough: "Rough estimate",
+			roughDescription:
+				"Based on less than 3 months of data, so it may still change a lot.",
+			initial: "Initial estimate",
+			range: "{{min}}–{{max}}",
+			basedOnSavings: "Based on your average savings of {{amount}}/month",
+			basedOnSurplus:
+				"Based on {{percent}}% of your average surplus of {{amount}}/month",
+			noSurplus: "Can't estimate yet — expenses exceed income",
+			noHistory: "Can't estimate yet — record some income and expenses first",
+			reached: "Goal reached!",
+			reachedDescription:
+				"You've saved enough. Mark it as purchased once you buy it.",
+		},
+		duration: {
+			days_one: "{{count}} day",
+			days_other: "{{count}} days",
+			months_one: "{{count}} month",
+			months_other: "{{count}} months",
+			years_one: "{{count}} year",
+			years_other: "{{count}} years",
+			yearsMonths: "{{years}} {{months}}",
+			overCap: "{{years}}+ years",
+		},
+		insight: {
+			potential:
+				"Your surplus allows {{amount}}/month for this goal, more than you've been setting aside. Saving that much would get you there sooner.",
+		},
+		targetDate: {
+			label: "Target: {{date}}",
+			onTrack: "On track for {{date}}",
+			behind: "Needs {{amount}}/month, short {{gap}}/month",
+			past: "The target date ({{date}}) has passed",
+		},
+		funding: {
+			title: "Funding",
+			linkedAccount: "Linked account",
+			setAside: "Set aside",
+			total: "Total",
+			empty: "Nothing saved yet. Link an account or set aside funds to start.",
+		},
+		contributions: {
+			title: "History",
+			empty: "No funds set aside yet",
+			setAside: "Set aside",
+			withdrawn: "Withdrawn",
+			delete: {
+				title: "Delete Entry",
+				description:
+					"Delete this entry? The goal's progress will be recalculated.",
+				confirm: "Delete",
+			},
+		},
+		contribution: {
+			setAside: "Set Aside Funds",
+			setAsideDescription:
+				"Mark money in one of your accounts for this goal. The money stays in that account.",
+			withdraw: "Withdraw Funds",
+			withdrawDescription:
+				"Release money set aside for this goal so it's free to use again.",
+			freeBalance: "Free balance: {{amount}}",
+			maxWithdraw: "Up to {{amount}} is set aside from this account",
+			notePlaceholder: "e.g. Year-end bonus",
+			noAccounts: "No accounts with free balance",
+		},
+		purchase: {
+			action: "Mark as Purchased",
+			title: "Mark as Purchased",
+			description:
+				'Record buying "{{name}}". An expense is created for each account that pays.',
+			payments: "Payments",
+			addPayment: "Add payment",
+			removePayment: "Remove payment",
+			shortfall: "Pay the remaining {{amount}} from",
+			total: "Total: {{amount}}",
+			category: "Expense category",
+			selectCategory: "Select an expense category",
+			confirm: "Mark as Purchased",
+		},
+		archive: {
+			action: "Archive",
+			title: "Archive Goal",
+			description:
+				'Archive "{{name}}"? Funds set aside for it will be released. This cannot be undone.',
+			confirm: "Archive",
+		},
+		delete: {
+			title: "Delete Goal",
+			description:
+				'Are you sure you want to delete "{{name}}"? Funds set aside for it will be released.',
+			confirm: "Delete",
+		},
+		allocation: {
+			freeBalance: "Free balance",
+			allocated: "Set aside for goals",
+			linkedTo: "Linked to {{name}}",
+			overAllocated: "Over-allocated",
+			overAllocatedDescription:
+				"More is set aside for goals than this account holds. Withdraw some funds from its goals.",
+			overLimit:
+				"Active goals use {{percent}}% of your surplus, more than 100%.",
+		},
+		errors: {
+			notActive: "This goal is no longer active.",
+			accountAlreadyLinked: "This account is already linked to another goal.",
+			accountIsContributionSource:
+				"Funds in this account are set aside for a goal, so it can't be linked.",
+			linkedAccountContribution:
+				"This account is linked to a goal and can't be used to set aside funds.",
+			insufficientFreeBalance: "Not enough free balance in this account.",
+			withdrawalExceedsAllocation:
+				"You can't withdraw more than this goal holds from this account.",
+			allocationLimitExceeded:
+				"Active goals can't share more than 100% of your surplus.",
+		},
+		toast: {
+			created: "Goal created successfully",
+			createFailed: "Failed to create goal: {{message}}",
+			updated: "Goal updated successfully",
+			updateFailed: "Failed to update goal: {{message}}",
+			deleted: "Goal deleted",
+			deleteFailed: "Failed to delete goal: {{message}}",
+			setAside: "Funds set aside",
+			withdrawn: "Funds withdrawn",
+			contributionFailed: "Failed to save: {{message}}",
+			contributionDeleted: "Entry deleted",
+			contributionDeleteFailed: "Failed to delete entry: {{message}}",
+			purchased: "Goal marked as purchased",
+			purchaseFailed: "Failed to mark as purchased: {{message}}",
+			archived: "Goal archived",
+			archiveFailed: "Failed to archive goal: {{message}}",
+		},
+		widget: {
+			title: "Top Goal",
+			noGoals: "No active goals",
+		},
+	},
 	recurrences: {
 		title: "Recurring Transactions",
 		ruleCount: "{{count}} rules",
@@ -353,6 +559,7 @@ export const en = {
 		transactions: "Transactions",
 		categories: "Categories",
 		accounts: "Accounts",
+		goals: "Goals",
 		emptyTrash: "Empty Trash",
 		restore: "Restore",
 		permanentDelete: "Delete Permanently",
