@@ -1,5 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { estimateGoalCompletion, pickGoalPace } from "./goal-estimate";
+import {
+	estimateGoalCompletion,
+	getTargetDateGap,
+	pickGoalPace,
+} from "./goal-estimate";
 
 const today = new Date(2026, 10, 4);
 
@@ -196,5 +200,92 @@ describe("pickGoalPace", () => {
 		});
 		expect(result.source).toBe("real");
 		expect(result.showInsight).toBe(false);
+	});
+});
+
+describe("getTargetDateGap", () => {
+	test("target date in the past is isPast", () => {
+		expect(
+			getTargetDateGap({
+				remaining: 5_000_000,
+				targetDate: new Date(2026, 9, 1),
+				monthlyRate: 1_000_000,
+				today,
+			}),
+		).toEqual({
+			requiredMonthly: null,
+			gap: null,
+			onTrack: false,
+			isPast: true,
+		});
+	});
+
+	test("target date of today is isPast", () => {
+		const result = getTargetDateGap({
+			remaining: 5_000_000,
+			targetDate: new Date(2026, 10, 4, 23, 59),
+			monthlyRate: 1_000_000,
+			today,
+		});
+		expect(result.isPast).toBe(true);
+	});
+
+	test("past target with nothing remaining is still on track", () => {
+		const result = getTargetDateGap({
+			remaining: 0,
+			targetDate: new Date(2026, 9, 1),
+			monthlyRate: 0,
+			today,
+		});
+		expect(result).toEqual({
+			requiredMonthly: null,
+			gap: null,
+			onTrack: true,
+			isPast: true,
+		});
+	});
+
+	test("on track when pace covers the required monthly amount", () => {
+		// 2026-11-04 → 2027-11-04 = 365 days = 11.99 months → ~1,000,684/month
+		const result = getTargetDateGap({
+			remaining: 12_000_000,
+			targetDate: new Date(2027, 10, 4),
+			monthlyRate: 1_100_000,
+			today,
+		});
+		expect(result.requiredMonthly).toBeCloseTo(12_000_000 / (365 / 30.4375));
+		expect(result.gap).toBe(0);
+		expect(result.onTrack).toBe(true);
+		expect(result.isPast).toBe(false);
+	});
+
+	test("behind when pace is below the required monthly amount", () => {
+		// 2026-11-04 → 2027-05-04 = 181 days → 6,000,000 / (181 / 30.4375) ≈ 1,008,978/month
+		const result = getTargetDateGap({
+			remaining: 6_000_000,
+			targetDate: new Date(2027, 4, 4),
+			monthlyRate: 600_000,
+			today,
+		});
+		const required = 6_000_000 / (181 / 30.4375);
+		expect(result.requiredMonthly).toBeCloseTo(required);
+		expect(result.gap).toBeCloseTo(required - 600_000);
+		expect(result.onTrack).toBe(false);
+		expect(result.isPast).toBe(false);
+	});
+
+	test("nothing remaining with a future target needs nothing", () => {
+		const result = getTargetDateGap({
+			remaining: -100_000,
+			targetDate: new Date(2027, 4, 4),
+			monthlyRate: 0,
+			today,
+		});
+		expect(result).toEqual({
+			requiredMonthly: 0,
+			gap: 0,
+			onTrack: true,
+			isPast: false,
+		});
 	});
 });
