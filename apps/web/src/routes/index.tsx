@@ -25,6 +25,7 @@ import { AnalyticsCard } from "./-components/analytics-card";
 import { BudgetOverviewWidget } from "./-components/budget-overview-widget";
 import CreateTransactionDialog from "./-components/create-transaction-dialog";
 import { DateRangePicker } from "./-components/date-range-picker";
+import { GoalsWidget } from "./-components/goals-widget";
 import { RecentTransactions } from "./-components/recent-transactions";
 import { SummaryCard } from "./-components/summary-card";
 import { getCurrentMonthRange } from "./-components/utils";
@@ -179,6 +180,8 @@ function HomeComponent() {
 			)}
 
 			<BudgetOverviewWidget from={dateRange.from} to={dateRange.to} />
+
+			<GoalsWidget />
 
 			<CreateTransactionDialog
 				open={state.transaction}
