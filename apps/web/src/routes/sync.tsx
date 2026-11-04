@@ -42,6 +42,8 @@ type PairingDialogState =
 			deviceId: string;
 			deviceName: string;
 			sasCode: string;
+			/** Our user confirmed; waiting for the pairing to complete */
+			confirming: boolean;
 	  };
 
 type SyncIpDialogState =
@@ -115,6 +117,7 @@ function RouteComponent() {
 				deviceId,
 				deviceName,
 				sasCode,
+				confirming: false,
 			});
 		});
 
@@ -127,6 +130,7 @@ function RouteComponent() {
 					deviceId,
 					deviceName,
 					sasCode,
+					confirming: false,
 				});
 			},
 		);
@@ -144,6 +148,12 @@ function RouteComponent() {
 			globalErrorToast(t("sync.toast.pairRejected"));
 		});
 
+		platform.sync.onPairFailed(() => {
+			setPairingDialog({ open: false });
+			setPairingDeviceId(null);
+			globalErrorToast(t("sync.toast.pairFailed"));
+		});
+
 		return () => {
 			platform.sync.removeAllListeners("sync:peer-discovered");
 			platform.sync.removeAllListeners("sync:peer-lost");
@@ -151,6 +161,7 @@ function RouteComponent() {
 			platform.sync.removeAllListeners("sync:pair-request-received");
 			platform.sync.removeAllListeners("sync:pair-confirmed");
 			platform.sync.removeAllListeners("sync:pair-rejected");
+			platform.sync.removeAllListeners("sync:pair-failed");
 		};
 	}, [queryClient, t]);
 
@@ -172,6 +183,8 @@ function RouteComponent() {
 
 	async function handleConfirmPair() {
 		if (!pairingDialog.open) return;
+		// Outgoing pairings complete once the other device accepts too
+		setPairingDialog({ ...pairingDialog, confirming: true });
 		await platform.sync.confirmPair(pairingDialog.deviceId);
 	}
 
@@ -454,14 +467,7 @@ function RouteComponent() {
 			<Dialog
 				open={pairingDialog.open}
 				onOpenChange={(open) => {
-					if (!open) {
-						if (pairingDialog.open && pairingDialog.direction === "incoming")
-							handleRejectPair();
-						else {
-							setPairingDialog({ open: false });
-							setPairingDeviceId(null);
-						}
-					}
+					if (!open) handleRejectPair();
 				}}
 			>
 				<DialogContent className="max-w-sm">
@@ -489,14 +495,13 @@ function RouteComponent() {
 							</div>
 							{pairingDialog.direction === "incoming" && (
 								<p className="text-muted-foreground text-xs">
-									{pairingDialog.deviceName} {t("common.name").toLowerCase()}{" "}
-									wants to pair
+									{t("sync.wantsToPair", { name: pairingDialog.deviceName })}
 								</p>
 							)}
 						</div>
 					)}
 
-					{pairingDialog.open && pairingDialog.direction === "incoming" && (
+					{pairingDialog.open && !pairingDialog.confirming && (
 						<DialogFooter className="flex-col gap-2 sm:flex-col">
 							<Button onClick={handleConfirmPair} className="w-full">
 								{t("sync.confirm")}
@@ -511,11 +516,19 @@ function RouteComponent() {
 						</DialogFooter>
 					)}
 
-					{pairingDialog.open && pairingDialog.direction === "outgoing" && (
-						<DialogFooter>
-							<p className="w-full text-center text-muted-foreground text-xs">
+					{pairingDialog.open && pairingDialog.confirming && (
+						<DialogFooter className="flex-col gap-2 sm:flex-col">
+							<p className="flex w-full items-center justify-center gap-2 text-muted-foreground text-xs">
+								<Loader2 className="size-4 animate-spin" />
 								{t("sync.pairingInProgress")}
 							</p>
+							<Button
+								variant="outline"
+								onClick={handleRejectPair}
+								className="w-full"
+							>
+								{t("common.cancel")}
+							</Button>
 						</DialogFooter>
 					)}
 				</DialogContent>

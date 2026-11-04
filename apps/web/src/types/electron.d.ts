@@ -62,6 +62,7 @@ declare global {
 			onPairRejected: (
 				callback: (info: { deviceId: string; reason?: string }) => void,
 			) => void;
+			onPairFailed: (callback: (info: { deviceId?: string }) => void) => void;
 			removeAllListeners: (channel: string) => void;
 		};
 		electronDataManager: {

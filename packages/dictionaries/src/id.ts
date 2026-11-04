@@ -437,6 +437,7 @@ export const id = {
 		confirm: "Kode Cocok — Konfirmasi",
 		reject: "Kode Tidak Cocok — Tolak",
 		pairingInProgress: "Pemasangan sedang berlangsung...",
+		wantsToPair: "{{name}} ingin dipasangkan",
 		connectToDesktop: "Hubungkan ke Desktop",
 		connectDescription:
 			"Masukkan alamat IP lokal desktop Anda untuk pasangkan melalui WiFi",

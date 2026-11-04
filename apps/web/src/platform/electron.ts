@@ -56,6 +56,7 @@ const sync: SyncCapability = {
 	onPairChallenge: (cb) => window.electronSync.onPairChallenge(cb),
 	onPairConfirmed: (cb) => window.electronSync.onPairConfirmed(cb),
 	onPairRejected: (cb) => window.electronSync.onPairRejected(cb),
+	onPairFailed: (cb) => window.electronSync.onPairFailed(cb),
 	removeAllListeners: (channel) =>
 		window.electronSync.removeAllListeners(channel),
 };

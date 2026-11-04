@@ -407,6 +407,7 @@ export interface Dictionary {
 		confirm: string;
 		reject: string;
 		pairingInProgress: string;
+		wantsToPair: string;
 		connectToDesktop: string;
 		connectDescription: string;
 		connect: string;

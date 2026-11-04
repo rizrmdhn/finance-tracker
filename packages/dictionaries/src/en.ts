@@ -437,6 +437,7 @@ export const en = {
 		confirm: "Codes Match — Confirm",
 		reject: "Codes Don't Match — Reject",
 		pairingInProgress: "Pairing in progress...",
+		wantsToPair: "{{name}} wants to pair",
 		connectToDesktop: "Connect to Desktop",
 		connectDescription:
 			"Enter your desktop's local IP address to pair over WiFi",

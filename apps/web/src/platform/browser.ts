@@ -89,6 +89,7 @@ const sync: SyncCapability = {
 	onPairChallenge: () => {},
 	onPairConfirmed: () => {},
 	onPairRejected: () => {},
+	onPairFailed: () => {},
 	removeAllListeners: () => {},
 };
 

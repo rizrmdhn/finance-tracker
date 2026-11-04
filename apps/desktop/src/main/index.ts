@@ -22,6 +22,7 @@ import {
 	isSyncMessage,
 	type PairAcceptMsg,
 	type PairChallengeMsg,
+	type PairingMessage,
 	type PairRejectMsg,
 	type PairRequestMsg,
 	pubKeyToBase64,
@@ -66,6 +67,15 @@ interface PendingPairing {
 	sharedSecret: Uint8Array;
 }
 
+/** We connected to a host. Trusted once our user confirmed and the host accepted. */
+interface OutgoingPairing extends PendingPairing {
+	host: string; // "ip:port"
+	confirmed: boolean;
+	accepted: boolean;
+	/** Drops the pairing and closes the connection without reporting a failure. */
+	settle: () => void;
+}
+
 function getDeviceIdentityPath(userData: string) {
 	return path.join(userData, "sync-identity.json");
 }
@@ -101,7 +111,7 @@ function setupSyncServer(
 	// Pending pairings indexed by their deviceId
 	const pendingPairings = new Map<string, PendingPairing>();
 	// Pending outgoing pairings (we initiated)
-	const outgoingPairings = new Map<string, PendingPairing>();
+	const outgoingPairings = new Map<string, OutgoingPairing>();
 
 	const channelFor = (ws: WebSocket): SyncChannel => ({
 		send: (msg) => ws.send(JSON.stringify(msg)),
@@ -135,7 +145,15 @@ function setupSyncServer(
 			},
 		});
 
-		ws.on("close", () => clearTimeout(idleTimer));
+		ws.on("close", () => {
+			clearTimeout(idleTimer);
+			// The initiator went away before our user answered
+			for (const [deviceId, pending] of pendingPairings) {
+				if (pending.ws !== ws) continue;
+				pendingPairings.delete(deviceId);
+				mainWin.webContents.send("sync:pair-failed", { deviceId });
+			}
+		});
 		ws.on("error", (err) => {
 			console.error("[sync] incoming connection error:", err.message);
 		});
@@ -272,6 +290,13 @@ function setupSyncServer(
 		(_event, { host, port }: { host: string; port: number }) => {
 			const ws = new WebSocket(`ws://${host}:${port}`);
 			const ourKeypair = generateEphemeralKeypair();
+			let pairing: OutgoingPairing | undefined;
+			let settled = false;
+			const settle = () => {
+				settled = true;
+				if (pairing) outgoingPairings.delete(pairing.theirDeviceId);
+				ws.close();
+			};
 
 			ws.on("open", () => {
 				const msg: PairRequestMsg = {
@@ -284,91 +309,120 @@ function setupSyncServer(
 				ws.send(JSON.stringify(msg));
 			});
 
+			// `error` is always followed by `close`
 			ws.on("error", (err) => {
 				console.error("[sync] pairing connection failed:", err.message);
 			});
 
+			ws.on("close", () => {
+				if (settled) return;
+				settled = true;
+				if (pairing) outgoingPairings.delete(pairing.theirDeviceId);
+				mainWin.webContents.send("sync:pair-failed", {
+					deviceId: pairing?.theirDeviceId,
+				});
+			});
+
+			// The host answers on the connection we opened
 			ws.on("message", async (raw) => {
+				if (settled) return;
 				try {
-					const msg = JSON.parse(raw.toString()) as { type: string };
-					if (msg.type === "pair-challenge") {
-						const challenge = msg as PairChallengeMsg;
+					const msg = JSON.parse(raw.toString()) as PairingMessage;
+
+					if (msg.type === "pair-challenge" && !pairing) {
+						const theirPublicKey = base64ToPubKey(msg.publicKey);
 						const sharedSecret = deriveSharedSecret(
 							ourKeypair.privateKey,
-							base64ToPubKey(challenge.publicKey),
+							theirPublicKey,
 						);
 						const sasCode = computeSasCode(
 							sharedSecret,
 							identity.deviceId,
-							challenge.deviceId,
+							msg.deviceId,
 						);
-
-						outgoingPairings.set(challenge.deviceId, {
+						pairing = {
 							ws,
-							theirDeviceId: challenge.deviceId,
-							theirDeviceName: challenge.deviceName,
-							theirPlatform: challenge.platform,
-							theirPublicKey: base64ToPubKey(challenge.publicKey),
+							host: `${host}:${port}`,
+							theirDeviceId: msg.deviceId,
+							theirDeviceName: msg.deviceName,
+							theirPlatform: msg.platform,
+							theirPublicKey,
 							sasCode,
 							sharedSecret,
-						});
+							confirmed: false,
+							accepted: false,
+							settle,
+						};
+						outgoingPairings.set(msg.deviceId, pairing);
 
-						// Show SAS code to user
+						// Show SAS code to user; trusted once they confirm (sync:confirm-pair)
 						mainWin.webContents.send("sync:pair-challenge", {
-							deviceId: challenge.deviceId,
-							deviceName: challenge.deviceName,
+							deviceId: msg.deviceId,
+							deviceName: msg.deviceName,
 							sasCode,
 						});
-					}
-
-					// The peer answers on the connection we opened
-					if (msg.type === "pair-accept") {
-						const pairAccept = msg as PairAcceptMsg;
-						const pending = outgoingPairings.get(pairAccept.deviceId);
-						if (!pending) return;
-						outgoingPairings.delete(pairAccept.deviceId);
-
-						await addTrustedPeer(db, {
-							deviceId: pending.theirDeviceId,
-							deviceName: pending.theirDeviceName,
-							platform: pending.theirPlatform,
-							publicKey: pending.theirPublicKey,
-							sharedSecret: secretToHex(pending.sharedSecret),
-						});
-						await updateSyncPeerHost(
-							db,
-							pending.theirDeviceId,
-							`${host}:${port}`,
-						);
-						ws.close();
-
-						mainWin.webContents.send("sync:pair-confirmed", {
-							deviceId: pending.theirDeviceId,
-							deviceName: pending.theirDeviceName,
-							platform: pending.theirPlatform,
-						});
-					}
-
-					if (msg.type === "pair-reject") {
-						const pairReject = msg as PairRejectMsg;
-						outgoingPairings.delete(pairReject.deviceId);
-						ws.close();
+					} else if (
+						msg.type === "pair-accept" &&
+						msg.deviceId === pairing?.theirDeviceId
+					) {
+						pairing.accepted = true;
+						if (pairing.confirmed) await completeOutgoing(pairing);
+					} else if (msg.type === "pair-reject") {
+						settle();
 						mainWin.webContents.send("sync:pair-rejected", {
-							deviceId: pairReject.deviceId,
-							reason: pairReject.reason,
+							deviceId: msg.deviceId,
+							reason: msg.reason,
 						});
 					}
 				} catch (err) {
 					console.error("[sync] pairing failed:", err);
+					settle();
+					mainWin.webContents.send("sync:pair-failed", {
+						deviceId: pairing?.theirDeviceId,
+					});
 				}
 			});
 		},
 	);
 
-	// IPC: user confirms the SAS code (incoming pair)
+	/** Our user confirmed and the host accepted: trust the host. */
+	async function completeOutgoing(pairing: OutgoingPairing) {
+		pairing.settle();
+		try {
+			await addTrustedPeer(db, {
+				deviceId: pairing.theirDeviceId,
+				deviceName: pairing.theirDeviceName,
+				platform: pairing.theirPlatform,
+				publicKey: pairing.theirPublicKey,
+				sharedSecret: secretToHex(pairing.sharedSecret),
+			});
+			await updateSyncPeerHost(db, pairing.theirDeviceId, pairing.host);
+		} catch (err) {
+			console.error("[sync] storing paired device failed:", err);
+			mainWin.webContents.send("sync:pair-failed", {
+				deviceId: pairing.theirDeviceId,
+			});
+			return;
+		}
+		mainWin.webContents.send("sync:pair-confirmed", {
+			deviceId: pairing.theirDeviceId,
+			deviceName: pairing.theirDeviceName,
+			platform: pairing.theirPlatform,
+		});
+	}
+
+	// IPC: user confirms the SAS code
 	ipcMain.handle(
 		"sync:confirm-pair",
 		async (_event, { deviceId }: { deviceId: string }) => {
+			// We initiated: wait for the host's user to accept too
+			const outgoing = outgoingPairings.get(deviceId);
+			if (outgoing) {
+				outgoing.confirmed = true;
+				if (outgoing.accepted) await completeOutgoing(outgoing);
+				return;
+			}
+
 			const pending = pendingPairings.get(deviceId);
 			if (!pending) return;
 			pendingPairings.delete(deviceId);
@@ -395,22 +449,31 @@ function setupSyncServer(
 		},
 	);
 
-	// IPC: user rejects the SAS code (incoming pair)
+	// IPC: user rejects the SAS code or cancels the pairing
 	ipcMain.handle(
 		"sync:reject-pair",
 		async (
 			_event,
 			{ deviceId, reason }: { deviceId: string; reason?: string },
 		) => {
-			const pending = pendingPairings.get(deviceId);
-			if (!pending) return;
-			pendingPairings.delete(deviceId);
-
 			const reject: PairRejectMsg = {
 				type: "pair-reject",
 				deviceId: identity.deviceId,
 				reason,
 			};
+
+			const outgoing = outgoingPairings.get(deviceId);
+			if (outgoing) {
+				if (outgoing.ws.readyState === WebSocket.OPEN) {
+					outgoing.ws.send(JSON.stringify(reject));
+				}
+				outgoing.settle();
+				return;
+			}
+
+			const pending = pendingPairings.get(deviceId);
+			if (!pending) return;
+			pendingPairings.delete(deviceId);
 			pending.ws.send(JSON.stringify(reject));
 		},
 	);

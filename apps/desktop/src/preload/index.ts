@@ -144,6 +144,11 @@ if (!("electronSync" in window)) {
 			ipcRenderer.on("sync:pair-rejected", (_event, info) => callback(info));
 		},
 
+		/** The pairing connection failed or closed before the pairing completed. */
+		onPairFailed: (callback: (info: { deviceId?: string }) => void) => {
+			ipcRenderer.on("sync:pair-failed", (_event, info) => callback(info));
+		},
+
 		removeAllListeners: (channel: string) => {
 			ipcRenderer.removeAllListeners(channel);
 		},

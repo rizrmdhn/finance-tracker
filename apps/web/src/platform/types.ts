@@ -135,6 +135,8 @@ export interface SyncCapability {
 	onPairRejected(
 		cb: (info: { deviceId: string; reason?: string }) => void,
 	): void;
+	/** The pairing connection failed or closed before the pairing completed. */
+	onPairFailed(cb: (info: { deviceId?: string }) => void): void;
 	removeAllListeners(channel: string): void;
 }
 
