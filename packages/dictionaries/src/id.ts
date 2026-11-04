@@ -438,23 +438,28 @@ export const id = {
 		reject: "Kode Tidak Cocok — Tolak",
 		pairingInProgress: "Pemasangan sedang berlangsung...",
 		connectToDesktop: "Hubungkan ke Desktop",
-		connectDescription: "Masukkan alamat IP lokal desktop Anda untuk pasangkan melalui WiFi",
+		connectDescription:
+			"Masukkan alamat IP lokal desktop Anda untuk pasangkan melalui WiFi",
 		connect: "Hubungkan",
 		syncNow: "Sinkronkan",
 		syncing: "Menyinkronkan...",
 		paired: "Terpasangkan",
 		syncWithDesktop: "Sinkron dengan Desktop",
-		syncDescription: "Masukkan alamat IP desktop Anda untuk menyinkronkan data.",
+		syncDescription:
+			"Masukkan alamat IP desktop Anda untuk menyinkronkan data.",
 		connectToDevice: "Hubungkan ke Perangkat",
-		connectToDeviceDescription: "Masukkan IP lokal perangkat Finance Tracker untuk dipasangkan",
+		connectToDeviceDescription:
+			"Masukkan IP lokal perangkat Finance Tracker untuk dipasangkan",
 		hostSyncSession: "Jadi Host Sinkronisasi",
-		hostSyncDescription: "Biarkan perangkat lain terhubung dan menyinkronkan data dengan Anda melalui WiFi",
+		hostSyncDescription:
+			"Biarkan perangkat lain terhubung dan menyinkronkan data dengan Anda melalui WiFi",
 		yourIpAddress: "Alamat IP Anda",
 		startHosting: "Mulai Hosting",
 		stopHosting: "Hentikan Hosting",
 		hosting: "Hosting — menunggu koneksi...",
 		syncEnterIp: "Masukkan IP untuk Sinkronisasi",
-		syncEnterIpDescription: "Masukkan alamat IP lokal perangkat untuk mulai sinkronisasi",
+		syncEnterIpDescription:
+			"Masukkan alamat IP lokal perangkat untuk mulai sinkronisasi",
 		toast: {
 			paired: "Perangkat berhasil dipasangkan",
 			pairFailed: "Gagal memasangkan perangkat",
@@ -463,6 +468,27 @@ export const id = {
 			pairRejected: "Pemasangan ditolak oleh perangkat lain",
 			syncComplete: "Sinkronisasi selesai",
 			syncFailed: "Sinkronisasi gagal",
+		},
+		errors: {
+			untrusted:
+				"Kedua perangkat ini belum dipasangkan. Hapus perangkat tersebut, lalu pasangkan kembali.",
+			repairRequired:
+				"Pasangan ini dibuat dengan versi aplikasi yang lebih lama. Hapus perangkat tersebut, lalu pasangkan kembali.",
+			authFailed:
+				"Perangkat lain tidak dapat diverifikasi. Jika Anda baru saja memasangkannya ulang, hapus perangkat tersebut, lalu pasangkan kembali.",
+			schemaMismatch:
+				"Kedua perangkat menggunakan versi aplikasi yang berbeda. Perbarui aplikasi di kedua perangkat, lalu coba lagi.",
+			protocolMismatch:
+				"Kedua perangkat menggunakan versi sinkronisasi yang berbeda. Perbarui aplikasi di kedua perangkat, lalu coba lagi.",
+			applyFailed:
+				"Perubahan hasil sinkronisasi tidak dapat disimpan. Silakan coba lagi.",
+			protocolError:
+				"Perangkat lain mengirim respons yang tidak terduga. Perbarui aplikasi di kedua perangkat, lalu coba lagi.",
+			connectionClosed:
+				"Koneksi terputus. Pastikan kedua perangkat berada di jaringan yang sama dan aplikasi terbuka di perangkat lain.",
+			timeout:
+				"Perangkat lain terlalu lama merespons. Pastikan perangkat tersebut berada di jaringan yang sama dan aplikasinya terbuka, lalu coba lagi.",
+			internal: "Terjadi kesalahan saat sinkronisasi. Silakan coba lagi.",
 		},
 	},
 } satisfies Dictionary;

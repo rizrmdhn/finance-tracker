@@ -434,5 +434,17 @@ export interface Dictionary {
 			syncComplete: string;
 			syncFailed: string;
 		};
+		errors: {
+			untrusted: string;
+			repairRequired: string;
+			authFailed: string;
+			schemaMismatch: string;
+			protocolMismatch: string;
+			applyFailed: string;
+			protocolError: string;
+			connectionClosed: string;
+			timeout: string;
+			internal: string;
+		};
 	};
 }
