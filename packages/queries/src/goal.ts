@@ -377,6 +377,25 @@ export async function purchaseGoal(db: AnyDatabase, input: GoalPurchaseInput) {
 	});
 }
 
+/** Cancels an active goal. Like a purchase, this releases its linked account and allocations. */
+export async function archiveGoal(db: AnyDatabase, id: string) {
+	const goal = await getGoalById(db, id);
+
+	if (!goal) throw new NotFoundError("Goal", id);
+	if (goal.status !== "active")
+		throw new GoalNotActiveError(goal.id, goal.status);
+
+	const [result] = await db
+		.update(goals)
+		.set({ status: "archived" })
+		.where(eq(goals.id, id))
+		.returning();
+
+	if (!result) throw new Error("Failed to archive goal");
+
+	return result;
+}
+
 export async function addGoalContribution(
 	db: AnyDatabase,
 	input: GoalContributionInput,
