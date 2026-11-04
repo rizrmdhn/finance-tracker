@@ -52,9 +52,6 @@ export default function GoalCard({
 	const { goal, progress } = item;
 	const Icon = ICON_MAP[goal.icon];
 	const isActive = goal.status === "active";
-	const percent =
-		goal.targetAmount > 0 ? (progress.total / goal.targetAmount) * 100 : 0;
-	const format = (amount: number) => formatAmount(amount, goal.currency);
 
 	// Funds can only move, and a goal can only be bought or archived, while it's active
 	const activeOnly = (action?: GoalAction) => (isActive ? action : undefined);
@@ -104,17 +101,7 @@ export default function GoalCard({
 					) : (
 						<span className="truncate font-medium text-sm">{goal.name}</span>
 					)}
-					{goal.productUrl && (
-						<a
-							href={goal.productUrl}
-							target="_blank"
-							rel="noopener noreferrer"
-							className="inline-flex w-fit items-center gap-1 text-muted-foreground text-xs hover:text-foreground hover:underline"
-						>
-							<ExternalLinkIcon className="size-3" />
-							{t("goals.card.openProduct")}
-						</a>
-					)}
+					{goal.productUrl && <GoalProductLink url={goal.productUrl} />}
 				</div>
 				<GoalStatusBadge item={item} />
 				{(menuActions.length > 0 || onDelete) && (
@@ -154,35 +141,7 @@ export default function GoalCard({
 				)}
 			</div>
 
-			<div className="flex flex-col gap-1.5">
-				<div className="flex justify-between gap-2 text-xs">
-					<span className="text-muted-foreground">
-						{t("goals.card.progress", {
-							current: format(progress.total),
-							target: format(goal.targetAmount),
-						})}
-					</span>
-					<span className="font-medium">
-						{t("goals.card.percent", { percent: Math.floor(percent) })}
-					</span>
-				</div>
-				<div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-					<div
-						className="h-full rounded-full transition-all"
-						style={{
-							width: `${Math.min(percent, 100)}%`,
-							backgroundColor: goal.color,
-						}}
-					/>
-				</div>
-				{!progress.isReached && (
-					<p className="text-muted-foreground text-xs">
-						{t("goals.card.remaining", {
-							amount: format(goal.targetAmount - progress.total),
-						})}
-					</p>
-				)}
-			</div>
+			<GoalProgress item={item} />
 
 			{isActive && progress.isReached && (
 				<div className="flex flex-col gap-2 rounded-md bg-muted/50 px-3 py-2">
@@ -210,7 +169,63 @@ export default function GoalCard({
 	);
 }
 
-function GoalStatusBadge({ item }: { item: GoalOverviewItem }) {
+export function GoalProductLink({ url }: { url: string }) {
+	const { t } = useTranslation();
+	return (
+		<a
+			href={url}
+			target="_blank"
+			rel="noopener noreferrer"
+			className="inline-flex w-fit items-center gap-1 text-muted-foreground text-xs hover:text-foreground hover:underline"
+		>
+			<ExternalLinkIcon className="size-3" />
+			{t("goals.card.openProduct")}
+		</a>
+	);
+}
+
+/** "X of Y", percent, progress bar and what's left. */
+export function GoalProgress({ item }: { item: GoalOverviewItem }) {
+	const { t } = useTranslation();
+	const { goal, progress } = item;
+	const percent =
+		goal.targetAmount > 0 ? (progress.total / goal.targetAmount) * 100 : 0;
+	const format = (amount: number) => formatAmount(amount, goal.currency);
+
+	return (
+		<div className="flex flex-col gap-1.5">
+			<div className="flex justify-between gap-2 text-xs">
+				<span className="text-muted-foreground">
+					{t("goals.card.progress", {
+						current: format(progress.total),
+						target: format(goal.targetAmount),
+					})}
+				</span>
+				<span className="font-medium">
+					{t("goals.card.percent", { percent: Math.floor(percent) })}
+				</span>
+			</div>
+			<div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+				<div
+					className="h-full rounded-full transition-all"
+					style={{
+						width: `${Math.min(percent, 100)}%`,
+						backgroundColor: goal.color,
+					}}
+				/>
+			</div>
+			{!progress.isReached && (
+				<p className="text-muted-foreground text-xs">
+					{t("goals.card.remaining", {
+						amount: format(goal.targetAmount - progress.total),
+					})}
+				</p>
+			)}
+		</div>
+	);
+}
+
+export function GoalStatusBadge({ item }: { item: GoalOverviewItem }) {
 	const { t } = useTranslation();
 	const { status } = item.goal;
 
@@ -225,7 +240,7 @@ function GoalStatusBadge({ item }: { item: GoalOverviewItem }) {
 }
 
 /** Estimate, its basis, the insight and the target-date check of an active goal. */
-function GoalEstimate({ item }: { item: GoalOverviewItem }) {
+export function GoalEstimate({ item }: { item: GoalOverviewItem }) {
 	const { t } = useTranslation();
 	const { duration, timeLeft, formatMonth, formatDate } = useGoalText();
 	const { goal, estimate } = item;

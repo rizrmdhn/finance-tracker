@@ -26,6 +26,10 @@ import { queryClient, trpc } from "@/lib/trpc";
 import CreateGoalDialog from "./-components/create-goal-dialog";
 import EditGoalDialog from "./-components/edit-goal-dialog";
 import GoalCard from "./-components/goal-card";
+import GoalContributionDialog, {
+	type GoalContributionMode,
+} from "./-components/goal-contribution-dialog";
+import GoalDetailDialog from "./-components/goal-detail-dialog";
 import {
 	type GoalOverviewItem,
 	useGoalErrorMessage,
@@ -47,16 +51,24 @@ function GoalsComponent() {
 	const goalErrorMessage = useGoalErrorMessage();
 	const { state, openModal, closeModal } = useModalState({
 		createGoal: false,
+		goalDetail: false,
+		contribution: false,
 		editGoal: false,
 		archiveGoal: false,
 		deleteGoal: false,
 	});
 	const [selected, setSelected] = useState<GoalOverviewItem | null>(null);
+	const [contributionMode, setContributionMode] =
+		useState<GoalContributionMode>("setAside");
 
 	// In list order: priority, then creation date
 	const { data: overview = [], isLoading } = useQuery(
 		trpc.goal.overview.queryOptions(),
 	);
+
+	// The latest data of the selected goal, so open dialogs follow its changes
+	const current =
+		overview.find((item) => item.goal.id === selected?.goal.id) ?? selected;
 
 	const activeGoals = overview.filter((item) => item.goal.status === "active");
 	const inactiveGoals = overview.filter(
@@ -102,14 +114,27 @@ function GoalsComponent() {
 		}),
 	);
 
-	function openFor(modal: "editGoal" | "archiveGoal" | "deleteGoal") {
+	function openFor(
+		modal: "goalDetail" | "editGoal" | "archiveGoal" | "deleteGoal",
+	) {
 		return (item: GoalOverviewItem) => {
 			setSelected(item);
 			openModal(modal);
 		};
 	}
 
+	function openContribution(mode: GoalContributionMode) {
+		return (item: GoalOverviewItem) => {
+			setSelected(item);
+			setContributionMode(mode);
+			openModal("contribution");
+		};
+	}
+
 	const cardActions = {
+		onOpenDetail: openFor("goalDetail"),
+		onSetAside: openContribution("setAside"),
+		onWithdraw: openContribution("withdraw"),
 		onEdit: openFor("editGoal"),
 		onArchive: openFor("archiveGoal"),
 		onDelete: openFor("deleteGoal"),
@@ -206,6 +231,23 @@ function GoalsComponent() {
 				setIsOpen={(open) =>
 					open ? openModal("createGoal") : closeModal("createGoal")
 				}
+			/>
+
+			<GoalDetailDialog
+				open={state.goalDetail}
+				setIsOpen={(open) =>
+					open ? openModal("goalDetail") : closeModal("goalDetail")
+				}
+				item={current}
+			/>
+
+			<GoalContributionDialog
+				open={state.contribution}
+				setIsOpen={(open) =>
+					open ? openModal("contribution") : closeModal("contribution")
+				}
+				mode={contributionMode}
+				item={current}
 			/>
 
 			<EditGoalDialog
