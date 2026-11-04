@@ -10,6 +10,7 @@ export interface Dictionary {
 		transactions: string;
 		recurring: string;
 		budgets: string;
+		goals: string;
 		trash: string;
 		settings: string;
 	};
@@ -298,6 +299,188 @@ export interface Dictionary {
 			deleteFailed: string;
 		};
 	};
+	goals: {
+		title: string;
+		description: string;
+		addGoal: string;
+		goalCount_one: string;
+		goalCount_other: string;
+		noGoals: string;
+		noGoalsDescription: string;
+		status: {
+			active: string;
+			reached: string;
+			purchased: string;
+			archived: string;
+		};
+		form: {
+			namePlaceholder: string;
+			targetAmount: string;
+			targetDate: string;
+			targetDateHelp: string;
+			linkedAccount: string;
+			linkedAccountPlaceholder: string;
+			noLinkedAccount: string;
+			linkedAccountHelp: string;
+			linkedAccountUnavailable: string;
+			initialFund: string;
+			initialFundHelp: string;
+			initialFundAccount: string;
+			freeBalance: string;
+			allocationPercent: string;
+			allocationPercentHelp: string;
+			allocationAvailable: string;
+			priority: string;
+			priorityHelp: string;
+			productUrl: string;
+			productUrlPlaceholder: string;
+			image: string;
+			uploadImage: string;
+			removeImage: string;
+		};
+		create: {
+			title: string;
+		};
+		edit: {
+			title: string;
+		};
+		card: {
+			progress: string;
+			percent: string;
+			remaining: string;
+			openProduct: string;
+		};
+		estimate: {
+			daysLeft_one: string;
+			daysLeft_other: string;
+			monthsLeft_one: string;
+			monthsLeft_other: string;
+			yearsLeft_one: string;
+			yearsLeft_other: string;
+			yearsMonthsLeft: string;
+			overCap: string;
+			estimatedDate: string;
+			rough: string;
+			roughDescription: string;
+			initial: string;
+			range: string;
+			basedOnSavings: string;
+			basedOnSurplus: string;
+			noSurplus: string;
+			noHistory: string;
+			reached: string;
+			reachedDescription: string;
+		};
+		duration: {
+			days_one: string;
+			days_other: string;
+			months_one: string;
+			months_other: string;
+			years_one: string;
+			years_other: string;
+			yearsMonths: string;
+			overCap: string;
+		};
+		insight: {
+			potential: string;
+		};
+		targetDate: {
+			label: string;
+			onTrack: string;
+			behind: string;
+			past: string;
+		};
+		funding: {
+			title: string;
+			linkedAccount: string;
+			setAside: string;
+			total: string;
+			empty: string;
+		};
+		contributions: {
+			title: string;
+			empty: string;
+			setAside: string;
+			withdrawn: string;
+			delete: {
+				title: string;
+				description: string;
+				confirm: string;
+			};
+		};
+		contribution: {
+			setAside: string;
+			setAsideDescription: string;
+			withdraw: string;
+			withdrawDescription: string;
+			freeBalance: string;
+			maxWithdraw: string;
+			notePlaceholder: string;
+			noAccounts: string;
+		};
+		purchase: {
+			action: string;
+			title: string;
+			description: string;
+			payments: string;
+			addPayment: string;
+			removePayment: string;
+			shortfall: string;
+			total: string;
+			category: string;
+			selectCategory: string;
+			confirm: string;
+		};
+		archive: {
+			action: string;
+			title: string;
+			description: string;
+			confirm: string;
+		};
+		delete: {
+			title: string;
+			description: string;
+			confirm: string;
+		};
+		allocation: {
+			freeBalance: string;
+			allocated: string;
+			linkedTo: string;
+			overAllocated: string;
+			overAllocatedDescription: string;
+			overLimit: string;
+		};
+		errors: {
+			notActive: string;
+			accountAlreadyLinked: string;
+			accountIsContributionSource: string;
+			linkedAccountContribution: string;
+			insufficientFreeBalance: string;
+			withdrawalExceedsAllocation: string;
+			allocationLimitExceeded: string;
+		};
+		toast: {
+			created: string;
+			createFailed: string;
+			updated: string;
+			updateFailed: string;
+			deleted: string;
+			deleteFailed: string;
+			setAside: string;
+			withdrawn: string;
+			contributionFailed: string;
+			contributionDeleted: string;
+			contributionDeleteFailed: string;
+			purchased: string;
+			purchaseFailed: string;
+			archived: string;
+			archiveFailed: string;
+		};
+		widget: {
+			title: string;
+			noGoals: string;
+		};
+	};
 	recurrences: {
 		title: string;
 		ruleCount: string;
@@ -331,6 +514,7 @@ export interface Dictionary {
 		transactions: string;
 		categories: string;
 		accounts: string;
+		goals: string;
 		emptyTrash: string;
 		restore: string;
 		permanentDelete: string;
