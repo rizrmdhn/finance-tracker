@@ -528,7 +528,7 @@ export const en = {
 			archiveFailed: "Failed to archive goal: {{message}}",
 		},
 		widget: {
-			title: "Top Goal",
+			title: "Top Goals",
 			noGoals: "No active goals",
 		},
 	},
