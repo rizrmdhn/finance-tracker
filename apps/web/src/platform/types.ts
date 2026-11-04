@@ -1,3 +1,7 @@
+import type { SyncErrorCode, SyncResult } from "@finance-tracker/sync";
+
+export type { SyncErrorCode } from "@finance-tracker/sync";
+
 export type PlatformType = "desktop" | "mobile";
 
 // ── App ───────────────────────────────────────────────────────────────────────
@@ -75,6 +79,10 @@ export interface DiscoveredPeer {
 	port: number;
 }
 
+export type SyncWithPeerResult =
+	| ({ ok: true } & SyncResult)
+	| { ok: false; code: SyncErrorCode };
+
 export interface SyncCapability {
 	/** True only in the Electron runtime where mDNS sync is available. */
 	readonly isSupported: boolean;
@@ -88,8 +96,18 @@ export interface SyncCapability {
 	initiatePair(peer: { host: string; port: number }): Promise<void>;
 	confirmPair(deviceId: string): Promise<void>;
 	rejectPair(deviceId: string, reason?: string): Promise<void>;
-	syncWithPeer(peer: { host: string; port: number }): Promise<void>;
+	/** `deviceId`: the trusted peer expected at this address, when known. */
+	syncWithPeer(peer: {
+		host: string;
+		port: number;
+		deviceId?: string;
+	}): Promise<SyncWithPeerResult>;
+	/** Fired after every successful sync, incoming or outgoing. */
 	onSyncComplete(cb: (info: { deviceId: string }) => void): void;
+	/** Fired when a sync started by another device fails. */
+	onSyncError(
+		cb: (info: { deviceId?: string; code: SyncErrorCode }) => void,
+	): void;
 	onPeerDiscovered(cb: (peer: DiscoveredPeer) => void): void;
 	onPeerLost(cb: (info: { deviceId: string }) => void): void;
 	onPairRequestReceived(

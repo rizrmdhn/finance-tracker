@@ -16,8 +16,7 @@ const updater: UpdaterCapability = {
 	},
 	checkForUpdates: () => window.electronUpdater.checkForUpdates(),
 	onUpdateAvailable: (cb) => window.electronUpdater.onUpdateAvailable(cb),
-	onUpdateNotAvailable: (cb) =>
-		window.electronUpdater.onUpdateNotAvailable(cb),
+	onUpdateNotAvailable: (cb) => window.electronUpdater.onUpdateNotAvailable(cb),
 	onUpdateError: (cb) => window.electronUpdater.onUpdateError(cb),
 	onDownloadProgress: (cb) => window.electronUpdater.onDownloadProgress(cb),
 	onUpdateDownloaded: (cb) => window.electronUpdater.onUpdateDownloaded(cb),
@@ -50,10 +49,10 @@ const sync: SyncCapability = {
 		window.electronSync.rejectPair(deviceId, reason),
 	syncWithPeer: (peer) => window.electronSync.syncWithPeer(peer),
 	onSyncComplete: (cb) => window.electronSync.onSyncComplete(cb),
+	onSyncError: (cb) => window.electronSync.onSyncError(cb),
 	onPeerDiscovered: (cb) => window.electronSync.onPeerDiscovered(cb),
 	onPeerLost: (cb) => window.electronSync.onPeerLost(cb),
-	onPairRequestReceived: (cb) =>
-		window.electronSync.onPairRequestReceived(cb),
+	onPairRequestReceived: (cb) => window.electronSync.onPairRequestReceived(cb),
 	onPairChallenge: (cb) => window.electronSync.onPairChallenge(cb),
 	onPairConfirmed: (cb) => window.electronSync.onPairConfirmed(cb),
 	onPairRejected: (cb) => window.electronSync.onPairRejected(cb),

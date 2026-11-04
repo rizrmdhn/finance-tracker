@@ -1,4 +1,8 @@
-import type { PlatformType } from "@finance-tracker/sync";
+import type {
+	PlatformType,
+	SyncErrorCode,
+	SyncResult,
+} from "@finance-tracker/sync";
 import { contextBridge, ipcRenderer } from "electron";
 import { exposeElectronTRPC } from "trpc-electron/main";
 
@@ -64,11 +68,25 @@ if (!("electronSync" in window)) {
 		rejectPair: (deviceId: string, reason?: string): Promise<void> =>
 			ipcRenderer.invoke("sync:reject-pair", { deviceId, reason }),
 
-		syncWithPeer: (peer: { host: string; port: number }): Promise<void> =>
-			ipcRenderer.invoke("sync:sync-with-peer", peer),
+		/** `deviceId`: the trusted peer we expect at this address, when known. */
+		syncWithPeer: (peer: {
+			host: string;
+			port: number;
+			deviceId?: string;
+		}): Promise<
+			({ ok: true } & SyncResult) | { ok: false; code: SyncErrorCode }
+		> => ipcRenderer.invoke("sync:sync-with-peer", peer),
 
+		/** Fired after every successful sync, incoming or outgoing. */
 		onSyncComplete: (callback: (info: { deviceId: string }) => void) => {
 			ipcRenderer.on("sync:sync-complete", (_event, info) => callback(info));
+		},
+
+		/** Fired when a sync started by another device fails. */
+		onSyncError: (
+			callback: (info: { deviceId?: string; code: SyncErrorCode }) => void,
+		) => {
+			ipcRenderer.on("sync:sync-error", (_event, info) => callback(info));
 		},
 
 		onPeerDiscovered: (

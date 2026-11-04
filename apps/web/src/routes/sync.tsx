@@ -24,9 +24,10 @@ import {
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { pageHead } from "@/lib/page-head";
+import { SYNC_ERROR_TOAST_DURATION, syncErrorKey } from "@/lib/sync-errors";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { trpc } from "@/lib/trpc";
-import { platform, type DiscoveredPeer } from "@/platform";
+import { type DiscoveredPeer, platform } from "@/platform";
 
 export const Route = createFileRoute("/sync")({
 	component: RouteComponent,
@@ -80,10 +81,6 @@ function RouteComponent() {
 			},
 			onError: () => globalErrorToast(t("sync.toast.unpairFailed")),
 		}),
-	);
-
-	const updateHostMutation = useMutation(
-		trpc.peer.updateHost.mutationOptions(),
 	);
 
 	useEffect(() => {
@@ -147,10 +144,6 @@ function RouteComponent() {
 			globalErrorToast(t("sync.toast.pairRejected"));
 		});
 
-		platform.sync.onSyncComplete(async () => {
-			await queryClient.invalidateQueries();
-		});
-
 		return () => {
 			platform.sync.removeAllListeners("sync:peer-discovered");
 			platform.sync.removeAllListeners("sync:peer-lost");
@@ -158,7 +151,6 @@ function RouteComponent() {
 			platform.sync.removeAllListeners("sync:pair-request-received");
 			platform.sync.removeAllListeners("sync:pair-confirmed");
 			platform.sync.removeAllListeners("sync:pair-rejected");
-			platform.sync.removeAllListeners("sync:sync-complete");
 		};
 	}, [queryClient, t]);
 
@@ -190,21 +182,33 @@ function RouteComponent() {
 		setPairingDeviceId(null);
 	}
 
-	async function handleSyncNearby(peer: DiscoveredPeer) {
-		setSyncingDeviceId(peer.deviceId);
+	// Main stores the peer host and emits `sync:sync-complete`, which refreshes all data (SyncListener)
+	async function syncWith(deviceId: string, host: string, port: number) {
+		setSyncingDeviceId(deviceId);
 		try {
-			await platform.sync.syncWithPeer({ host: peer.host, port: peer.port });
-			updateHostMutation.mutate({
-				deviceId: peer.deviceId,
-				host: `${peer.host}:${peer.port}`,
+			const result = await platform.sync.syncWithPeer({
+				host,
+				port,
+				deviceId,
 			});
-			await queryClient.invalidateQueries();
-			globalSuccessToast(t("sync.toast.syncComplete"));
+			if (result.ok) {
+				globalSuccessToast(t("sync.toast.syncComplete"));
+			} else {
+				globalErrorToast(
+					t(syncErrorKey(result.code)),
+					t("sync.toast.syncFailed"),
+					SYNC_ERROR_TOAST_DURATION,
+				);
+			}
 		} catch {
 			globalErrorToast(t("sync.toast.syncFailed"));
 		} finally {
 			setSyncingDeviceId(null);
 		}
+	}
+
+	async function handleSyncNearby(peer: DiscoveredPeer) {
+		await syncWith(peer.deviceId, peer.host, peer.port);
 	}
 
 	async function handleSyncTrusted(peer: (typeof trustedPeers)[number]) {
@@ -225,18 +229,7 @@ function RouteComponent() {
 
 		const [ip, portStr] = host.split(":");
 		const port = portStr ? Number.parseInt(portStr, 10) : 47821;
-
-		setSyncingDeviceId(peer.deviceId);
-		try {
-			await platform.sync.syncWithPeer({ host: ip, port });
-			updateHostMutation.mutate({ deviceId: peer.deviceId, host });
-			await queryClient.invalidateQueries();
-			globalSuccessToast(t("sync.toast.syncComplete"));
-		} catch {
-			globalErrorToast(t("sync.toast.syncFailed"));
-		} finally {
-			setSyncingDeviceId(null);
-		}
+		await syncWith(peer.deviceId, ip, port);
 	}
 
 	async function handleSyncWithIp() {
@@ -246,23 +239,11 @@ function RouteComponent() {
 			? hostInput.split(":")
 			: [hostInput, "47821"];
 		const port = Number.parseInt(portStr, 10);
-		const host = `${ip}:${port}`;
-		const capturedDeviceId = syncIpDialog.deviceId;
+		const { deviceId } = syncIpDialog;
 
-		setSyncingDeviceId(capturedDeviceId);
 		setSyncIpDialog({ open: false });
 		setSyncIpInput("");
-
-		try {
-			await platform.sync.syncWithPeer({ host: ip, port });
-			updateHostMutation.mutate({ deviceId: capturedDeviceId, host });
-			await queryClient.invalidateQueries();
-			globalSuccessToast(t("sync.toast.syncComplete"));
-		} catch {
-			globalErrorToast(t("sync.toast.syncFailed"));
-		} finally {
-			setSyncingDeviceId(null);
-		}
+		await syncWith(deviceId, ip, port);
 	}
 
 	const trustedDeviceIds = new Set(trustedPeers.map((p) => p.deviceId));
@@ -376,15 +357,11 @@ function RouteComponent() {
 
 					<section className="flex flex-col gap-3">
 						<div className="flex items-center justify-between">
-							<h2 className="font-medium text-sm">
-								{t("sync.nearbyDevices")}
-							</h2>
+							<h2 className="font-medium text-sm">{t("sync.nearbyDevices")}</h2>
 							<Button
 								variant="outline"
 								size="sm"
-								onClick={
-									isScanning ? handleStopScanning : handleStartScanning
-								}
+								onClick={isScanning ? handleStopScanning : handleStartScanning}
 							>
 								{isScanning ? (
 									<>

@@ -8,26 +8,27 @@ import { APP_SETTINGS_DEFAULTS, CRDT_TABLES } from "@finance-tracker/constants";
 import * as schema from "@finance-tracker/db";
 import {
 	addTrustedPeer,
-	getTrustedPeerByDeviceId,
 	processRecurrences,
 	updateSyncPeerHost,
 } from "@finance-tracker/queries";
-import type {
-	CRChange,
-	PairAcceptMsg,
-	PairChallengeMsg,
-	PairRejectMsg,
-	PairRequestMsg,
-	SyncChangesMsg,
-	SyncDoneMsg,
-	SyncRequestMsg,
-} from "@finance-tracker/sync";
 import {
 	base64ToPubKey,
 	computeSasCode,
+	createSyncClientSession,
+	createSyncServerSession,
 	deriveSharedSecret,
 	generateEphemeralKeypair,
+	isSyncMessage,
+	type PairAcceptMsg,
+	type PairChallengeMsg,
+	type PairRejectMsg,
+	type PairRequestMsg,
 	pubKeyToBase64,
+	type SyncChannel,
+	SyncError,
+	type SyncErrorCode,
+	type SyncResult,
+	secretToHex,
 } from "@finance-tracker/sync";
 import { extensionPath } from "@vlcn.io/crsqlite/nodejs-helper";
 import Database from "better-sqlite3";
@@ -39,6 +40,7 @@ import { app, BrowserWindow, dialog, ipcMain } from "electron";
 import { autoUpdater } from "electron-updater";
 import { createIPCHandler } from "trpc-electron/main";
 import { WebSocket, WebSocketServer } from "ws";
+import { createSqliteSyncStore } from "./sync-store";
 
 const isDev = process.env.NODE_ENV_ELECTRON_VITE === "development";
 
@@ -46,6 +48,12 @@ let win: BrowserWindow;
 
 const SYNC_PORT = 47821;
 const MDNS_SERVICE_TYPE = "financetracker";
+/** Incoming sync sessions that have not completed by then are dropped. */
+const SYNC_SERVER_TIMEOUT_MS = 60_000;
+
+type SyncWithPeerResult =
+	| ({ ok: true } & SyncResult)
+	| { ok: false; code: SyncErrorCode };
 
 interface PendingPairing {
 	ws: WebSocket;
@@ -55,7 +63,6 @@ interface PendingPairing {
 	theirPublicKey: string; // hex
 	sasCode: string;
 	sharedSecret: Uint8Array;
-	ourPrivateKey: string; // ephemeral hex
 }
 
 function getDeviceIdentityPath(userData: string) {
@@ -86,6 +93,7 @@ function setupSyncServer(
 	sqlite: InstanceType<typeof Database>,
 ) {
 	const identity = loadOrCreateDeviceIdentity(userData);
+	const store = createSqliteSyncStore(sqlite, db);
 	const bonjour = new Bonjour();
 	let browser: ReturnType<typeof bonjour.find> | null = null;
 
@@ -94,167 +102,116 @@ function setupSyncServer(
 	// Pending outgoing pairings (we initiated)
 	const outgoingPairings = new Map<string, PendingPairing>();
 
+	const channelFor = (ws: WebSocket): SyncChannel => ({
+		send: (msg) => ws.send(JSON.stringify(msg)),
+		close: () => ws.close(),
+	});
+
 	// Start WebSocket server
 	const httpServer = createServer();
 	const wss = new WebSocketServer({ server: httpServer });
 
 	wss.on("connection", (ws) => {
+		let clientDeviceId: string | undefined;
+		let idleTimer: ReturnType<typeof setTimeout> | undefined;
+		const session = createSyncServerSession({
+			deviceId: identity.deviceId,
+			store,
+			channel: channelFor(ws),
+			onComplete: ({ peerDeviceId }) => {
+				clearTimeout(idleTimer);
+				mainWin.webContents.send("sync:sync-complete", {
+					deviceId: peerDeviceId,
+				});
+			},
+			onError: (err) => {
+				clearTimeout(idleTimer);
+				console.error("[sync] incoming session failed:", err.code, err.message);
+				mainWin.webContents.send("sync:sync-error", {
+					deviceId: clientDeviceId,
+					code: err.code,
+				});
+			},
+		});
+
+		ws.on("close", () => clearTimeout(idleTimer));
+		ws.on("error", (err) => {
+			console.error("[sync] incoming connection error:", err.message);
+		});
+
 		ws.on("message", async (raw) => {
+			let msg: unknown;
 			try {
-				const msg = JSON.parse(raw.toString()) as {
-					type: string;
-					deviceId?: string;
-					deviceName?: string;
-					platform?: "desktop" | "mobile";
-					publicKey?: string;
-					reason?: string;
-				};
-
-				if (msg.type === "pair-request") {
-					const pairReq = msg as PairRequestMsg;
-					// Someone wants to pair with us — generate our keypair and respond
-					const ourKeypair = generateEphemeralKeypair();
-					const sharedSecret = deriveSharedSecret(
-						ourKeypair.privateKey,
-						base64ToPubKey(pairReq.publicKey),
-					);
-					const sasCode = computeSasCode(
-						sharedSecret,
-						identity.deviceId,
-						pairReq.deviceId,
-					);
-
-					const pending: PendingPairing = {
-						ws,
-						theirDeviceId: pairReq.deviceId,
-						theirDeviceName: pairReq.deviceName,
-						theirPlatform: pairReq.platform,
-						theirPublicKey: base64ToPubKey(pairReq.publicKey),
-						sasCode,
-						sharedSecret,
-						ourPrivateKey: ourKeypair.privateKey,
-					};
-					pendingPairings.set(pairReq.deviceId, pending);
-
-					// Send our public key back
-					const challenge: PairChallengeMsg = {
-						type: "pair-challenge",
-						deviceId: identity.deviceId,
-						deviceName: identity.deviceName,
-						platform: "desktop",
-						publicKey: pubKeyToBase64(ourKeypair.publicKey),
-					};
-					ws.send(JSON.stringify(challenge));
-
-					// Notify renderer to show SAS code confirmation UI
-					mainWin.webContents.send("sync:pair-request-received", {
-						deviceId: pairReq.deviceId,
-						deviceName: pairReq.deviceName,
-						platform: pairReq.platform,
-						sasCode,
-					});
-				}
-
-				if (msg.type === "pair-accept") {
-					const pairAccept = msg as PairAcceptMsg;
-					// The other side confirmed — finalize pairing
-					const pending = outgoingPairings.get(pairAccept.deviceId);
-					if (!pending) return;
-					outgoingPairings.delete(pairAccept.deviceId);
-
-					await addTrustedPeer(db, {
-						deviceId: pending.theirDeviceId,
-						deviceName: pending.theirDeviceName,
-						platform: pending.theirPlatform,
-						publicKey: pending.theirPublicKey,
-					});
-
-					mainWin.webContents.send("sync:pair-confirmed", {
-						deviceId: pending.theirDeviceId,
-						deviceName: pending.theirDeviceName,
-						platform: pending.theirPlatform,
-					});
-				}
-
-				if (msg.type === "pair-reject") {
-					const pairReject = msg as PairRejectMsg;
-					outgoingPairings.delete(pairReject.deviceId);
-					mainWin.webContents.send("sync:pair-rejected", {
-						deviceId: pairReject.deviceId,
-						reason: pairReject.reason,
-					});
-				}
-
-				if (msg.type === "sync-request") {
-					const syncReq = msg as SyncRequestMsg;
-					// Only serve trusted peers
-					const peer = await getTrustedPeerByDeviceId(db, syncReq.deviceId);
-					if (!peer) {
-						ws.close();
-						return;
-					}
-
-					const changes = sqlite
-						.prepare(`
-						SELECT "table" as tbl, pk, cid, val, col_version, db_version, hex(site_id) as site_id, cl, seq
-						FROM crsql_changes
-						WHERE site_id = crsql_site_id()
-					`)
-						.all() as Array<CRChange & { tbl: string }>;
-
-					const mapped: CRChange[] = changes.map((c) => ({
-						...c,
-						table: c.tbl,
-					}));
-
-					const reply: SyncChangesMsg = {
-						type: "sync-changes",
-						deviceId: identity.deviceId,
-						changes: mapped,
-					};
-					ws.send(JSON.stringify(reply));
-				}
-
-				if (msg.type === "sync-changes") {
-					const syncChanges = msg as SyncChangesMsg;
-					const peer = await getTrustedPeerByDeviceId(db, syncChanges.deviceId);
-					if (!peer) {
-						ws.close();
-						return;
-					}
-
-					const applyStmt = sqlite.prepare(
-						"INSERT INTO crsql_changes VALUES (?, ?, ?, ?, ?, ?, unhex(?), ?, ?)",
-					);
-					const applyAll = sqlite.transaction((rows: CRChange[]) => {
-						for (const c of rows) {
-							applyStmt.run(
-								c.table,
-								c.pk,
-								c.cid,
-								c.val,
-								c.col_version,
-								c.db_version,
-								c.site_id,
-								c.cl,
-								c.seq,
-							);
-						}
-					});
-					applyAll(syncChanges.changes);
-
-					const done: SyncDoneMsg = {
-						type: "sync-done",
-						deviceId: identity.deviceId,
-					};
-					ws.send(JSON.stringify(done));
-
-					mainWin.webContents.send("sync:sync-complete", {
-						deviceId: syncChanges.deviceId,
-					});
-				}
+				msg = JSON.parse(raw.toString());
 			} catch {
-				// ignore malformed messages
+				return; // ignore malformed messages
+			}
+
+			if (isSyncMessage(msg)) {
+				if (msg.type === "sync-hello") clientDeviceId = msg.deviceId;
+				// The engine has no server-side timeout; drop sessions that stall
+				idleTimer ??= setTimeout(() => ws.close(), SYNC_SERVER_TIMEOUT_MS);
+				await session.handle(msg);
+				return;
+			}
+
+			const { type } = msg as { type?: unknown };
+
+			// The initiator of an incoming pairing declined the SAS code
+			if (type === "pair-reject") {
+				const pairReject = msg as PairRejectMsg;
+				if (!pendingPairings.delete(pairReject.deviceId)) return;
+				mainWin.webContents.send("sync:pair-rejected", {
+					deviceId: pairReject.deviceId,
+					reason: pairReject.reason,
+				});
+				return;
+			}
+
+			if (type !== "pair-request") return;
+			const pairReq = msg as PairRequestMsg;
+			try {
+				// Someone wants to pair with us — generate our keypair and respond
+				const ourKeypair = generateEphemeralKeypair();
+				const sharedSecret = deriveSharedSecret(
+					ourKeypair.privateKey,
+					base64ToPubKey(pairReq.publicKey),
+				);
+				const sasCode = computeSasCode(
+					sharedSecret,
+					identity.deviceId,
+					pairReq.deviceId,
+				);
+
+				pendingPairings.set(pairReq.deviceId, {
+					ws,
+					theirDeviceId: pairReq.deviceId,
+					theirDeviceName: pairReq.deviceName,
+					theirPlatform: pairReq.platform,
+					theirPublicKey: base64ToPubKey(pairReq.publicKey),
+					sasCode,
+					sharedSecret,
+				});
+
+				// Send our public key back
+				const challenge: PairChallengeMsg = {
+					type: "pair-challenge",
+					deviceId: identity.deviceId,
+					deviceName: identity.deviceName,
+					platform: "desktop",
+					publicKey: pubKeyToBase64(ourKeypair.publicKey),
+				};
+				ws.send(JSON.stringify(challenge));
+
+				// Notify renderer to show SAS code confirmation UI
+				mainWin.webContents.send("sync:pair-request-received", {
+					deviceId: pairReq.deviceId,
+					deviceName: pairReq.deviceName,
+					platform: pairReq.platform,
+					sasCode,
+				});
+			} catch (err) {
+				console.error("[sync] invalid pair-request:", err);
 			}
 		});
 	});
@@ -326,6 +283,10 @@ function setupSyncServer(
 				ws.send(JSON.stringify(msg));
 			});
 
+			ws.on("error", (err) => {
+				console.error("[sync] pairing connection failed:", err.message);
+			});
+
 			ws.on("message", async (raw) => {
 				try {
 					const msg = JSON.parse(raw.toString()) as { type: string };
@@ -341,7 +302,7 @@ function setupSyncServer(
 							challenge.deviceId,
 						);
 
-						const pending: PendingPairing = {
+						outgoingPairings.set(challenge.deviceId, {
 							ws,
 							theirDeviceId: challenge.deviceId,
 							theirDeviceName: challenge.deviceName,
@@ -349,9 +310,7 @@ function setupSyncServer(
 							theirPublicKey: base64ToPubKey(challenge.publicKey),
 							sasCode,
 							sharedSecret,
-							ourPrivateKey: ourKeypair.privateKey,
-						};
-						outgoingPairings.set(challenge.deviceId, pending);
+						});
 
 						// Show SAS code to user
 						mainWin.webContents.send("sync:pair-challenge", {
@@ -360,8 +319,46 @@ function setupSyncServer(
 							sasCode,
 						});
 					}
-				} catch {
-					// ignore
+
+					// The peer answers on the connection we opened
+					if (msg.type === "pair-accept") {
+						const pairAccept = msg as PairAcceptMsg;
+						const pending = outgoingPairings.get(pairAccept.deviceId);
+						if (!pending) return;
+						outgoingPairings.delete(pairAccept.deviceId);
+
+						await addTrustedPeer(db, {
+							deviceId: pending.theirDeviceId,
+							deviceName: pending.theirDeviceName,
+							platform: pending.theirPlatform,
+							publicKey: pending.theirPublicKey,
+							sharedSecret: secretToHex(pending.sharedSecret),
+						});
+						await updateSyncPeerHost(
+							db,
+							pending.theirDeviceId,
+							`${host}:${port}`,
+						);
+						ws.close();
+
+						mainWin.webContents.send("sync:pair-confirmed", {
+							deviceId: pending.theirDeviceId,
+							deviceName: pending.theirDeviceName,
+							platform: pending.theirPlatform,
+						});
+					}
+
+					if (msg.type === "pair-reject") {
+						const pairReject = msg as PairRejectMsg;
+						outgoingPairings.delete(pairReject.deviceId);
+						ws.close();
+						mainWin.webContents.send("sync:pair-rejected", {
+							deviceId: pairReject.deviceId,
+							reason: pairReject.reason,
+						});
+					}
+				} catch (err) {
+					console.error("[sync] pairing failed:", err);
 				}
 			});
 		},
@@ -380,6 +377,7 @@ function setupSyncServer(
 				deviceName: pending.theirDeviceName,
 				platform: pending.theirPlatform,
 				publicKey: pending.theirPublicKey,
+				sharedSecret: secretToHex(pending.sharedSecret),
 			});
 
 			const accept: PairAcceptMsg = {
@@ -416,89 +414,54 @@ function setupSyncServer(
 		},
 	);
 
-	// IPC: sync with a peer (desktop-initiated, acts as client)
+	// IPC: sync with a peer (desktop-initiated, acts as client).
+	// Resolves with a result instead of rejecting: Electron rewrites the message of
+	// errors thrown from handlers, which would hide the SyncErrorCode from the renderer.
 	ipcMain.handle(
 		"sync:sync-with-peer",
-		(_event, { host, port }: { host: string; port: number }) => {
-			const hostStr = `${host}:${port}`;
-			return new Promise<void>((resolve, reject) => {
-				const ws = new WebSocket(`ws://${host}:${port}`);
-
-				ws.on("open", () => {
-					const req: SyncRequestMsg = {
-						type: "sync-request",
-						deviceId: identity.deviceId,
-					};
-					ws.send(JSON.stringify(req));
-				});
-
-				ws.on("message", (raw) => {
-					try {
-						const msg = JSON.parse(raw.toString()) as { type: string };
-
-						if (msg.type === "sync-changes") {
-							const syncChanges = msg as SyncChangesMsg;
-
-							const applyStmt = sqlite.prepare(
-								"INSERT INTO crsql_changes VALUES (?, ?, ?, ?, ?, ?, unhex(?), ?, ?)",
-							);
-							const applyAll = sqlite.transaction((rows: CRChange[]) => {
-								for (const c of rows) {
-									applyStmt.run(
-										c.table,
-										c.pk,
-										c.cid,
-										c.val,
-										c.col_version,
-										c.db_version,
-										c.site_id,
-										c.cl,
-										c.seq,
-									);
-								}
-							});
-							applyAll(syncChanges.changes);
-
-							// Store the host so trusted device sync button works next time
-							updateSyncPeerHost(db, syncChanges.deviceId, hostStr).catch(() => {});
-
-							// Now send our changes back
-							const changes = sqlite
-								.prepare(`
-								SELECT "table" as tbl, pk, cid, val, col_version, db_version, hex(site_id) as site_id, cl, seq
-								FROM crsql_changes
-								WHERE site_id = crsql_site_id()
-							`)
-								.all() as Array<CRChange & { tbl: string }>;
-
-							const mapped: CRChange[] = changes.map((c) => ({
-								...c,
-								table: c.tbl,
-							}));
-
-							const reply: SyncChangesMsg = {
-								type: "sync-changes",
-								deviceId: identity.deviceId,
-								changes: mapped,
-							};
-							ws.send(JSON.stringify(reply));
-						}
-
-						if (msg.type === "sync-done") {
-							const done = msg as SyncDoneMsg;
-							mainWin.webContents.send("sync:sync-complete", {
-								deviceId: done.deviceId,
-							});
-							resolve();
-							ws.close();
-						}
-					} catch {
-						// ignore
-					}
-				});
-
-				ws.on("error", (err) => reject(err));
+		async (
+			_event,
+			{
+				host,
+				port,
+				deviceId,
+			}: { host: string; port: number; deviceId?: string },
+		): Promise<SyncWithPeerResult> => {
+			const ws = new WebSocket(`ws://${host}:${port}`, {
+				handshakeTimeout: 10_000,
 			});
+			const session = createSyncClientSession({
+				deviceId: identity.deviceId,
+				store,
+				channel: channelFor(ws),
+				expectedPeerDeviceId: deviceId,
+			});
+
+			ws.on("open", () => session.start());
+			ws.on("message", (raw) => {
+				let msg: unknown;
+				try {
+					msg = JSON.parse(raw.toString());
+				} catch {
+					return; // ignore malformed messages
+				}
+				if (isSyncMessage(msg)) void session.handle(msg);
+			});
+			ws.on("close", () => session.handleClose());
+			ws.on("error", () => session.handleClose());
+
+			try {
+				const result = await session.result;
+				await updateSyncPeerHost(db, result.peerDeviceId, `${host}:${port}`);
+				mainWin.webContents.send("sync:sync-complete", {
+					deviceId: result.peerDeviceId,
+				});
+				return { ok: true, ...result };
+			} catch (err) {
+				const code = err instanceof SyncError ? err.code : "internal";
+				console.error("[sync] sync with peer failed:", code, err);
+				return { ok: false, code };
+			}
 		},
 	);
 
