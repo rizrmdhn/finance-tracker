@@ -21,6 +21,7 @@ import {
 	estimateGoalCompletion,
 	getDurationParts,
 	getTargetDateGap,
+	median,
 	pickGoalPace,
 } from "@finance-tracker/utils";
 import { eachMonthOfInterval, max, startOfMonth, subMonths } from "date-fns";
@@ -722,9 +723,10 @@ export async function getGoalEstimate(
 	]);
 
 	const remaining = Math.max(goal.targetAmount - progress.total, 0);
+	const surpluses = monthlySurplus.map((m) => m.surplus);
 	const pace = pickGoalPace({
 		realRates: monthlyProgress.map((m) => m.amount),
-		monthlySurplus: monthlySurplus.map((m) => m.surplus),
+		monthlySurplus: surpluses,
 		allocationPercent: goal.allocationPercent,
 	});
 	const monthlyRate =
@@ -743,6 +745,8 @@ export async function getGoalEstimate(
 		estimate: {
 			remaining,
 			monthlySurplus,
+			/** Median monthly surplus (goal currency) the potential pace is based on; null without history. */
+			surplusMonthly: median(surpluses),
 			monthlyProgress,
 			pace,
 			monthlyRate,
