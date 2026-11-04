@@ -453,6 +453,9 @@ export const en = {
 			maxWithdraw: "Up to {{amount}} is set aside from this account",
 			notePlaceholder: "e.g. Year-end bonus",
 			noAccounts: "No accounts with free balance",
+			noHeldAccounts: "Nothing is set aside for this goal yet",
+			amountHelp: "In the selected account's currency",
+			exceedsMax: "Can't be more than {{amount}}",
 		},
 		purchase: {
 			action: "Mark as Purchased",

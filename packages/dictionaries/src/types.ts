@@ -420,6 +420,9 @@ export interface Dictionary {
 			maxWithdraw: string;
 			notePlaceholder: string;
 			noAccounts: string;
+			noHeldAccounts: string;
+			amountHelp: string;
+			exceedsMax: string;
 		};
 		purchase: {
 			action: string;

@@ -453,6 +453,9 @@ export const id = {
 			maxWithdraw: "Maksimal {{amount}} disisihkan dari akun ini",
 			notePlaceholder: "mis. Bonus akhir tahun",
 			noAccounts: "Tidak ada akun dengan saldo bebas",
+			noHeldAccounts: "Belum ada dana yang disisihkan untuk target ini",
+			amountHelp: "Dalam mata uang akun yang dipilih",
+			exceedsMax: "Tidak boleh lebih dari {{amount}}",
 		},
 		purchase: {
 			action: "Tandai Sudah Dibeli",
