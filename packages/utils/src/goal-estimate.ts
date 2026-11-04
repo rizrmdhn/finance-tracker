@@ -1,7 +1,8 @@
-import { addDays } from "date-fns";
+import { addDays, differenceInCalendarDays } from "date-fns";
 import { median, percentile } from "./stats";
 
 const DAYS_PER_YEAR = 365.25;
+const DAYS_PER_MONTH = DAYS_PER_YEAR / 12;
 
 export type GoalEstimateStatus = "reached" | "estimated" | "no-surplus";
 
@@ -108,4 +109,41 @@ export function pickGoalPace({
 		realMonthly,
 		potentialMonthly,
 	};
+}
+
+export interface TargetDateGap {
+	/** Amount needed per month to hit the target date; null once the date has passed. */
+	requiredMonthly: number | null;
+	/** Extra per month needed on top of the current pace (0 when on track); null once the date has passed. */
+	gap: number | null;
+	onTrack: boolean;
+	isPast: boolean;
+}
+
+export function getTargetDateGap({
+	remaining,
+	targetDate,
+	monthlyRate,
+	today,
+}: {
+	remaining: number;
+	targetDate: Date;
+	monthlyRate: number;
+	today: Date;
+}): TargetDateGap {
+	const daysLeft = differenceInCalendarDays(targetDate, today);
+
+	if (daysLeft <= 0) {
+		return {
+			requiredMonthly: null,
+			gap: null,
+			onTrack: remaining <= 0,
+			isPast: true,
+		};
+	}
+
+	const requiredMonthly = Math.max(remaining, 0) / (daysLeft / DAYS_PER_MONTH);
+	const gap = Math.max(requiredMonthly - monthlyRate, 0);
+
+	return { requiredMonthly, gap, onTrack: gap === 0, isPast: false };
 }
