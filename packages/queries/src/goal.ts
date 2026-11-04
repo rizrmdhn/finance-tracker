@@ -88,6 +88,34 @@ async function getAccountBalances(db: AnyDatabase) {
 	);
 }
 
+async function getActiveGoals(db: AnyDatabase) {
+	return await db.query.goals.findMany({
+		where: and(isNull(goals.deletedAt), eq(goals.status, "active")),
+	});
+}
+
+/**
+ * Contributions that hold money: neither the row nor its goal is deleted and the goal is active.
+ * Purchasing / archiving a goal releases its contributions without touching them.
+ */
+async function getActiveAllocations(db: AnyDatabase) {
+	return await db
+		.select({
+			goalId: goalContributions.goalId,
+			accountId: goalContributions.accountId,
+			amount: goalContributions.amount,
+		})
+		.from(goalContributions)
+		.innerJoin(goals, eq(goals.id, goalContributions.goalId))
+		.where(
+			and(
+				isNull(goalContributions.deletedAt),
+				isNull(goals.deletedAt),
+				eq(goals.status, "active"),
+			),
+		);
+}
+
 export async function getGoals(db: AnyDatabase) {
 	return await db.query.goals.findMany({
 		where: isNull(goals.deletedAt),
@@ -400,4 +428,45 @@ export async function getGoalMonthlyProgress(db: AnyDatabase, goalId: string) {
 		month: monthStart.getTime(),
 		amount: increase.get(monthStart.getTime()) ?? 0,
 	}));
+}
+
+/**
+ * Per account (amounts in the account's currency): balance, what active goals hold from it,
+ * and the free rest. A linked account is fully reserved for its goal, so its free balance is 0.
+ */
+export async function getAccountAllocations(db: AnyDatabase) {
+	const [balances, allocations, activeGoals] = await Promise.all([
+		getAccountBalances(db),
+		getActiveAllocations(db),
+		getActiveGoals(db),
+	]);
+
+	const allocatedByAccount = new Map<string, number>();
+	for (const row of allocations)
+		allocatedByAccount.set(
+			row.accountId,
+			(allocatedByAccount.get(row.accountId) ?? 0) + row.amount,
+		);
+
+	const linkedGoalByAccount = new Map(
+		activeGoals.flatMap((goal) =>
+			goal.linkedAccountId ? [[goal.linkedAccountId, goal.id] as const] : [],
+		),
+	);
+
+	return [...balances].map(([accountId, { balance }]) => {
+		const allocated = allocatedByAccount.get(accountId) ?? 0;
+		const linkedGoalId = linkedGoalByAccount.get(accountId) ?? null;
+		const isLinked = linkedGoalId !== null;
+		return {
+			accountId,
+			balance,
+			allocated,
+			freeBalance: isLinked ? 0 : balance - allocated,
+			isLinked,
+			linkedGoalId,
+			// a linked account shouldn't fund other goals at all (only reachable through sync merges)
+			isOverAllocated: isLinked ? allocated > 0 : allocated > balance,
+		};
+	});
 }
