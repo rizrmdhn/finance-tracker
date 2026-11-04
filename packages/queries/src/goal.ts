@@ -1,6 +1,10 @@
-import type { SupportedCurrency } from "@finance-tracker/constants";
+import type {
+	CategoryType,
+	SupportedCurrency,
+} from "@finance-tracker/constants";
 import {
 	type AnyDatabase,
+	accounts,
 	goalContributions,
 	goals,
 	transactions,
@@ -30,6 +34,58 @@ async function getCurrencyConverter(
 		const rate = rates.get(source);
 		return rate ? amount / rate : amount;
 	};
+}
+
+/** Effect of a transaction on `accountId`'s balance (same rules as getAccountsWithBalance). */
+function balanceDelta(
+	tx: {
+		amount: number;
+		accountId: string;
+		toAccountId: string | null;
+		category: { type: CategoryType } | null;
+	},
+	accountId: string,
+) {
+	const type = tx.category?.type;
+	if (type === "transfer")
+		return (
+			(tx.toAccountId === accountId ? tx.amount : 0) -
+			(tx.accountId === accountId ? tx.amount : 0)
+		);
+	if (tx.accountId !== accountId) return 0;
+	if (type === "income") return tx.amount;
+	if (type === "expense" || type === "savings") return -tx.amount;
+	return 0;
+}
+
+/** Current balance (in the account's own currency) of every non-deleted account. */
+async function getAccountBalances(db: AnyDatabase) {
+	const [allAccounts, allTransactions] = await Promise.all([
+		db.query.accounts.findMany({ where: isNull(accounts.deletedAt) }),
+		db.query.transactions.findMany({
+			where: isNull(transactions.deletedAt),
+			with: { category: true },
+		}),
+	]);
+
+	const deltas = new Map<string, number>();
+	const addDelta = (accountId: string, delta: number) =>
+		deltas.set(accountId, (deltas.get(accountId) ?? 0) + delta);
+	for (const tx of allTransactions) {
+		addDelta(tx.accountId, balanceDelta(tx, tx.accountId));
+		if (tx.toAccountId && tx.toAccountId !== tx.accountId)
+			addDelta(tx.toAccountId, balanceDelta(tx, tx.toAccountId));
+	}
+
+	return new Map(
+		allAccounts.map((account) => [
+			account.id,
+			{
+				currency: account.currency,
+				balance: account.initialBalance + (deltas.get(account.id) ?? 0),
+			},
+		]),
+	);
 }
 
 export async function getGoals(db: AnyDatabase) {
@@ -218,4 +274,56 @@ export async function getMonthlySurplus(
 			surplus: monthIncome - monthExpense,
 		};
 	});
+}
+
+/**
+ * Progress = linked account balance + contributions, all in the goal's currency.
+ * Contributions are in their source account's currency.
+ */
+export async function getGoalProgress(db: AnyDatabase, goalId: string) {
+	const goal = await getGoalById(db, goalId);
+
+	if (!goal) throw new NotFoundError("Goal", goalId);
+
+	const [balances, contributionRows, toGoalCurrency] = await Promise.all([
+		getAccountBalances(db),
+		db.query.goalContributions.findMany({
+			columns: { accountId: true, amount: true },
+			where: and(
+				eq(goalContributions.goalId, goalId),
+				isNull(goalContributions.deletedAt),
+			),
+		}),
+		getCurrencyConverter(db, goal.currency),
+	]);
+
+	const linked = goal.linkedAccountId
+		? balances.get(goal.linkedAccountId)
+		: undefined;
+	const linkedBalance = linked
+		? toGoalCurrency(linked.balance, linked.currency)
+		: 0;
+
+	const totals = new Map<string, number>();
+	for (const row of contributionRows) {
+		const currency = balances.get(row.accountId)?.currency ?? goal.currency;
+		totals.set(
+			row.accountId,
+			(totals.get(row.accountId) ?? 0) + toGoalCurrency(row.amount, currency),
+		);
+	}
+	const contributions = [...totals].map(([accountId, total]) => ({
+		accountId,
+		total,
+	}));
+
+	const total =
+		linkedBalance + contributions.reduce((sum, c) => sum + c.total, 0);
+
+	return {
+		linkedBalance,
+		contributions,
+		total,
+		isReached: total >= goal.targetAmount,
+	};
 }
