@@ -18,10 +18,14 @@ import {
 	deleteGoal,
 	deleteGoalContribution,
 	getAccountAllocations,
+	getDeletedGoals,
 	getGoalById,
 	getGoalContributions,
 	getGoals,
+	permanentDeleteAllGoals,
+	permanentDeleteGoal,
 	purchaseGoal,
+	restoreGoal,
 	updateGoal,
 } from "./goal";
 import {
@@ -587,5 +591,162 @@ describe("archiveGoal", () => {
 		);
 		expect((await getGoalById(db, purchased.id))?.status).toBe("purchased");
 		await expect(archiveGoal(db, "missing")).rejects.toThrow(NotFoundError);
+	});
+});
+
+describe("goal trash", () => {
+	test("getDeletedGoals lists only deleted goals", async () => {
+		const kept = await createGoal(db, { ...baseGoal, allocationPercent: 10 });
+		const deleted = await createGoal(db, {
+			...baseGoal,
+			allocationPercent: 10,
+		});
+		await deleteGoal(db, deleted.id);
+
+		const result = await getDeletedGoals(db);
+		expect(result.map((g) => g.id)).toEqual([deleted.id]);
+		expect(result.some((g) => g.id === kept.id)).toBe(false);
+	});
+
+	test("restoreGoal brings a deleted goal and its allocations back", async () => {
+		const wallet = await seedAccount(db, { initialBalance: 5000 });
+		const goal = await createGoal(db, {
+			...baseGoal,
+			initialFund: { accountId: wallet.id, amount: 2000 },
+		});
+		await deleteGoal(db, goal.id);
+
+		const restored = await restoreGoal(db, goal.id);
+
+		expect(restored.deletedAt).toBeNull();
+		expect(await getGoalById(db, goal.id)).toBeDefined();
+		expect(await getAccountAllocations(db)).toEqual([
+			expect.objectContaining({ accountId: wallet.id, allocated: 2000 }),
+		]);
+	});
+
+	test("restoreGoal only restores deleted goals", async () => {
+		const goal = await createGoal(db, baseGoal);
+
+		await expect(restoreGoal(db, goal.id)).rejects.toThrow(NotFoundError);
+		await expect(restoreGoal(db, "missing")).rejects.toThrow(NotFoundError);
+	});
+
+	test("restoreGoal rejects an active goal whose linked account was taken meanwhile", async () => {
+		const pocket = await seedAccount(db, { initialBalance: 1000 });
+		const goal = await createGoal(db, {
+			...baseGoal,
+			allocationPercent: 10,
+			linkedAccountId: pocket.id,
+		});
+		await deleteGoal(db, goal.id);
+		await createGoal(db, {
+			...baseGoal,
+			allocationPercent: 10,
+			linkedAccountId: pocket.id,
+		});
+
+		await expect(restoreGoal(db, goal.id)).rejects.toThrow(
+			AccountAlreadyLinkedError,
+		);
+		expect(await getGoalById(db, goal.id)).toBeUndefined();
+	});
+
+	test("restoreGoal rejects an active goal whose linked account now funds a goal", async () => {
+		const pocket = await seedAccount(db, { initialBalance: 1000 });
+		const goal = await createGoal(db, {
+			...baseGoal,
+			allocationPercent: 10,
+			linkedAccountId: pocket.id,
+		});
+		await deleteGoal(db, goal.id);
+		await createGoal(db, {
+			...baseGoal,
+			allocationPercent: 10,
+			initialFund: { accountId: pocket.id, amount: 500 },
+		});
+
+		await expect(restoreGoal(db, goal.id)).rejects.toThrow(
+			AccountIsContributionSourceError,
+		);
+	});
+
+	test("restoreGoal rejects an active goal that would exceed 100% allocation", async () => {
+		const goal = await createGoal(db, { ...baseGoal, allocationPercent: 60 });
+		await deleteGoal(db, goal.id);
+		await createGoal(db, { ...baseGoal, allocationPercent: 50 });
+
+		await expect(restoreGoal(db, goal.id)).rejects.toThrow(
+			AllocationLimitExceededError,
+		);
+	});
+
+	test("restoreGoal skips the rule checks for inactive goals", async () => {
+		const pocket = await seedAccount(db, { initialBalance: 1000 });
+		const goal = await createGoal(db, {
+			...baseGoal,
+			allocationPercent: 100,
+			linkedAccountId: pocket.id,
+		});
+		await archiveGoal(db, goal.id);
+		await deleteGoal(db, goal.id);
+		await createGoal(db, {
+			...baseGoal,
+			allocationPercent: 100,
+			linkedAccountId: pocket.id,
+		});
+
+		const restored = await restoreGoal(db, goal.id);
+		expect(restored.status).toBe("archived");
+	});
+
+	test("permanentDeleteGoal removes a deleted goal and its contributions", async () => {
+		const wallet = await seedAccount(db, { initialBalance: 5000 });
+		const goal = await createGoal(db, {
+			...baseGoal,
+			allocationPercent: 10,
+			initialFund: { accountId: wallet.id, amount: 1000 },
+		});
+		const other = await createGoal(db, {
+			...baseGoal,
+			allocationPercent: 10,
+			initialFund: { accountId: wallet.id, amount: 500 },
+		});
+
+		await expect(permanentDeleteGoal(db, goal.id)).rejects.toThrow(
+			NotFoundError,
+		);
+
+		await deleteGoal(db, goal.id);
+		await permanentDeleteGoal(db, goal.id);
+
+		expect(await getDeletedGoals(db)).toHaveLength(0);
+		const contributions = await db.select().from(goalContributions);
+		expect(contributions.map((c) => c.goalId)).toEqual([other.id]);
+	});
+
+	test("permanentDeleteAllGoals empties only the trash", async () => {
+		const wallet = await seedAccount(db, { initialBalance: 5000 });
+		const kept = await createGoal(db, {
+			...baseGoal,
+			allocationPercent: 10,
+			initialFund: { accountId: wallet.id, amount: 500 },
+		});
+		for (const amount of [1000, 2000]) {
+			const goal = await createGoal(db, {
+				...baseGoal,
+				allocationPercent: 10,
+				initialFund: { accountId: wallet.id, amount },
+			});
+			await deleteGoal(db, goal.id);
+		}
+
+		const removed = await permanentDeleteAllGoals(db);
+
+		expect(removed).toHaveLength(2);
+		expect((await getGoals(db)).map((g) => g.id)).toEqual([kept.id]);
+		const contributions = await db.select().from(goalContributions);
+		expect(contributions.map((c) => c.goalId)).toEqual([kept.id]);
+		expect(await permanentDeleteAllGoals(db)).toEqual([]);
 	});
 });

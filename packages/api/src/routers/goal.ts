@@ -5,12 +5,16 @@ import {
 	deleteGoal,
 	deleteGoalContribution,
 	getAccountAllocations,
+	getDeletedGoals,
 	getGoalById,
 	getGoalContributions,
 	getGoalEstimate,
 	getGoals,
 	getGoalsOverview,
+	permanentDeleteAllGoals,
+	permanentDeleteGoal,
 	purchaseGoal,
+	restoreGoal,
 	updateGoal,
 } from "@finance-tracker/queries";
 import {
@@ -80,6 +84,40 @@ export const goalRouter = createTRPCRouter({
 			if (err) throw toTRPCError(err);
 			return data;
 		}),
+
+	listDeleted: publicProcedure.query(async ({ ctx }) => {
+		const [data, err] = await tryCatchAsync(() => getDeletedGoals(ctx.db));
+		if (err) throw toTRPCError(err);
+		return data;
+	}),
+
+	restore: publicProcedure
+		.input(z.object({ id: z.string() }))
+		.mutation(async ({ ctx, input }) => {
+			const [data, err] = await tryCatchAsync(() =>
+				restoreGoal(ctx.db, input.id),
+			);
+			if (err) throw toTRPCError(err);
+			return data;
+		}),
+
+	permanentDelete: publicProcedure
+		.input(z.object({ id: z.string() }))
+		.mutation(async ({ ctx, input }) => {
+			const [data, err] = await tryCatchAsync(() =>
+				permanentDeleteGoal(ctx.db, input.id),
+			);
+			if (err) throw toTRPCError(err);
+			return data;
+		}),
+
+	emptyTrash: publicProcedure.mutation(async ({ ctx }) => {
+		const [data, err] = await tryCatchAsync(() =>
+			permanentDeleteAllGoals(ctx.db),
+		);
+		if (err) throw toTRPCError(err);
+		return data;
+	}),
 
 	purchase: publicProcedure
 		.input(goalPurchaseSchema)

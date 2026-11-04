@@ -20,6 +20,7 @@ import { Route as BudgetsRouteImport } from './routes/budgets'
 import { Route as AccountsRouteImport } from './routes/accounts'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TrashTransactionsRouteImport } from './routes/trash/transactions'
+import { Route as TrashGoalsRouteImport } from './routes/trash/goals'
 import { Route as TrashCategoriesRouteImport } from './routes/trash/categories'
 
 const TrashRoute = TrashRouteImport.update({
@@ -77,6 +78,11 @@ const TrashTransactionsRoute = TrashTransactionsRouteImport.update({
   path: '/transactions',
   getParentRoute: () => TrashRoute,
 } as any)
+const TrashGoalsRoute = TrashGoalsRouteImport.update({
+  id: '/goals',
+  path: '/goals',
+  getParentRoute: () => TrashRoute,
+} as any)
 const TrashCategoriesRoute = TrashCategoriesRouteImport.update({
   id: '/categories',
   path: '/categories',
@@ -95,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/transactions': typeof TransactionsRoute
   '/trash': typeof TrashRouteWithChildren
   '/trash/categories': typeof TrashCategoriesRoute
+  '/trash/goals': typeof TrashGoalsRoute
   '/trash/transactions': typeof TrashTransactionsRoute
 }
 export interface FileRoutesByTo {
@@ -109,6 +116,7 @@ export interface FileRoutesByTo {
   '/transactions': typeof TransactionsRoute
   '/trash': typeof TrashRouteWithChildren
   '/trash/categories': typeof TrashCategoriesRoute
+  '/trash/goals': typeof TrashGoalsRoute
   '/trash/transactions': typeof TrashTransactionsRoute
 }
 export interface FileRoutesById {
@@ -124,6 +132,7 @@ export interface FileRoutesById {
   '/transactions': typeof TransactionsRoute
   '/trash': typeof TrashRouteWithChildren
   '/trash/categories': typeof TrashCategoriesRoute
+  '/trash/goals': typeof TrashGoalsRoute
   '/trash/transactions': typeof TrashTransactionsRoute
 }
 export interface FileRouteTypes {
@@ -140,6 +149,7 @@ export interface FileRouteTypes {
     | '/transactions'
     | '/trash'
     | '/trash/categories'
+    | '/trash/goals'
     | '/trash/transactions'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -154,6 +164,7 @@ export interface FileRouteTypes {
     | '/transactions'
     | '/trash'
     | '/trash/categories'
+    | '/trash/goals'
     | '/trash/transactions'
   id:
     | '__root__'
@@ -168,6 +179,7 @@ export interface FileRouteTypes {
     | '/transactions'
     | '/trash'
     | '/trash/categories'
+    | '/trash/goals'
     | '/trash/transactions'
   fileRoutesById: FileRoutesById
 }
@@ -263,6 +275,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TrashTransactionsRouteImport
       parentRoute: typeof TrashRoute
     }
+    '/trash/goals': {
+      id: '/trash/goals'
+      path: '/goals'
+      fullPath: '/trash/goals'
+      preLoaderRoute: typeof TrashGoalsRouteImport
+      parentRoute: typeof TrashRoute
+    }
     '/trash/categories': {
       id: '/trash/categories'
       path: '/categories'
@@ -275,11 +294,13 @@ declare module '@tanstack/react-router' {
 
 interface TrashRouteChildren {
   TrashCategoriesRoute: typeof TrashCategoriesRoute
+  TrashGoalsRoute: typeof TrashGoalsRoute
   TrashTransactionsRoute: typeof TrashTransactionsRoute
 }
 
 const TrashRouteChildren: TrashRouteChildren = {
   TrashCategoriesRoute: TrashCategoriesRoute,
+  TrashGoalsRoute: TrashGoalsRoute,
   TrashTransactionsRoute: TrashTransactionsRoute,
 }
 
