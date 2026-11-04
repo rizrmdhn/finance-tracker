@@ -32,3 +32,8 @@ export const LANGUAGE_LABELS: Record<SupportedLanguage, string> = {
 	id: "Bahasa Indonesia",
 	en: "English",
 };
+
+export const LANGUAGE_LOCALE_MAP: Record<SupportedLanguage, string> = {
+	id: "id-ID",
+	en: "en-US",
+};
