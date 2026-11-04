@@ -4,12 +4,15 @@ import { addDays, startOfMonth, subMonths } from "date-fns";
 import { eq } from "drizzle-orm";
 import {
 	addGoalContribution,
+	archiveGoal,
 	createGoal,
 	deleteGoal,
 	deleteGoalContribution,
 	getAccountAllocations,
+	getGoalEstimate,
 	getGoalMonthlyProgress,
 	getGoalProgress,
+	getGoalsOverview,
 	getMonthlySurplus,
 } from "./goal";
 import {
@@ -251,7 +254,9 @@ describe("getGoalProgress", () => {
 		// 1000 + 500 − 200 + 700 = 2000 linked, 3000 − 500 = 2500 contributed
 		expect(await getGoalProgress(db, goal.id)).toEqual({
 			linkedBalance: 2000,
-			contributions: [{ accountId: wallet.id, total: 2500 }],
+			contributions: [
+				{ accountId: wallet.id, total: 2500, held: 2500, currency: "IDR" },
+			],
 			total: 4500,
 			isReached: false,
 		});
@@ -292,7 +297,10 @@ describe("getGoalProgress", () => {
 
 		expect(await getGoalProgress(db, goal.id)).toMatchObject({
 			linkedBalance: 160_000,
-			contributions: [{ accountId: wallet.id, total: 80_000 }],
+			// held stays in the source account's currency for the withdrawal limit
+			contributions: [
+				{ accountId: wallet.id, total: 80_000, held: 5, currency: "USD" },
+			],
 			total: 240_000,
 		});
 	});
@@ -472,5 +480,139 @@ describe("getAccountAllocations", () => {
 		expect(await getAccountAllocations(db)).toMatchObject([
 			{ balance: 50, allocated: 80, freeBalance: -30, isOverAllocated: true },
 		]);
+	});
+});
+
+describe("getGoalEstimate", () => {
+	const today = new Date();
+
+	/** Income and expense in each of the last `months` full months. */
+	async function seedMonthlySurplus(
+		months: number,
+		{ income, expense }: { income: number; expense: number },
+	) {
+		const account = await seedAccount(db);
+		const incomeCategory = await seedCategory(db, "income");
+		const expenseCategory = await seedCategory(db, "expense");
+		for (let monthsAgo = 1; monthsAgo <= months; monthsAgo++) {
+			const base = { accountId: account.id, date: midMonth(monthsAgo) };
+			await seedTransaction(db, {
+				...base,
+				amount: income,
+				categoryId: incomeCategory.id,
+			});
+			await seedTransaction(db, {
+				...base,
+				amount: expense,
+				categoryId: expenseCategory.id,
+			});
+		}
+		return account;
+	}
+
+	test("uses the potential pace for a new goal", async () => {
+		await seedMonthlySurplus(3, { income: 1000, expense: 400 });
+		const goal = await createGoal(db, {
+			...baseGoal,
+			targetAmount: 3000,
+			allocationPercent: 50,
+		});
+
+		const { estimate } = await getGoalEstimate(db, goal.id, today);
+
+		// 600 surplus × 50% = 300/month → 3000 / (300 × 12 / 365.25) = 304.4 days
+		expect(estimate).toMatchObject({
+			remaining: 3000,
+			monthlyProgress: [],
+			pace: { source: "potential", rates: [300, 300, 300], showInsight: false },
+			monthlyRate: 300,
+			completion: {
+				status: "estimated",
+				days: 305,
+				estimatedDate: addDays(today, 305),
+				range: { minDays: 305, maxDays: 305 },
+				isRough: false,
+			},
+			duration: {
+				main: { unit: "months", months: 11 },
+				min: { unit: "months", months: 11 },
+				max: { unit: "months", months: 11 },
+			},
+			targetDateGap: null,
+		});
+		expect(estimate?.monthlySurplus).toHaveLength(3);
+	});
+
+	test("is reached once progress covers the target", async () => {
+		const wallet = await seedAccount(db, { initialBalance: 5000 });
+		const goal = await createGoal(db, {
+			...baseGoal,
+			targetAmount: 1000,
+			initialFund: { amount: 1000, accountId: wallet.id },
+		});
+
+		const { progress, estimate } = await getGoalEstimate(db, goal.id, today);
+
+		expect(progress.isReached).toBe(true);
+		expect(estimate).toMatchObject({
+			remaining: 0,
+			completion: { status: "reached", days: 0 },
+			duration: { main: { unit: "days", days: 0 } },
+		});
+	});
+
+	test("can't estimate when expenses exceed income", async () => {
+		await seedMonthlySurplus(3, { income: 400, expense: 1000 });
+		const goal = await createGoal(db, baseGoal);
+
+		const { estimate } = await getGoalEstimate(db, goal.id, today);
+
+		expect(estimate).toMatchObject({
+			monthlyRate: -300,
+			completion: { status: "no-surplus", days: null },
+			duration: { main: null, min: null, max: null },
+		});
+	});
+
+	test("compares the pace with the target date", async () => {
+		await seedMonthlySurplus(3, { income: 1000, expense: 400 });
+		const goal = await createGoal(db, {
+			...baseGoal,
+			targetAmount: 3000,
+			allocationPercent: 50,
+			targetDate: addDays(today, 100).getTime(),
+		});
+
+		const gap = (await getGoalEstimate(db, goal.id, today)).estimate
+			?.targetDateGap;
+
+		// 3000 in 100 days ≈ 913/month needed, 300/month saved
+		expect(gap).toMatchObject({ onTrack: false, isPast: false });
+		expect(gap?.requiredMonthly).toBeCloseTo((3000 * 365.25) / 12 / 100);
+		expect(gap?.gap).toBeCloseTo((gap?.requiredMonthly ?? 0) - 300);
+	});
+
+	test("returns progress only for purchased or archived goals", async () => {
+		await seedMonthlySurplus(3, { income: 1000, expense: 400 });
+		const goal = await createGoal(db, baseGoal);
+		await archiveGoal(db, goal.id);
+
+		const result = await getGoalEstimate(db, goal.id, today);
+
+		expect(result.goal.status).toBe("archived");
+		expect(result.progress.total).toBe(0);
+		expect(result.estimate).toBeNull();
+	});
+
+	test("overview returns every non-deleted goal in list order", async () => {
+		const goal = { ...baseGoal, allocationPercent: 20 };
+		const second = await createGoal(db, { ...goal, priority: 1 });
+		const first = await createGoal(db, { ...goal, priority: 0 });
+		const removed = await createGoal(db, goal);
+		await deleteGoal(db, removed.id);
+
+		const overview = await getGoalsOverview(db, today);
+
+		expect(overview.map((o) => o.goal.id)).toEqual([first.id, second.id]);
 	});
 });

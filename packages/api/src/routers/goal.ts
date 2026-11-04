@@ -7,7 +7,9 @@ import {
 	getAccountAllocations,
 	getGoalById,
 	getGoalContributions,
+	getGoalEstimate,
 	getGoals,
+	getGoalsOverview,
 	purchaseGoal,
 	updateGoal,
 } from "@finance-tracker/queries";
@@ -38,6 +40,22 @@ export const goalRouter = createTRPCRouter({
 			if (err) throw toTRPCError(err);
 			return data;
 		}),
+
+	getEstimate: publicProcedure
+		.input(z.object({ id: z.string() }))
+		.query(async ({ ctx, input }) => {
+			const [data, err] = await tryCatchAsync(() =>
+				getGoalEstimate(ctx.db, input.id),
+			);
+			if (err) throw toTRPCError(err);
+			return data;
+		}),
+
+	overview: publicProcedure.query(async ({ ctx }) => {
+		const [data, err] = await tryCatchAsync(() => getGoalsOverview(ctx.db));
+		if (err) throw toTRPCError(err);
+		return data;
+	}),
 
 	create: publicProcedure.input(goalSchema).mutation(async ({ ctx, input }) => {
 		const [data, err] = await tryCatchAsync(() => createGoal(ctx.db, input));
