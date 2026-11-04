@@ -6,13 +6,14 @@ import {
 	CardTitle,
 } from "@finance-tracker/ui/components/card";
 import { Skeleton } from "@finance-tracker/ui/components/skeleton";
+import { formatCurrency } from "@finance-tracker/utils";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { PiggyBank } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ICON_MAP } from "@/components/icon-picker";
 import { trpc } from "@/lib/trpc";
-import { formatAmount, useGoalText } from "./goal-utils";
+import { useGoalText } from "./goal-utils";
 
 const MAX_GOALS = 3;
 
@@ -106,8 +107,8 @@ export function GoalsWidget() {
 											)}
 										</div>
 										<span className="shrink-0 text-muted-foreground text-xs tabular-nums">
-											{formatAmount(progress.total, goal.currency)} /{" "}
-											{formatAmount(goal.targetAmount, goal.currency)}
+											{formatCurrency(progress.total, goal.currency)} /{" "}
+											{formatCurrency(goal.targetAmount, goal.currency)}
 										</span>
 									</div>
 									<div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">

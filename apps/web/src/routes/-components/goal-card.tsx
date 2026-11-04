@@ -7,7 +7,7 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@finance-tracker/ui/components/dropdown-menu";
-import type { TargetDateGap } from "@finance-tracker/utils";
+import { formatCurrency, type TargetDateGap } from "@finance-tracker/utils";
 import {
 	ArchiveIcon,
 	ArrowDownToLineIcon,
@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ICON_MAP } from "@/components/icon-picker";
-import { formatAmount, type GoalOverviewItem, useGoalText } from "./goal-utils";
+import { type GoalOverviewItem, useGoalText } from "./goal-utils";
 
 type GoalAction = (item: GoalOverviewItem) => void;
 
@@ -190,7 +190,7 @@ export function GoalProgress({ item }: { item: GoalOverviewItem }) {
 	const { goal, progress } = item;
 	const percent =
 		goal.targetAmount > 0 ? (progress.total / goal.targetAmount) * 100 : 0;
-	const format = (amount: number) => formatAmount(amount, goal.currency);
+	const format = (amount: number) => formatCurrency(amount, goal.currency);
 
 	return (
 		<div className="flex flex-col gap-1.5">
@@ -247,7 +247,7 @@ export function GoalEstimate({ item }: { item: GoalOverviewItem }) {
 
 	if (!estimate) return null;
 
-	const format = (amount: number) => formatAmount(amount, goal.currency);
+	const format = (amount: number) => formatCurrency(amount, goal.currency);
 	const { completion, pace, targetDateGap } = estimate;
 	const main = estimate.duration.main;
 	const { min, max } = estimate.duration;

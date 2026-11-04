@@ -13,6 +13,7 @@ import {
 	EmptyTitle,
 } from "@finance-tracker/ui/components/empty";
 import { Skeleton } from "@finance-tracker/ui/components/skeleton";
+import type { GoalContributionMode } from "@finance-tracker/utils";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { ChevronRightIcon, PiggyBankIcon, PlusIcon } from "lucide-react";
@@ -26,9 +27,7 @@ import { queryClient, trpc } from "@/lib/trpc";
 import CreateGoalDialog from "./-components/create-goal-dialog";
 import EditGoalDialog from "./-components/edit-goal-dialog";
 import GoalCard from "./-components/goal-card";
-import GoalContributionDialog, {
-	type GoalContributionMode,
-} from "./-components/goal-contribution-dialog";
+import GoalContributionDialog from "./-components/goal-contribution-dialog";
 import GoalDetailDialog from "./-components/goal-detail-dialog";
 import {
 	type GoalOverviewItem,

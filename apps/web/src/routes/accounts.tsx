@@ -2,6 +2,7 @@ import type { AccountWithBalance } from "@finance-tracker/types";
 import { Badge } from "@finance-tracker/ui/components/badge";
 import { Button } from "@finance-tracker/ui/components/button";
 import { Skeleton } from "@finance-tracker/ui/components/skeleton";
+import { formatCurrency } from "@finance-tracker/utils";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -20,7 +21,6 @@ import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
 import CreateAccountDialog from "./-components/create-account-dialog";
 import EditAccountDialog from "./-components/edit-account-dialog";
-import { formatAmount } from "./-components/goal-utils";
 
 export const Route = createFileRoute("/accounts")({
 	component: RouteComponent,
@@ -144,16 +144,16 @@ function RouteComponent() {
 									)}
 								</div>
 								<span className="text-muted-foreground text-xs">
-									{formatAmount(account.balance, account.currency)}
+									{formatCurrency(account.balance, account.currency)}
 								</span>
 								{allocation && allocation.allocated > 0 && (
 									<span className="text-muted-foreground text-xs">
 										{t("goals.allocation.summary", {
-											allocated: formatAmount(
+											allocated: formatCurrency(
 												allocation.allocated,
 												account.currency,
 											),
-											free: formatAmount(
+											free: formatCurrency(
 												allocation.freeBalance,
 												account.currency,
 											),

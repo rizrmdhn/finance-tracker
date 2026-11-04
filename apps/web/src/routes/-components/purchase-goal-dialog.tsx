@@ -1,4 +1,3 @@
-import type { SupportedCurrency } from "@finance-tracker/constants";
 import { goalPurchaseSchema } from "@finance-tracker/schema";
 import { Button } from "@finance-tracker/ui/components/button";
 import {
@@ -24,6 +23,12 @@ import {
 	SelectValue,
 } from "@finance-tracker/ui/components/select";
 import { Spinner } from "@finance-tracker/ui/components/spinner";
+import {
+	createCurrencyConverter,
+	formatCurrency,
+	getDefaultGoalPayments,
+	getGoalPaymentRemaining,
+} from "@finance-tracker/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { PlusIcon, XIcon } from "lucide-react";
@@ -41,11 +46,7 @@ import { DatePicker } from "@/components/date-picker";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
 import { AccountOption } from "./goal-form-fields";
-import {
-	formatAmount,
-	type GoalOverviewItem,
-	useGoalErrorMessage,
-} from "./goal-utils";
+import { type GoalOverviewItem, useGoalErrorMessage } from "./goal-utils";
 
 // `source` only labels the pre-filled rows; it isn't sent
 const purchaseFormSchema = goalPurchaseSchema.omit({ goalId: true }).extend({
@@ -111,34 +112,6 @@ export default function PurchaseGoalDialog({
 	);
 }
 
-function getDefaultPayments(
-	{ goal, progress }: GoalOverviewItem,
-	linkedBalance: number,
-) {
-	const payments: Partial<PaymentRow>[] = [];
-	if (goal.linkedAccountId && linkedBalance > 0)
-		payments.push({
-			accountId: goal.linkedAccountId,
-			amount: linkedBalance,
-			source: "linked",
-		});
-	for (const c of progress.contributions)
-		if (c.held > 0)
-			payments.push({
-				accountId: c.accountId,
-				amount: c.held,
-				source: "setAside",
-			});
-	// No account yet: the user picks who pays the rest
-	const shortfall = goal.targetAmount - progress.total;
-	if (shortfall > 0 || payments.length === 0)
-		payments.push({
-			amount: shortfall > 0 ? shortfall : undefined,
-			source: "shortfall",
-		});
-	return payments;
-}
-
 interface PurchaseGoalFormProps {
 	item: GoalOverviewItem;
 	/** The linked account's balance in its own currency. */
@@ -168,7 +141,7 @@ function PurchaseGoalForm({
 	const form = useForm<PurchaseForm>({
 		resolver: zodResolver(purchaseFormSchema),
 		defaultValues: {
-			payments: getDefaultPayments(item, linkedBalance),
+			payments: getDefaultGoalPayments(item.goal, item.progress, linkedBalance),
 			date: Date.now(),
 		} satisfies DefaultValues<PurchaseForm>,
 	});
@@ -177,30 +150,19 @@ function PurchaseGoalForm({
 		name: "payments",
 	});
 
-	const rateMap = new Map(rates.map((r) => [r.target, r.rate]));
+	const converter = createCurrencyConverter(goal.currency, rates);
 	const currencyOf = (accountId?: string) =>
 		accounts.find((a) => a.id === accountId)?.currency ?? goal.currency;
-	const toGoalCurrency = (amount: number, currency: SupportedCurrency) => {
-		if (currency === goal.currency) return amount;
-		const rate = rateMap.get(currency);
-		return rate ? amount / rate : amount;
-	};
 
 	const payments = form.watch("payments");
-	const inGoalCurrency = (p: Partial<PaymentRow>) =>
-		toGoalCurrency(p.amount ?? 0, currencyOf(p.accountId));
-	const total = payments.reduce((sum, p) => sum + inGoalCurrency(p), 0);
+	const inGoalCurrency = payments.map((p) =>
+		converter.toBase(p.amount ?? 0, currencyOf(p.accountId)),
+	);
+	const total = inGoalCurrency.reduce((sum, amount) => sum + amount, 0);
 
 	// The shortfall row covers whatever the other rows leave of the target
 	const remainingFor = (index: number) =>
-		Math.max(
-			goal.targetAmount -
-				payments.reduce(
-					(sum, p, i) => (i === index ? sum : sum + inGoalCurrency(p)),
-					0,
-				),
-			0,
-		);
+		getGoalPaymentRemaining(goal.targetAmount, inGoalCurrency, index);
 
 	function onAccountChange(index: number, accountId: string) {
 		form.setValue(`payments.${index}.accountId`, accountId, {
@@ -209,13 +171,11 @@ function PurchaseGoalForm({
 		if (payments[index]?.source !== "shortfall") return;
 
 		// Re-express the remaining amount in the chosen account's currency
-		const currency = currencyOf(accountId);
-		const rate = currency === goal.currency ? 1 : rateMap.get(currency);
-		if (rate)
-			form.setValue(
-				`payments.${index}.amount`,
-				Math.round(remainingFor(index) * rate * 100) / 100,
-			);
+		const amount = converter.fromBase(
+			remainingFor(index),
+			currencyOf(accountId),
+		);
+		if (amount !== null) form.setValue(`payments.${index}.amount`, amount);
 	}
 
 	const purchaseMutation = useMutation(
@@ -254,7 +214,7 @@ function PurchaseGoalForm({
 		});
 	}
 
-	const format = (amount: number) => formatAmount(amount, goal.currency);
+	const format = (amount: number) => formatCurrency(amount, goal.currency);
 	const rowLabel = (index: number) => {
 		switch (payments[index]?.source) {
 			case "linked":
