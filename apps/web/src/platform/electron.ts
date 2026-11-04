@@ -15,16 +15,11 @@ const updater: UpdaterCapability = {
 		return !!window.electronUpdater;
 	},
 	checkForUpdates: () => window.electronUpdater.checkForUpdates(),
-	onUpdateAvailable: (cb) => window.electronUpdater.onUpdateAvailable(cb),
-	onUpdateNotAvailable: (cb) => window.electronUpdater.onUpdateNotAvailable(cb),
-	onUpdateError: (cb) => window.electronUpdater.onUpdateError(cb),
-	onDownloadProgress: (cb) => window.electronUpdater.onDownloadProgress(cb),
-	onUpdateDownloaded: (cb) => window.electronUpdater.onUpdateDownloaded(cb),
+	getStatus: () => window.electronUpdater.getStatus(),
+	onStatus: (cb) => window.electronUpdater.onStatus(cb),
 	installUpdate: () => window.electronUpdater.installUpdate(),
 	setAllowPrerelease: (allow) =>
 		window.electronUpdater.setAllowPrerelease(allow),
-	removeAllListeners: (channel) =>
-		window.electronUpdater.removeAllListeners(channel),
 };
 
 const dataManager: DataManagerCapability = {

@@ -217,6 +217,8 @@ export interface Dictionary {
 			upToDate: string;
 			versionAvailable: string;
 			downloadingAuto: string;
+			downloadManuallyHint: string;
+			downloadManually: string;
 			downloading: string;
 			downloadApk: string;
 			readyToInstall: string;
@@ -347,6 +349,11 @@ export interface Dictionary {
 	};
 	update: {
 		toast: {
+			title: string;
+			description: string;
+			action: string;
+		};
+		manualToast: {
 			title: string;
 			description: string;
 			action: string;
