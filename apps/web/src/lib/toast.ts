@@ -22,11 +22,15 @@ export const dismissLoadingToast = (toastId: string | number) => {
 	toast.dismiss(toastId); // Use toast ID to dismiss
 };
 
-export const globalErrorToast = (message: string, title?: string) => {
+export const globalErrorToast = (
+	message: string,
+	title?: string,
+	duration = SONNER_DEFAULT_TOAST_DURATION,
+) => {
 	return toast.error(title ?? "Error", {
 		description: message,
 		closeButton: true,
-		duration: SONNER_DEFAULT_TOAST_DURATION,
+		duration,
 	});
 };
 

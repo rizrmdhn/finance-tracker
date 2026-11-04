@@ -3,6 +3,7 @@ export const APP_SETTINGS_KEYS = [
 	"language",
 	"onboarding",
 	"pre_release",
+	"auto_sync",
 ] as const;
 
 export type AppSettingsKey = (typeof APP_SETTINGS_KEYS)[number];
@@ -12,6 +13,7 @@ export const APP_SETTINGS_LABELS: Record<AppSettingsKey, string> = {
 	language: "Language",
 	onboarding: "Onboarding",
 	pre_release: "Pre-release",
+	auto_sync: "Auto sync",
 };
 
 export const APP_SETTINGS_DEFAULTS: Record<AppSettingsKey, string> = {
@@ -19,6 +21,7 @@ export const APP_SETTINGS_DEFAULTS: Record<AppSettingsKey, string> = {
 	language: "id",
 	onboarding: "pending",
 	pre_release: "false",
+	auto_sync: "true",
 };
 
 export const SUPPORTED_LANGUAGES = ["id", "en"] as const;

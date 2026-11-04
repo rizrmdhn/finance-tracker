@@ -1,3 +1,5 @@
+import type { SyncErrorCode, SyncWithPeerResult } from "@/platform/types";
+
 type PlatformType = "desktop" | "mobile";
 
 declare global {
@@ -16,8 +18,15 @@ declare global {
 			initiatePair: (peer: { host: string; port: number }) => Promise<void>;
 			confirmPair: (deviceId: string) => Promise<void>;
 			rejectPair: (deviceId: string, reason?: string) => Promise<void>;
-			syncWithPeer: (peer: { host: string; port: number }) => Promise<void>;
+			syncWithPeer: (peer: {
+				host: string;
+				port: number;
+				deviceId?: string;
+			}) => Promise<SyncWithPeerResult>;
 			onSyncComplete: (callback: (info: { deviceId: string }) => void) => void;
+			onSyncError: (
+				callback: (info: { deviceId?: string; code: SyncErrorCode }) => void,
+			) => void;
 			onPeerDiscovered: (
 				callback: (peer: {
 					deviceId: string;
@@ -53,6 +62,7 @@ declare global {
 			onPairRejected: (
 				callback: (info: { deviceId: string; reason?: string }) => void,
 			) => void;
+			onPairFailed: (callback: (info: { deviceId?: string }) => void) => void;
 			removeAllListeners: (channel: string) => void;
 		};
 		electronDataManager: {
@@ -104,5 +114,3 @@ declare global {
 		};
 	}
 }
-
-export {};

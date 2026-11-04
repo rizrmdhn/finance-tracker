@@ -67,3 +67,8 @@ export function base64ToPubKey(b64: string): string {
 	for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
 	return bytesToHex(bytes);
 }
+
+/** Hex-encode the pairing shared secret for storage; it keys the sync handshake HMAC */
+export function secretToHex(secret: Uint8Array): string {
+	return bytesToHex(secret);
+}

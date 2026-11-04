@@ -38,9 +38,7 @@ const dataManager: DataManagerCapability = {
 
 	exportFile: async ({ content, format, defaultName }) => {
 		const mime =
-			format === "csv"
-				? "text/csv;charset=utf-8;"
-				: "application/json";
+			format === "csv" ? "text/csv;charset=utf-8;" : "application/json";
 		const blob = new Blob([content], { type: mime });
 		const url = URL.createObjectURL(blob);
 		const a = document.createElement("a");
@@ -75,20 +73,23 @@ const dataManager: DataManagerCapability = {
 
 const sync: SyncCapability = {
 	isSupported: false,
-	getDeviceInfo: () => Promise.reject(new Error("Sync not available in browser")),
+	getDeviceInfo: () =>
+		Promise.reject(new Error("Sync not available in browser")),
 	startDiscovery: () => Promise.resolve(),
 	stopDiscovery: () => Promise.resolve(),
 	initiatePair: () => Promise.resolve(),
 	confirmPair: () => Promise.resolve(),
 	rejectPair: () => Promise.resolve(),
-	syncWithPeer: () => Promise.resolve(),
+	syncWithPeer: () => Promise.resolve({ ok: false, code: "internal" }),
 	onSyncComplete: () => {},
+	onSyncError: () => {},
 	onPeerDiscovered: () => {},
 	onPeerLost: () => {},
 	onPairRequestReceived: () => {},
 	onPairChallenge: () => {},
 	onPairConfirmed: () => {},
 	onPairRejected: () => {},
+	onPairFailed: () => {},
 	removeAllListeners: () => {},
 };
 

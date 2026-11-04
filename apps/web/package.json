@@ -14,6 +14,7 @@
     "@finance-tracker/dictionaries": "workspace:*",
     "@finance-tracker/queries": "workspace:*",
     "@finance-tracker/schema": "workspace:*",
+    "@finance-tracker/sync": "workspace:*",
     "@finance-tracker/types": "workspace:*",
     "@finance-tracker/ui": "workspace:*",
     "@finance-tracker/utils": "workspace:*",

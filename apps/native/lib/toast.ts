@@ -6,10 +6,14 @@ const WARNING_DURATION = 3000;
 export const globalSuccessToast = (message: string) =>
 	toast.success(message, { duration: DEFAULT_DURATION });
 
-export const globalErrorToast = (message: string, title?: string) =>
+export const globalErrorToast = (
+	message: string,
+	title?: string,
+	duration = DEFAULT_DURATION,
+) =>
 	toast.error(title ?? message, {
 		description: title ? message : undefined,
-		duration: DEFAULT_DURATION,
+		duration,
 	});
 
 export const globalWarningToast = (message: string) =>

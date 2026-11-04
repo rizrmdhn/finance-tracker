@@ -437,8 +437,10 @@ export const en = {
 		confirm: "Codes Match — Confirm",
 		reject: "Codes Don't Match — Reject",
 		pairingInProgress: "Pairing in progress...",
+		wantsToPair: "{{name}} wants to pair",
 		connectToDesktop: "Connect to Desktop",
-		connectDescription: "Enter your desktop's local IP address to pair over WiFi",
+		connectDescription:
+			"Enter your desktop's local IP address to pair over WiFi",
 		connect: "Connect",
 		syncNow: "Sync Now",
 		syncing: "Syncing...",
@@ -446,15 +448,21 @@ export const en = {
 		syncWithDesktop: "Sync with Desktop",
 		syncDescription: "Enter your desktop IP address to sync data.",
 		connectToDevice: "Connect to Device",
-		connectToDeviceDescription: "Enter any Finance Tracker device's local IP to pair",
+		connectToDeviceDescription:
+			"Enter any Finance Tracker device's local IP to pair",
 		hostSyncSession: "Host Sync Session",
-		hostSyncDescription: "Let other devices connect and sync with you over WiFi",
+		hostSyncDescription:
+			"Let other devices connect and sync with you over WiFi",
 		yourIpAddress: "Your IP Address",
 		startHosting: "Start Hosting",
 		stopHosting: "Stop Hosting",
 		hosting: "Hosting — waiting for connections...",
 		syncEnterIp: "Enter IP to Sync",
-		syncEnterIpDescription: "Enter the device's local IP address to start syncing",
+		syncEnterIpDescription:
+			"Enter the device's local IP address to start syncing",
+		autoSync: "Auto sync",
+		autoSyncDescription:
+			"Sync with paired devices on the same WiFi when the app opens and after changes",
 		toast: {
 			paired: "Device paired successfully",
 			pairFailed: "Failed to pair device",
@@ -463,6 +471,27 @@ export const en = {
 			pairRejected: "Pairing was rejected by the other device",
 			syncComplete: "Sync complete",
 			syncFailed: "Sync failed",
+			autoSyncFailed: "Auto sync with {{name}} failed",
+		},
+		errors: {
+			untrusted:
+				"These devices are not paired with each other. Remove the device and pair it again.",
+			repairRequired:
+				"This pairing was made with an older version of the app. Remove the device and pair it again.",
+			authFailed:
+				"The other device could not be verified. If you re-paired it recently, remove the device and pair it again.",
+			schemaMismatch:
+				"The two devices are running different app versions. Update the app on both devices and try again.",
+			protocolMismatch:
+				"The two devices use different sync versions. Update the app on both devices and try again.",
+			applyFailed: "The synced changes could not be saved. Please try again.",
+			protocolError:
+				"The other device sent an unexpected response. Update the app on both devices and try again.",
+			connectionClosed:
+				"The connection was lost. Make sure both devices are on the same network and the app is open on the other device.",
+			timeout:
+				"The other device took too long to respond. Make sure it is on the same network with the app open, then try again.",
+			internal: "Something went wrong while syncing. Please try again.",
 		},
 	},
 } satisfies Dictionary;

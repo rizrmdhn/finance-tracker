@@ -24,6 +24,7 @@ import { GlobalSearch, SearchTrigger } from "@/components/global-search";
 import { NotFoundComponent } from "@/components/not-found";
 import { OnboardingScreen } from "@/components/onboarding-screen";
 import { SplashScreen } from "@/components/splash-screen";
+import { SyncListener } from "@/components/sync-listener";
 import { ThemeProvider } from "@/components/theme-provider";
 import { UpdateNotifier } from "@/components/update-notifier";
 import { pageHead } from "../lib/page-head";
@@ -82,6 +83,7 @@ function RootComponent() {
 			<ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
 				<HeadContent />
 				<OnboardingScreen />
+				<SyncListener />
 				<Toaster position="top-right" richColors />
 			</ThemeProvider>
 		);
@@ -118,6 +120,7 @@ function RootComponent() {
 					</SidebarInset>
 				</SidebarProvider>
 				<GlobalSearch />
+				<SyncListener />
 				<Toaster position="top-right" richColors />
 			</ThemeProvider>
 			<TanStackRouterDevtools position="bottom-left" />

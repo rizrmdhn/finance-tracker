@@ -2,7 +2,6 @@ import { browserAdapter } from "./browser";
 import { electronAdapter } from "./electron";
 import type { PlatformAdapter } from "./types";
 
-export type { PlatformAdapter } from "./types";
 export type {
 	AppCapability,
 	DataManagerCapability,
@@ -10,8 +9,11 @@ export type {
 	DownloadProgress,
 	FileOpResult,
 	ImportResult,
+	PlatformAdapter,
 	PlatformType,
 	SyncCapability,
+	SyncErrorCode,
+	SyncWithPeerResult,
 	UpdateInfo,
 	UpdaterCapability,
 } from "./types";

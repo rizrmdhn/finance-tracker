@@ -407,6 +407,7 @@ export interface Dictionary {
 		confirm: string;
 		reject: string;
 		pairingInProgress: string;
+		wantsToPair: string;
 		connectToDesktop: string;
 		connectDescription: string;
 		connect: string;
@@ -425,6 +426,8 @@ export interface Dictionary {
 		hosting: string;
 		syncEnterIp: string;
 		syncEnterIpDescription: string;
+		autoSync: string;
+		autoSyncDescription: string;
 		toast: {
 			paired: string;
 			pairFailed: string;
@@ -433,6 +436,19 @@ export interface Dictionary {
 			pairRejected: string;
 			syncComplete: string;
 			syncFailed: string;
+			autoSyncFailed: string;
+		};
+		errors: {
+			untrusted: string;
+			repairRequired: string;
+			authFailed: string;
+			schemaMismatch: string;
+			protocolMismatch: string;
+			applyFailed: string;
+			protocolError: string;
+			connectionClosed: string;
+			timeout: string;
+			internal: string;
 		};
 	};
 }

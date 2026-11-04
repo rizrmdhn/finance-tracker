@@ -71,6 +71,13 @@
       "when": 1774667883310,
       "tag": "0009_silent_paladin",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1793788871361,
+      "tag": "0010_nebulous_the_anarchist",
+      "breakpoints": true
     }
   ]
 }

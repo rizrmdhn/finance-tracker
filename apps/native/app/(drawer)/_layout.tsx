@@ -11,6 +11,7 @@ import { Text, View } from "react-native";
 
 import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useAutoSync } from "@/hooks/use-auto-sync";
 import { useThemeColor } from "@/lib/theme";
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>["name"];
@@ -55,6 +56,7 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
 
 function DrawerLayout() {
 	const { t } = useTranslation();
+	useAutoSync();
 
 	const themeColorForeground = useThemeColor("foreground");
 	const themeColorBackground = useThemeColor("background");

@@ -48,16 +48,24 @@ export async function processRecurrences(db: AnyDatabase): Promise<number> {
 			continue;
 		}
 
-		// Clone template into a new transaction (date = nextRunAt)
-		await db.insert(transactions).values({
-			amount: tmpl.amount,
-			note: tmpl.note,
-			categoryId: tmpl.categoryId,
-			accountId: tmpl.accountId,
-			toAccountId: tmpl.toAccountId,
-			tags: tmpl.tags,
-			date: rule.nextRunAt,
-		});
+		// Clone template into a new transaction (date = nextRunAt).
+		// The id is derived from the rule + occurrence so that every device
+		// generating the same occurrence produces the same primary key — the
+		// CRDT sync then merges them into one row instead of duplicating it.
+		const inserted = await db
+			.insert(transactions)
+			.values({
+				id: `rec_${rule.id}_${rule.nextRunAt}`,
+				amount: tmpl.amount,
+				note: tmpl.note,
+				categoryId: tmpl.categoryId,
+				accountId: tmpl.accountId,
+				toAccountId: tmpl.toAccountId,
+				tags: tmpl.tags,
+				date: rule.nextRunAt,
+			})
+			.onConflictDoNothing()
+			.returning({ id: transactions.id });
 
 		// Advance nextRunAt to the next interval
 		const next = advanceNextRunAt(
@@ -78,7 +86,7 @@ export async function processRecurrences(db: AnyDatabase): Promise<number> {
 				.where(eq(recurrences.id, rule.id));
 		}
 
-		spawned++;
+		spawned += inserted.length;
 	}
 
 	return spawned;

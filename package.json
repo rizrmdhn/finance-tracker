@@ -67,7 +67,8 @@
 		"native:doctor": "turbo -F @finance-tracker/native doctor",
 		"native:prebuild": "turbo -F @finance-tracker/native prebuild",
 		"native:bump": "node apps/native/scripts/bump-version.mjs",
-		"tag": "bun scripts/tag.ts"
+		"tag": "bun scripts/tag.ts",
+		"release": "bun scripts/release.ts"
 	},
 	"dependencies": {
 		"@finance-tracker/env": "workspace:*",
