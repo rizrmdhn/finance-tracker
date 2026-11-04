@@ -63,3 +63,49 @@ export function estimateGoalCompletion({
 		isRough,
 	};
 }
+
+const MIN_REAL_MONTHS = 3;
+const INSIGHT_THRESHOLD = 0.1;
+
+export interface GoalPace {
+	source: "real" | "potential";
+	rates: number[];
+	showInsight: boolean;
+	realMonthly: number | null;
+	potentialMonthly: number | null;
+}
+
+/**
+ * Real pace (actual monthly progress) once the goal has ≥ 3 months of data, otherwise
+ * potential pace (monthly surplus × allocation). Insight flags real pace lagging potential by ≥ 10%.
+ */
+export function pickGoalPace({
+	realRates,
+	monthlySurplus,
+	allocationPercent,
+}: {
+	realRates: number[];
+	monthlySurplus: number[];
+	allocationPercent: number;
+}): GoalPace {
+	const potentialRates = monthlySurplus.map(
+		(surplus) => (surplus * allocationPercent) / 100,
+	);
+	const realMonthly = median(realRates);
+	const potentialMonthly = median(potentialRates);
+	const useReal = realRates.length >= MIN_REAL_MONTHS;
+
+	return {
+		source: useReal ? "real" : "potential",
+		rates: useReal ? realRates : potentialRates,
+		showInsight:
+			useReal &&
+			realMonthly !== null &&
+			potentialMonthly !== null &&
+			potentialMonthly > 0 &&
+			potentialMonthly - realMonthly >=
+				Math.abs(realMonthly) * INSIGHT_THRESHOLD,
+		realMonthly,
+		potentialMonthly,
+	};
+}

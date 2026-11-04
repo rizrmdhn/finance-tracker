@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { estimateGoalCompletion } from "./goal-estimate";
+import { estimateGoalCompletion, pickGoalPace } from "./goal-estimate";
 
 const today = new Date(2026, 10, 4);
 
@@ -113,5 +113,88 @@ describe("estimateGoalCompletion", () => {
 		expect(result.days).toBe(30_438);
 		expect(result.days).toBeGreaterThan(50 * 365.25);
 		expect(result.estimatedDate).toEqual(new Date(2026, 10, 4 + 30_438));
+	});
+});
+
+describe("pickGoalPace", () => {
+	const monthlySurplus = [4_000_000, 2_000_000, 3_000_000, 5_000_000];
+
+	test("new goal (< 3 months of real data) uses potential pace", () => {
+		const result = pickGoalPace({
+			realRates: [1_000_000, 1_500_000],
+			monthlySurplus,
+			allocationPercent: 50,
+		});
+		expect(result).toEqual({
+			source: "potential",
+			rates: [2_000_000, 1_000_000, 1_500_000, 2_500_000],
+			showInsight: false,
+			realMonthly: 1_250_000,
+			potentialMonthly: 1_750_000,
+		});
+	});
+
+	test("goal with no real data yet uses potential pace", () => {
+		const result = pickGoalPace({
+			realRates: [],
+			monthlySurplus,
+			allocationPercent: 100,
+		});
+		expect(result.source).toBe("potential");
+		expect(result.rates).toEqual(monthlySurplus);
+		expect(result.realMonthly).toBeNull();
+		expect(result.showInsight).toBe(false);
+	});
+
+	test("mature goal (>= 3 months) uses real pace and shows insight when potential is >= 10% higher", () => {
+		const realRates = [1_000_000, 1_200_000, 800_000];
+		const result = pickGoalPace({
+			realRates,
+			monthlySurplus,
+			allocationPercent: 100,
+		});
+		expect(result.source).toBe("real");
+		expect(result.rates).toEqual(realRates);
+		expect(result.realMonthly).toBe(1_000_000);
+		expect(result.potentialMonthly).toBe(3_500_000);
+		expect(result.showInsight).toBe(true);
+	});
+
+	test("insight threshold is inclusive at exactly 10%", () => {
+		const base = { realRates: [1_000_000, 1_000_000, 1_000_000] };
+		expect(
+			pickGoalPace({
+				...base,
+				monthlySurplus: [1_100_000],
+				allocationPercent: 100,
+			}).showInsight,
+		).toBe(true);
+		expect(
+			pickGoalPace({
+				...base,
+				monthlySurplus: [1_090_000],
+				allocationPercent: 100,
+			}).showInsight,
+		).toBe(false);
+	});
+
+	test("real >= potential shows no insight", () => {
+		const result = pickGoalPace({
+			realRates: [3_000_000, 4_000_000, 5_000_000],
+			monthlySurplus,
+			allocationPercent: 100,
+		});
+		expect(result.source).toBe("real");
+		expect(result.showInsight).toBe(false);
+	});
+
+	test("no insight when potential pace is not positive", () => {
+		const result = pickGoalPace({
+			realRates: [-500_000, -200_000, -300_000],
+			monthlySurplus: [-100_000, 0, -50_000],
+			allocationPercent: 100,
+		});
+		expect(result.source).toBe("real");
+		expect(result.showInsight).toBe(false);
 	});
 });
