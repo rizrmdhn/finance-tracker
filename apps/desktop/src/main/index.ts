@@ -6,6 +6,7 @@ import path from "node:path";
 import { appRouter, createTRPCContext } from "@finance-tracker/api";
 import { APP_SETTINGS_DEFAULTS, CRDT_TABLES } from "@finance-tracker/constants";
 import * as schema from "@finance-tracker/db";
+import { migrateWithCrr } from "@finance-tracker/db";
 import {
 	addTrustedPeer,
 	processRecurrences,
@@ -35,7 +36,7 @@ import Database from "better-sqlite3";
 import { Bonjour } from "bonjour-service";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/better-sqlite3";
-import { migrate } from "drizzle-orm/better-sqlite3/migrator";
+import { readMigrationFiles } from "drizzle-orm/migrator";
 import { app, BrowserWindow, dialog, ipcMain } from "electron";
 import { autoUpdater } from "electron-updater";
 import { createIPCHandler } from "trpc-electron/main";
@@ -598,15 +599,23 @@ app.whenReady().then(() => {
 		? path.join(__dirname, "../../../../packages/db/migrations")
 		: path.join(process.resourcesPath, "migrations");
 
+	// cr-sqlite must be loaded before migrating: CRR tables are altered through crsql_begin_alter/commit_alter
+	sqlite.loadExtension(extensionPath);
+
 	// PRAGMA foreign_keys is a no-op inside a transaction, so we must disable
-	// FK enforcement on the connection BEFORE Drizzle starts its migration transaction.
+	// FK enforcement on the connection BEFORE the migration transaction starts.
 	sqlite.pragma("foreign_keys = OFF");
-	migrate(db, { migrationsFolder });
+	migrateWithCrr(
+		{
+			exec: (sql) => sqlite.exec(sql),
+			all: (sql) => sqlite.prepare(sql).all() as Record<string, unknown>[],
+		},
+		readMigrationFiles({ migrationsFolder }),
+	);
 	sqlite.pragma("foreign_keys = ON");
 
-	// Load cr-sqlite extension and register all user data tables as CRDTs.
+	// Register all user data tables as CRDTs (no-op for tables that already are).
 	try {
-		sqlite.loadExtension(extensionPath);
 		for (const table of CRDT_TABLES) {
 			sqlite.prepare("SELECT crsql_as_crr(?)").run(table);
 		}

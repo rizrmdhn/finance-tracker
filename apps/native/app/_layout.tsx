@@ -1,11 +1,10 @@
 import "@/global.css";
 import "@/lib/i18n";
 import { useReactQueryDevTools } from "@dev-plugins/react-query";
-import { seedDatabase } from "@finance-tracker/db";
 import { CRDT_TABLES } from "@finance-tracker/constants";
+import { seedDatabase } from "@finance-tracker/db";
 import { PortalHost } from "@rn-primitives/portal";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
-import { useMigrations } from "drizzle-orm/op-sqlite/migrator";
 import { Stack } from "expo-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -18,9 +17,8 @@ import { OnboardingScreen } from "@/components/onboarding-screen";
 import { SplashScreen } from "@/components/splash-screen";
 import { Text } from "@/components/ui/text";
 import { AppThemeProvider } from "@/contexts/app-theme-context";
-import bundledMigrations from "@/drizzle/migrations";
 import { useNavigationPersistence } from "@/hooks/use-navigation-persistence";
-import { db, sqlite } from "@/lib/db";
+import { db, migrateDatabase, sqlite } from "@/lib/db";
 import { queryClient, trpc } from "@/lib/trpc";
 
 export const unstable_settings = {
@@ -45,16 +43,23 @@ function StackLayout() {
 
 function MigratedApp() {
 	const { i18n } = useTranslation();
-	const { success, error } = useMigrations(db, bundledMigrations);
+	const [success, setSuccess] = useState(false);
+	const [error, setError] = useState<Error | null>(null);
 	const [isSeeded, setIsSeeded] = useState(false);
 
 	useEffect(() => {
-		if (!success) return;
+		try {
+			migrateDatabase();
+		} catch (e) {
+			setError(e as Error);
+			return;
+		}
+		setSuccess(true);
 		setupCRDT()
 			.then(() => seedDatabase(db))
 			.then(() => setIsSeeded(true))
 			.catch((e: unknown) => console.error("[cr-sqlite] setup failed:", e));
-	}, [success]);
+	}, []);
 
 	const { data: onboarding, isLoading } = useQuery({
 		...trpc.appSetting.get.queryOptions({ key: "onboarding" }),
