@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, test } from "bun:test";
 import { goalContributions } from "@finance-tracker/db";
-import type { GoalInput } from "@finance-tracker/schema";
 import {
 	addGoalContribution,
 	createGoal,
@@ -11,17 +10,7 @@ import {
 	getGoals,
 	updateGoal,
 } from "./goal";
-import { createTestDb, seedAccount, type TestDb } from "./test-db";
-
-const baseGoal: GoalInput = {
-	name: "iPhone 17",
-	icon: "Gift",
-	color: "#ef4444",
-	targetAmount: 15_000_000,
-	currency: "IDR",
-	allocationPercent: 50,
-	priority: 0,
-};
+import { baseGoal, createTestDb, seedAccount, type TestDb } from "./test-db";
 
 let db: TestDb;
 

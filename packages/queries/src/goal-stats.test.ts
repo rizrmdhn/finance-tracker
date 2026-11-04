@@ -1,8 +1,15 @@
 import { beforeEach, describe, expect, test } from "bun:test";
 import { exchangeRates } from "@finance-tracker/db";
 import { addDays, startOfMonth, subMonths } from "date-fns";
-import { getMonthlySurplus } from "./goal";
 import {
+	addGoalContribution,
+	createGoal,
+	deleteGoalContribution,
+	getGoalProgress,
+	getMonthlySurplus,
+} from "./goal";
+import {
+	baseGoal,
 	createTestDb,
 	seedAccount,
 	seedCategory,
@@ -164,5 +171,125 @@ describe("getMonthlySurplus", () => {
 				surplus: 1_000_000,
 			},
 		]);
+	});
+});
+
+describe("getGoalProgress", () => {
+	test("starts at 0 without linked account or contributions", async () => {
+		const goal = await createGoal(db, baseGoal);
+		expect(await getGoalProgress(db, goal.id)).toEqual({
+			linkedBalance: 0,
+			contributions: [],
+			total: 0,
+			isReached: false,
+		});
+	});
+
+	test("adds the linked balance and contributions per account", async () => {
+		const pocket = await seedAccount(db, { initialBalance: 1000 });
+		const wallet = await seedAccount(db, { initialBalance: 50_000 });
+		const income = await seedCategory(db, "income");
+		const expense = await seedCategory(db, "expense");
+		const transfer = await seedCategory(db, "transfer");
+		const date = midMonth(1);
+		await seedTransaction(db, {
+			accountId: pocket.id,
+			categoryId: income.id,
+			amount: 500,
+			date,
+		});
+		await seedTransaction(db, {
+			accountId: pocket.id,
+			categoryId: expense.id,
+			amount: 200,
+			date,
+		});
+		await seedTransaction(db, {
+			accountId: wallet.id,
+			toAccountId: pocket.id,
+			categoryId: transfer.id,
+			amount: 700,
+			date,
+		});
+		await seedTransaction(db, {
+			accountId: pocket.id,
+			categoryId: income.id,
+			amount: 9999,
+			date,
+			deletedAt: new Date().toISOString(),
+		});
+
+		const goal = await createGoal(db, {
+			...baseGoal,
+			targetAmount: 5000,
+			linkedAccountId: pocket.id,
+		});
+		await addGoalContribution(db, {
+			goalId: goal.id,
+			accountId: wallet.id,
+			amount: 3000,
+			date,
+		});
+		await addGoalContribution(db, {
+			goalId: goal.id,
+			accountId: wallet.id,
+			amount: -500,
+			date,
+		});
+		const removed = await addGoalContribution(db, {
+			goalId: goal.id,
+			accountId: wallet.id,
+			amount: 10_000,
+			date,
+		});
+		await deleteGoalContribution(db, removed.id);
+
+		// 1000 + 500 − 200 + 700 = 2000 linked, 3000 − 500 = 2500 contributed
+		expect(await getGoalProgress(db, goal.id)).toEqual({
+			linkedBalance: 2000,
+			contributions: [{ accountId: wallet.id, total: 2500 }],
+			total: 4500,
+			isReached: false,
+		});
+
+		await addGoalContribution(db, {
+			goalId: goal.id,
+			accountId: wallet.id,
+			amount: 500,
+			date,
+		});
+		expect((await getGoalProgress(db, goal.id)).isReached).toBe(true);
+	});
+
+	test("converts to the goal's currency", async () => {
+		const pocket = await seedAccount(db, {
+			currency: "USD",
+			initialBalance: 10,
+		});
+		const wallet = await seedAccount(db, {
+			currency: "USD",
+			initialBalance: 100,
+		});
+		await db
+			.insert(exchangeRates)
+			.values({ base: "IDR", target: "USD", rate: 0.0000625, fetchedAt: 0 });
+
+		const goal = await createGoal(db, {
+			...baseGoal,
+			currency: "IDR",
+			linkedAccountId: pocket.id,
+		});
+		await addGoalContribution(db, {
+			goalId: goal.id,
+			accountId: wallet.id,
+			amount: 5,
+			date: midMonth(1),
+		});
+
+		expect(await getGoalProgress(db, goal.id)).toMatchObject({
+			linkedBalance: 160_000,
+			contributions: [{ accountId: wallet.id, total: 80_000 }],
+			total: 240_000,
+		});
 	});
 });
