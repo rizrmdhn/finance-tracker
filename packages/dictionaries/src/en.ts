@@ -467,6 +467,8 @@ export const en = {
 			removePayment: "Remove payment",
 			shortfall: "Pay the remaining {{amount}} from",
 			total: "Total: {{amount}}",
+			target: "Target: {{amount}}",
+			paymentsHelp: "Each amount is in its account's currency.",
 			category: "Expense category",
 			selectCategory: "Select an expense category",
 			confirm: "Mark as Purchased",
