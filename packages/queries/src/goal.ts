@@ -15,7 +15,7 @@ import type {
 	GoalUpdateInput,
 } from "@finance-tracker/schema";
 import { eachMonthOfInterval, max, startOfMonth, subMonths } from "date-fns";
-import { and, asc, desc, eq, gte, isNull, lt } from "drizzle-orm";
+import { and, asc, desc, eq, gte, isNull, lt, or } from "drizzle-orm";
 import { NotFoundError } from "./errors";
 import { getCachedRates } from "./exchange-rate";
 import { withTransaction } from "./utils/with-transaction";
@@ -326,4 +326,78 @@ export async function getGoalProgress(db: AnyDatabase, goalId: string) {
 		total,
 		isReached: total >= goal.targetAmount,
 	};
+}
+
+/**
+ * Monthly progress increase (goal currency), oldest first: net change of the linked account's
+ * balance + contributions in that month. Full months from the goal's creation month onward,
+ * current month excluded, at most the last 6.
+ */
+export async function getGoalMonthlyProgress(db: AnyDatabase, goalId: string) {
+	const goal = await getGoalById(db, goalId);
+
+	if (!goal) throw new NotFoundError("Goal", goalId);
+
+	const currentMonth = startOfMonth(new Date());
+	const from = max([
+		subMonths(currentMonth, 6),
+		startOfMonth(goal.createdAt ?? currentMonth),
+	]);
+
+	if (from >= currentMonth) return [];
+
+	const linkedAccountId = goal.linkedAccountId;
+	const [allAccounts, linkedTransactions, contributionRows, toGoalCurrency] =
+		await Promise.all([
+			db.query.accounts.findMany({
+				columns: { id: true, currency: true },
+			}),
+			linkedAccountId
+				? db.query.transactions.findMany({
+						where: and(
+							or(
+								eq(transactions.accountId, linkedAccountId),
+								eq(transactions.toAccountId, linkedAccountId),
+							),
+							gte(transactions.date, from.getTime()),
+							lt(transactions.date, currentMonth.getTime()),
+							isNull(transactions.deletedAt),
+						),
+						with: { category: true },
+					})
+				: Promise.resolve([]),
+			db.query.goalContributions.findMany({
+				where: and(
+					eq(goalContributions.goalId, goalId),
+					gte(goalContributions.date, from.getTime()),
+					lt(goalContributions.date, currentMonth.getTime()),
+					isNull(goalContributions.deletedAt),
+				),
+			}),
+			getCurrencyConverter(db, goal.currency),
+		]);
+
+	const currencies = new Map(allAccounts.map((a) => [a.id, a.currency]));
+	const increase = new Map<number, number>();
+	const add = (date: number, amount: number, accountId: string) => {
+		const month = startOfMonth(date).getTime();
+		const converted = toGoalCurrency(
+			amount,
+			currencies.get(accountId) ?? goal.currency,
+		);
+		increase.set(month, (increase.get(month) ?? 0) + converted);
+	};
+
+	if (linkedAccountId)
+		for (const tx of linkedTransactions)
+			add(tx.date, balanceDelta(tx, linkedAccountId), linkedAccountId);
+	for (const row of contributionRows) add(row.date, row.amount, row.accountId);
+
+	return eachMonthOfInterval({
+		start: from,
+		end: subMonths(currentMonth, 1),
+	}).map((monthStart) => ({
+		month: monthStart.getTime(),
+		amount: increase.get(monthStart.getTime()) ?? 0,
+	}));
 }
