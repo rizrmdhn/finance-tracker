@@ -1,8 +1,4 @@
-export const GOAL_STATUSES = [
-	"active",
-	"achieved",
-	"purchased",
-	"archived",
-] as const;
+// "Reached" is derived (progress >= targetAmount) and never stored
+export const GOAL_STATUSES = ["active", "purchased", "archived"] as const;
 
 export type GoalStatus = (typeof GOAL_STATUSES)[number];
