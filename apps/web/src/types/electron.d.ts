@@ -1,4 +1,8 @@
-import type { SyncErrorCode, SyncWithPeerResult } from "@/platform/types";
+import type {
+	SyncErrorCode,
+	SyncWithPeerResult,
+	UpdateStatus,
+} from "@/platform/types";
 
 type PlatformType = "desktop" | "mobile";
 
@@ -92,25 +96,10 @@ declare global {
 		};
 		electronUpdater: {
 			checkForUpdates: () => void;
-			onUpdateAvailable: (
-				callback: (info: {
-					version: string;
-					releaseNotes: string | null;
-				}) => void,
-			) => void;
-			onUpdateNotAvailable: (callback: () => void) => void;
-			onDownloadProgress: (
-				callback: (progress: {
-					percent: number;
-					transferred: number;
-					total: number;
-				}) => void,
-			) => void;
-			onUpdateDownloaded: (callback: () => void) => void;
-			onUpdateError: (callback: (message: string) => void) => void;
+			getStatus: () => Promise<UpdateStatus>;
+			onStatus: (callback: (status: UpdateStatus) => void) => () => void;
 			installUpdate: () => void;
 			setAllowPrerelease: (allow: boolean) => Promise<void>;
-			removeAllListeners: (channel: string) => void;
 		};
 	}
 }

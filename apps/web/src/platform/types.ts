@@ -13,29 +13,36 @@ export interface AppCapability {
 
 // ── Updater ───────────────────────────────────────────────────────────────────
 
-export interface UpdateInfo {
-	version: string;
-	releaseNotes: string | null;
-}
-
-export interface DownloadProgress {
-	percent: number;
-	transferred: number;
-	total: number;
-}
+// Keep in sync with UpdateStatus in apps/desktop/src/main/index.ts
+export type UpdateStatus =
+	| { state: "idle" }
+	| { state: "checking" }
+	| { state: "up-to-date" }
+	| { state: "error"; message: string }
+	| {
+			state: "available";
+			version: string;
+			releaseNotes: string | null;
+			/** Set when the update can't install itself (macOS): open it to download. */
+			manualDownloadUrl: string | null;
+	  }
+	| {
+			state: "downloading";
+			version: string;
+			releaseNotes: string | null;
+			percent: number;
+	  }
+	| { state: "downloaded"; version: string };
 
 export interface UpdaterCapability {
 	/** True only in the Electron runtime where the updater is available. */
 	readonly isSupported: boolean;
 	checkForUpdates(): void;
-	onUpdateAvailable(cb: (info: UpdateInfo) => void): void;
-	onUpdateNotAvailable(cb: () => void): void;
-	onUpdateError(cb: (message: string) => void): void;
-	onDownloadProgress(cb: (progress: DownloadProgress) => void): void;
-	onUpdateDownloaded(cb: () => void): void;
+	getStatus(): Promise<UpdateStatus>;
+	/** Subscribes to status changes; returns the unsubscribe function. */
+	onStatus(cb: (status: UpdateStatus) => void): () => void;
 	installUpdate(): void;
 	setAllowPrerelease(allow: boolean): Promise<void>;
-	removeAllListeners(channel: string): void;
 }
 
 // ── Data manager ──────────────────────────────────────────────────────────────

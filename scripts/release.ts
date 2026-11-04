@@ -8,14 +8,14 @@
 //   platform : desktop | mobile  (omit to release both with the same version)
 //   version  : x.y.z, x.y.z-beta.N, or major | minor | patch
 //
-//   A prerelease (e.g. 2.0.0-beta.1) keeps the base version (2.0.0) in the files
-//   and only the tag carries the suffix — the same way earlier betas were made.
-//   With both platforms, major/minor/patch bump from the higher of the two
-//   current versions so desktop and mobile stay aligned.
+//   A prerelease (e.g. 2.0.0-beta.1) is written to the files as-is, so an
+//   installed beta can tell it is older than the final 2.0.0 and update to it.
+//   major/minor/patch bump from the higher of the current versions (desktop and
+//   mobile stay aligned) and need a non-prerelease current version.
 //
 // Examples:
 //   bun run release 2.0.0               -> both to 2.0.0, tags desktop/v2.0.0 + mobile/v2.0.0
-//   bun run release 2.0.0-beta.1        -> files at 2.0.0, tags desktop/v2.0.0-beta.1 + mobile/v2.0.0-beta.1
+//   bun run release 2.0.0-beta.1        -> both to 2.0.0-beta.1, tags desktop/v2.0.0-beta.1 + mobile/v2.0.0-beta.1
 //   bun run release minor               -> both to the next minor version
 //   bun run release mobile patch        -> mobile only
 //   bun run release 2.0.0 --dry-run     -> print the plan, change nothing
@@ -35,6 +35,8 @@ const FILES = {
 const PLATFORMS = ["desktop", "mobile"] as const;
 type Platform = (typeof PLATFORMS)[number];
 type Semver = [number, number, number];
+/** `pre` is the prerelease suffix without its dash ("beta.1"), "" for a release. */
+type Version = { base: Semver; pre: string };
 
 function fail(message: string): never {
 	console.error(`✗ ${message}`);
@@ -58,14 +60,41 @@ function read(file: string) {
 	return readFileSync(resolve(ROOT, file), "utf-8");
 }
 
-function parseSemver(version: string): Semver {
-	const match = /^(\d+)\.(\d+)\.(\d+)$/.exec(version);
+function parseVersion(version: string): Version {
+	const match = /^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?$/.exec(version);
 	if (!match) fail(`Invalid version: ${version}`);
-	return [Number(match[1]), Number(match[2]), Number(match[3])];
+	return {
+		base: [Number(match[1]), Number(match[2]), Number(match[3])],
+		pre: match[4] ?? "",
+	};
 }
 
-function compare(a: Semver, b: Semver) {
-	return a[0] - b[0] || a[1] - b[1] || a[2] - b[2];
+function format({ base, pre }: Version) {
+	return pre ? `${base.join(".")}-${pre}` : base.join(".");
+}
+
+/** Semver precedence: 2.0.0-beta.1 < 2.0.0-beta.2 < 2.0.0 */
+function compare(a: Version, b: Version): number {
+	const baseDiff =
+		a.base[0] - b.base[0] || a.base[1] - b.base[1] || a.base[2] - b.base[2];
+	if (baseDiff !== 0 || a.pre === b.pre) return baseDiff;
+	if (!a.pre) return 1;
+	if (!b.pre) return -1;
+	const aIds = a.pre.split(".");
+	const bIds = b.pre.split(".");
+	for (let i = 0; i < Math.max(aIds.length, bIds.length); i++) {
+		const x = aIds[i];
+		const y = bIds[i];
+		if (x === undefined) return -1;
+		if (y === undefined) return 1;
+		if (x === y) continue;
+		const xNum = /^\d+$/.test(x);
+		const yNum = /^\d+$/.test(y);
+		if (xNum && yNum) return Number(x) - Number(y);
+		if (xNum !== yNum) return xNum ? -1 : 1;
+		return x < y ? -1 : 1;
+	}
+	return 0;
 }
 
 function bump([major, minor, patch]: Semver, kind: string): Semver {
@@ -107,34 +136,34 @@ if (!versionArg) {
 
 // ── Current state ────────────────────────────────────────────────────────────
 
-const current: Record<Platform, Semver> = {
-	desktop: parseSemver(JSON.parse(read(FILES.desktopPkg)).version),
-	mobile: parseSemver(JSON.parse(read(FILES.nativeAppJson)).expo.version),
+const current: Record<Platform, Version> = {
+	desktop: parseVersion(JSON.parse(read(FILES.desktopPkg)).version),
+	mobile: parseVersion(JSON.parse(read(FILES.nativeAppJson)).expo.version),
 };
 const currentVersionCode: number = JSON.parse(read(FILES.nativeAppJson)).expo
 	.android.versionCode;
 
-let base: Semver;
-let suffix = "";
+let next: Version;
 if (["major", "minor", "patch"].includes(versionArg)) {
 	const from = platforms
 		.map((p) => current[p])
 		.reduce((a, b) => (compare(a, b) >= 0 ? a : b));
-	base = bump(from, versionArg);
+	if (from.pre) {
+		fail(
+			`Current version is the prerelease ${format(from)} — pass an explicit version (e.g. ${from.base.join(".")}).`,
+		);
+	}
+	next = { base: bump(from.base, versionArg), pre: "" };
 } else {
-	const match = /^(\d+\.\d+\.\d+)(-[0-9A-Za-z.-]+)?$/.exec(versionArg);
-	if (!match) fail(`Invalid version: ${versionArg}`);
-	base = parseSemver(match[1] as string);
-	suffix = match[2] ?? "";
+	next = parseVersion(versionArg);
 }
 
-const baseStr = base.join(".");
-const tagVersion = `${baseStr}${suffix}`;
+const tagVersion = format(next);
 
 for (const p of platforms) {
-	if (compare(base, current[p]) < 0) {
+	if (compare(next, current[p]) < 0) {
 		fail(
-			`${p} is at ${current[p].join(".")}, refusing to go back to ${baseStr}`,
+			`${p} is at ${format(current[p])}, refusing to go back to ${tagVersion}`,
 		);
 	}
 }
@@ -179,19 +208,19 @@ for (const tag of tags) {
 
 const edits: { file: string; content: string }[] = [];
 
-if (platforms.includes("desktop") && compare(base, current.desktop) !== 0) {
+if (platforms.includes("desktop") && compare(next, current.desktop) !== 0) {
 	edits.push({
 		file: FILES.desktopPkg,
 		content: replaceOnce(
 			read(FILES.desktopPkg),
 			/"version":\s*"[^"]+"/,
-			`"version": "${baseStr}"`,
+			`"version": "${tagVersion}"`,
 		),
 	});
 }
 
 const mobileChanges =
-	platforms.includes("mobile") && compare(base, current.mobile) !== 0;
+	platforms.includes("mobile") && compare(next, current.mobile) !== 0;
 const nextVersionCode = mobileChanges
 	? currentVersionCode + 1
 	: currentVersionCode;
@@ -203,7 +232,7 @@ if (mobileChanges) {
 			content: replaceOnce(
 				read(FILES.nativePkg),
 				/"version":\s*"[^"]+"/,
-				`"version": "${baseStr}"`,
+				`"version": "${tagVersion}"`,
 			),
 		},
 		{
@@ -212,7 +241,7 @@ if (mobileChanges) {
 				replaceOnce(
 					read(FILES.nativeAppJson),
 					/"version":\s*"[^"]+"/,
-					`"version": "${baseStr}"`,
+					`"version": "${tagVersion}"`,
 				),
 				/"versionCode":\s*\d+/,
 				`"versionCode": ${nextVersionCode}`,
@@ -227,7 +256,7 @@ if (mobileChanges) {
 					`versionCode ${nextVersionCode}`,
 				),
 				/versionName "[^"]+"/,
-				`versionName "${baseStr}"`,
+				`versionName "${tagVersion}"`,
 			),
 		},
 	);
@@ -235,13 +264,13 @@ if (mobileChanges) {
 
 console.log(`Release ${tagVersion} on '${branch}'`);
 for (const p of platforms) {
-	const from = current[p].join(".");
+	const from = format(current[p]);
 	const note =
 		p === "mobile" && mobileChanges
 			? ` (versionCode ${currentVersionCode} → ${nextVersionCode})`
 			: "";
 	console.log(
-		`  ${p}: ${from === baseStr ? `${from} (unchanged)` : `${from} → ${baseStr}`}${note}`,
+		`  ${p}: ${from === tagVersion ? `${from} (unchanged)` : `${from} → ${tagVersion}`}${note}`,
 	);
 }
 console.log(`  tags: ${tags.join(", ")}`);
@@ -258,10 +287,10 @@ if (edits.length > 0) {
 		writeFileSync(resolve(ROOT, edit.file), edit.content);
 	}
 	const bumped = platforms
-		.filter((p) => compare(base, current[p]) !== 0)
+		.filter((p) => compare(next, current[p]) !== 0)
 		.join(" and ");
 	git(["add", ...edits.map((e) => e.file)]);
-	git(["commit", "-m", `build: bump ${bumped} to ${baseStr}`]);
+	git(["commit", "-m", `build: bump ${bumped} to ${tagVersion}`]);
 	run("git", ["push", "origin", branch]);
 }
 

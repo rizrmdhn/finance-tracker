@@ -3,7 +3,7 @@ import type {
 	SyncErrorCode,
 	SyncResult,
 } from "@finance-tracker/sync";
-import { contextBridge, ipcRenderer } from "electron";
+import { contextBridge, type IpcRendererEvent, ipcRenderer } from "electron";
 import { exposeElectronTRPC } from "trpc-electron/main";
 
 exposeElectronTRPC();
@@ -158,43 +158,23 @@ if (!("electronSync" in window)) {
 if (!("electronUpdater" in window)) {
 	contextBridge.exposeInMainWorld("electronUpdater", {
 		checkForUpdates: () => {
-			ipcRenderer.send("check-for-updates");
+			ipcRenderer.send("updater:check");
 		},
-		onUpdateAvailable: (
-			callback: (info: {
-				version: string;
-				releaseNotes: string | null;
-			}) => void,
-		) => {
-			ipcRenderer.on("update-available", (_event, info) => callback(info));
-		},
-		onUpdateNotAvailable: (callback: () => void) => {
-			ipcRenderer.on("update-not-available", () => callback());
-		},
-		onDownloadProgress: (
-			callback: (progress: {
-				percent: number;
-				transferred: number;
-				total: number;
-			}) => void,
-		) => {
-			ipcRenderer.on("download-progress", (_event, progress) =>
-				callback(progress),
-			);
-		},
-		onUpdateDownloaded: (callback: () => void) => {
-			ipcRenderer.on("update-downloaded", () => callback());
-		},
-		onUpdateError: (callback: (message: string) => void) => {
-			ipcRenderer.on("update-error", (_event, message) => callback(message));
+		getStatus: () => ipcRenderer.invoke("updater:get-status"),
+		// Returns its own unsubscribe so one component's cleanup can't drop
+		// another component's listener on the same channel.
+		onStatus: (callback: (status: unknown) => void) => {
+			const listener = (_event: IpcRendererEvent, status: unknown) =>
+				callback(status);
+			ipcRenderer.on("updater:status", listener);
+			return () => {
+				ipcRenderer.removeListener("updater:status", listener);
+			};
 		},
 		installUpdate: () => {
-			ipcRenderer.send("install-update");
+			ipcRenderer.send("updater:install");
 		},
 		setAllowPrerelease: (allow: boolean): Promise<void> =>
 			ipcRenderer.invoke("updater:set-prerelease", { allow }),
-		removeAllListeners: (channel: string) => {
-			ipcRenderer.removeAllListeners(channel);
-		},
 	});
 }

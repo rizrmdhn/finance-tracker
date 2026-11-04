@@ -9,13 +9,35 @@ interface GithubRelease {
 	body: string | null;
 }
 
-function isNewerVersion(latest: string, current: string): boolean {
-	const parse = (v: string) => v.split(".").map(Number);
-	const [lMaj, lMin, lPat] = parse(latest);
-	const [cMaj, cMin, cPat] = parse(current);
-	if (lMaj !== cMaj) return lMaj > cMaj;
-	if (lMin !== cMin) return lMin > cMin;
-	return lPat > cPat;
+/** Semver precedence: negative if a < b, positive if a > b, 0 if equal. */
+function compareVersions(a: string, b: string): number {
+	const [aBase, aPre] = a.split(/-(.*)/s);
+	const [bBase, bPre] = b.split(/-(.*)/s);
+	const aNums = aBase.split(".").map(Number);
+	const bNums = bBase.split(".").map(Number);
+	for (let i = 0; i < 3; i++) {
+		const diff = (aNums[i] ?? 0) - (bNums[i] ?? 0);
+		if (diff !== 0) return diff;
+	}
+	// A release (no suffix) ranks above its prereleases: 2.0.0 > 2.0.0-beta.1
+	if (!aPre || !bPre) return (aPre ? -1 : 0) - (bPre ? -1 : 0);
+	const aIds = aPre.split(".");
+	const bIds = bPre.split(".");
+	for (let i = 0; i < Math.max(aIds.length, bIds.length); i++) {
+		if (aIds[i] === undefined) return -1;
+		if (bIds[i] === undefined) return 1;
+		const aNum = /^\d+$/.test(aIds[i]);
+		const bNum = /^\d+$/.test(bIds[i]);
+		if (aNum && bNum) {
+			const diff = Number(aIds[i]) - Number(bIds[i]);
+			if (diff !== 0) return diff;
+		} else if (aNum !== bNum) {
+			return aNum ? -1 : 1;
+		} else if (aIds[i] !== bIds[i]) {
+			return aIds[i] < bIds[i] ? -1 : 1;
+		}
+	}
+	return 0;
 }
 
 export function useGithubRelease(repo: string, includePreRelease = false) {
@@ -37,12 +59,15 @@ export function useGithubRelease(repo: string, includePreRelease = false) {
 					assets: { name: string; browser_download_url: string }[];
 				}[];
 
-				const release = includePreRelease
-					? json[0]
-					: json.find((r) => !r.prerelease);
+				// Pick the highest version rather than trusting the API order:
+				// releases sharing a created_at come back in arbitrary order.
+				const release = json
+					.filter((r) => includePreRelease || !r.prerelease)
+					.map((r) => ({ ...r, version: r.tag_name.replace(/^mobile\/v/, "") }))
+					.sort((a, b) => compareVersions(b.version, a.version))[0];
 				if (!release) throw new Error("No release found");
 
-				const latestVersion = release.tag_name.replace(/^mobile\/v/, "");
+				const latestVersion = release.version;
 				const supportedAbis = Device.supportedCpuArchitectures ?? [];
 				const apkAsset =
 					supportedAbis
@@ -52,7 +77,8 @@ export function useGithubRelease(repo: string, includePreRelease = false) {
 
 				// If current version is unknown, assume up to date to avoid false positives
 				const isUpToDate =
-					!currentVersion || !isNewerVersion(latestVersion, currentVersion);
+					!currentVersion ||
+					compareVersions(latestVersion, currentVersion) <= 0;
 
 				return {
 					isUpToDate,
