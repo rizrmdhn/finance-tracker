@@ -57,6 +57,7 @@
 		"dev:android": "cd apps/native && expo run:android",
 		"dev:web": "turbo -F @finance-tracker/web dev",
 		"dev:desktop": "turbo -F @finance-tracker/desktop dev",
+		"dev:desktop-web": "turbo -F @finance-tracker/web -F @finance-tracker/desktop dev",
 		"desktop:build": "turbo -F @finance-tracker/desktop build",
 		"desktop:pack": "turbo -F @finance-tracker/desktop package",
 		"db:studio": "turbo -F @finance-tracker/db db:studio",

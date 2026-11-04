@@ -599,8 +599,10 @@ function createWindow() {
 		win.show();
 	});
 
-	if (isDev && process.env.ELECTRON_RENDERER_URL) {
-		win.loadURL(process.env.ELECTRON_RENDERER_URL);
+	const WEB_DEV_URL = process.env.WEB_DEV_URL ?? "http://localhost:3000";
+
+	if (isDev) {
+		win.loadURL(WEB_DEV_URL);
 		win.webContents.openDevTools();
 	} else {
 		win.removeMenu();

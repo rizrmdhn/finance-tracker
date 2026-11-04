@@ -29,6 +29,7 @@ import { useOptimisticMutation } from "@/lib/optimistic-update";
 import { pageHead } from "@/lib/page-head";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
+import { platform } from "@/platform";
 
 export const Route = createFileRoute("/settings")({
 	component: RouteComponent,
@@ -83,7 +84,7 @@ function RouteComponent() {
 		trpc.appSetting.set.mutationOptions(),
 		{
 			queryOptions: (variables) =>
-				trpc.appSetting.get.queryOptions({ key: variables.key }), // This will be overridden in the mutationFn, but we need it here for the optimistic update
+				trpc.appSetting.get.queryOptions({ key: variables.key }),
 			operation: {
 				type: "update",
 				getId: (variables) => variables.key,
@@ -104,7 +105,7 @@ function RouteComponent() {
 		trpc.appSetting.set.mutationOptions(),
 		{
 			queryOptions: () =>
-				trpc.appSetting.get.queryOptions({ key: "onboarding" }), // This will be overridden in the mutationFn, but we need it here for the optimistic update
+				trpc.appSetting.get.queryOptions({ key: "onboarding" }),
 			operation: {
 				type: "update",
 				getId: () => "onboarding",
@@ -122,13 +123,13 @@ function RouteComponent() {
 	);
 
 	useEffect(() => {
-		window.electronApp?.getVersion().then(setAppVersion);
+		platform.app.getVersion().then((v) => setAppVersion(v));
 	}, []);
 
 	useEffect(() => {
-		if (!window.electronUpdater) return;
+		if (!platform.updater.isSupported) return;
 
-		window.electronUpdater.onUpdateAvailable((info) => {
+		platform.updater.onUpdateAvailable((info) => {
 			setUpdateStatus({
 				state: "available",
 				version: info.version,
@@ -136,15 +137,15 @@ function RouteComponent() {
 			});
 		});
 
-		window.electronUpdater.onUpdateNotAvailable(() => {
+		platform.updater.onUpdateNotAvailable(() => {
 			setUpdateStatus({ state: "up-to-date" });
 		});
 
-		window.electronUpdater.onUpdateError((message) => {
+		platform.updater.onUpdateError((message) => {
 			setUpdateStatus({ state: "error", message });
 		});
 
-		window.electronUpdater.onDownloadProgress((progress) => {
+		platform.updater.onDownloadProgress((progress) => {
 			setUpdateStatus((prev) => ({
 				state: "downloading",
 				version:
@@ -159,28 +160,28 @@ function RouteComponent() {
 			}));
 		});
 
-		window.electronUpdater.onUpdateDownloaded(() => {
+		platform.updater.onUpdateDownloaded(() => {
 			setUpdateStatus({ state: "downloaded" });
 		});
 
 		return () => {
-			window.electronUpdater?.removeAllListeners("update-available");
-			window.electronUpdater?.removeAllListeners("update-not-available");
-			window.electronUpdater?.removeAllListeners("download-progress");
-			window.electronUpdater?.removeAllListeners("update-downloaded");
-			window.electronUpdater?.removeAllListeners("update-error");
+			platform.updater.removeAllListeners("update-available");
+			platform.updater.removeAllListeners("update-not-available");
+			platform.updater.removeAllListeners("download-progress");
+			platform.updater.removeAllListeners("update-downloaded");
+			platform.updater.removeAllListeners("update-error");
 		};
 	}, []);
 
 	function handleCheckForUpdates() {
 		setUpdateStatus({ state: "checking" });
-		window.electronUpdater?.checkForUpdates();
+		platform.updater.checkForUpdates();
 	}
 
 	async function handleBackup() {
 		setDataOpPending("backup");
 		try {
-			const result = await window.electronDataManager.backup();
+			const result = await platform.dataManager.backup();
 			if (result.cancelled) return;
 			if (result.success) {
 				globalSuccessToast(t("settings.toast.backupSuccess"));
@@ -197,7 +198,7 @@ function RouteComponent() {
 	async function handleRestore() {
 		setDataOpPending("restore");
 		try {
-			const result = await window.electronDataManager.restore();
+			const result = await platform.dataManager.restore();
 			if (result.cancelled) return;
 			if (result.success) {
 				globalSuccessToast(t("settings.toast.restoreSuccess"));
@@ -214,7 +215,7 @@ function RouteComponent() {
 	async function handleWipe() {
 		setDataOpPending("wipe");
 		try {
-			const result = await window.electronDataManager.wipe();
+			const result = await platform.dataManager.wipe();
 			if (result.success) {
 				await queryClient.invalidateQueries();
 				globalSuccessToast(t("settings.toast.wipeSuccess"));
@@ -325,121 +326,128 @@ function RouteComponent() {
 
 			<Separator />
 
-			{/* Advanced */}
+			{/* Advanced — updater section only shown in Electron */}
 			<section className="flex flex-col gap-4">
 				<h2 className="font-medium text-sm">{t("settings.advanced.title")}</h2>
 
-				<SettingRow
-					label={t("settings.advanced.updates")}
-					description={t("settings.advanced.updatesDescription")}
-				>
-					<Button
-						variant="outline"
-						onClick={handleCheckForUpdates}
-						disabled={
-							updateStatus.state === "checking" ||
-							updateStatus.state === "downloading" ||
-							updateStatus.state === "downloaded"
-						}
-					>
-						{updateStatus.state === "checking" ? (
-							<Loader2 className="size-4 animate-spin" />
-						) : (
-							<RefreshCw className="size-4" />
-						)}
-						{t("settings.advanced.checkUpdates")}
-					</Button>
-				</SettingRow>
-
-				{updateStatus.state === "up-to-date" && (
-					<div className="flex items-center gap-2 text-muted-foreground text-sm">
-						<CheckCircle2 className="size-4 text-green-500" />
-						{t("settings.advanced.upToDate")}
-					</div>
-				)}
-
-				{updateStatus.state === "error" && (
-					<div className="flex items-center gap-2 text-destructive text-sm">
-						<AlertCircle className="size-4" />
-						{t("settings.advanced.failedToCheck", {
-							message: updateStatus.message,
-						})}
-					</div>
-				)}
-
-				{(updateStatus.state === "available" ||
-					updateStatus.state === "downloading" ||
-					updateStatus.state === "downloaded") && (
-					<div className="flex flex-col gap-3 rounded-lg border p-4">
-						{updateStatus.state !== "downloaded" && (
-							<p className="font-medium text-sm">
-								{t("settings.advanced.versionAvailable", {
-									version: updateStatus.version,
-								})}
-							</p>
-						)}
-
-						{updateStatus.state !== "downloaded" &&
-							updateStatus.releaseNotes && (
-								<div
-									className="prose prose-sm dark:prose-invert max-h-48 overflow-y-auto text-muted-foreground text-xs"
-									dangerouslySetInnerHTML={{
-										__html: updateStatus.releaseNotes,
-									}}
-								/>
-							)}
-
-						{updateStatus.state === "available" && (
-							<p className="text-muted-foreground text-xs">
-								{t("settings.advanced.downloadingAuto")}
-							</p>
-						)}
-
-						{updateStatus.state === "downloading" && (
-							<Progress
-								value={updateStatus.percent}
-								className="flex-col gap-1.5"
+				{platform.updater.isSupported && (
+					<>
+						<SettingRow
+							label={t("settings.advanced.updates")}
+							description={t("settings.advanced.updatesDescription")}
+						>
+							<Button
+								variant="outline"
+								onClick={handleCheckForUpdates}
+								disabled={
+									updateStatus.state === "checking" ||
+									updateStatus.state === "downloading" ||
+									updateStatus.state === "downloaded"
+								}
 							>
-								<div className="flex w-full items-center justify-between">
-									<ProgressLabel>
-										{t("settings.advanced.downloading")}
-									</ProgressLabel>
-									<span className="text-muted-foreground text-xs tabular-nums">
-										{updateStatus.percent}%
-									</span>
-								</div>
-							</Progress>
-						)}
+								{updateStatus.state === "checking" ? (
+									<Loader2 className="size-4 animate-spin" />
+								) : (
+									<RefreshCw className="size-4" />
+								)}
+								{t("settings.advanced.checkUpdates")}
+							</Button>
+						</SettingRow>
 
-						{updateStatus.state === "downloaded" && (
-							<div className="flex items-center justify-between">
-								<div className="flex items-center gap-2 text-sm">
-									<CheckCircle2 className="size-4 text-green-500" />
-									{t("settings.advanced.readyToInstall")}
-								</div>
-								<Button
-									size="sm"
-									onClick={() => window.electronUpdater?.installUpdate()}
-								>
-									{t("settings.advanced.restartInstall")}
-								</Button>
+						{updateStatus.state === "up-to-date" && (
+							<div className="flex items-center gap-2 text-muted-foreground text-sm">
+								<CheckCircle2 className="size-4 text-green-500" />
+								{t("settings.advanced.upToDate")}
 							</div>
 						)}
-					</div>
-				)}
 
-				<SettingRow
-					label={t("settings.advanced.preRelease")}
-					description={t("settings.advanced.preReleaseDescription")}
-				>
-					<Switch
-						checked={isPreRelease}
-						onCheckedChange={async (checked) => {
-							await setSettingMutation.mutateAsync({ key: "pre_release", value: checked ? "true" : "false" });
-							await window.electronUpdater?.setAllowPrerelease(checked);
-						}}
-					/>
-				</SettingRow>
+						{updateStatus.state === "error" && (
+							<div className="flex items-center gap-2 text-destructive text-sm">
+								<AlertCircle className="size-4" />
+								{t("settings.advanced.failedToCheck", {
+									message: updateStatus.message,
+								})}
+							</div>
+						)}
+
+						{(updateStatus.state === "available" ||
+							updateStatus.state === "downloading" ||
+							updateStatus.state === "downloaded") && (
+							<div className="flex flex-col gap-3 rounded-lg border p-4">
+								{updateStatus.state !== "downloaded" && (
+									<p className="font-medium text-sm">
+										{t("settings.advanced.versionAvailable", {
+											version: updateStatus.version,
+										})}
+									</p>
+								)}
+
+								{updateStatus.state !== "downloaded" &&
+									updateStatus.releaseNotes && (
+										<div
+											className="prose prose-sm dark:prose-invert max-h-48 overflow-y-auto text-muted-foreground text-xs"
+											dangerouslySetInnerHTML={{
+												__html: updateStatus.releaseNotes,
+											}}
+										/>
+									)}
+
+								{updateStatus.state === "available" && (
+									<p className="text-muted-foreground text-xs">
+										{t("settings.advanced.downloadingAuto")}
+									</p>
+								)}
+
+								{updateStatus.state === "downloading" && (
+									<Progress
+										value={updateStatus.percent}
+										className="flex-col gap-1.5"
+									>
+										<div className="flex w-full items-center justify-between">
+											<ProgressLabel>
+												{t("settings.advanced.downloading")}
+											</ProgressLabel>
+											<span className="text-muted-foreground text-xs tabular-nums">
+												{updateStatus.percent}%
+											</span>
+										</div>
+									</Progress>
+								)}
+
+								{updateStatus.state === "downloaded" && (
+									<div className="flex items-center justify-between">
+										<div className="flex items-center gap-2 text-sm">
+											<CheckCircle2 className="size-4 text-green-500" />
+											{t("settings.advanced.readyToInstall")}
+										</div>
+										<Button
+											size="sm"
+											onClick={() => platform.updater.installUpdate()}
+										>
+											{t("settings.advanced.restartInstall")}
+										</Button>
+									</div>
+								)}
+							</div>
+						)}
+
+						<SettingRow
+							label={t("settings.advanced.preRelease")}
+							description={t("settings.advanced.preReleaseDescription")}
+						>
+							<Switch
+								checked={isPreRelease}
+								onCheckedChange={async (checked) => {
+									await setSettingMutation.mutateAsync({
+										key: "pre_release",
+										value: checked ? "true" : "false",
+									});
+									await platform.updater.setAllowPrerelease(checked);
+								}}
+							/>
+						</SettingRow>
+					</>
+				)}
 
 				<SettingRow
 					label={t("settings.advanced.resetOnboarding")}
@@ -460,61 +468,66 @@ function RouteComponent() {
 				</SettingRow>
 			</section>
 
-			<Separator />
+			{/* Data Management — backup/restore/wipe only in Electron */}
+			{platform.dataManager.supportsNativeDialogs && (
+				<>
+					<Separator />
+					<section className="flex flex-col gap-4">
+						<h2 className="font-medium text-sm">
+							{t("settings.dataManagement.title")}
+						</h2>
 
-			{/* Data Management */}
-			<section className="flex flex-col gap-4">
-				<h2 className="font-medium text-sm">
-					{t("settings.dataManagement.title")}
-				</h2>
+						<SettingRow
+							label={t("settings.dataManagement.backup")}
+							description={t("settings.dataManagement.backupDescription")}
+						>
+							<Button
+								variant="outline"
+								onClick={handleBackup}
+								disabled={dataOpPending !== null}
+							>
+								{dataOpPending === "backup" && (
+									<Loader2 className="size-4 animate-spin" />
+								)}
+								{t("settings.dataManagement.backup")}
+							</Button>
+						</SettingRow>
 
-				<SettingRow
-					label={t("settings.dataManagement.backup")}
-					description={t("settings.dataManagement.backupDescription")}
-				>
-					<Button
-						variant="outline"
-						onClick={handleBackup}
-						disabled={dataOpPending !== null}
-					>
-						{dataOpPending === "backup" && (
-							<Loader2 className="size-4 animate-spin" />
-						)}
-						{t("settings.dataManagement.backup")}
-					</Button>
-				</SettingRow>
+						<SettingRow
+							label={t("settings.dataManagement.restore")}
+							description={t("settings.dataManagement.restoreDescription")}
+						>
+							<Button
+								variant="outline"
+								onClick={handleRestore}
+								disabled={dataOpPending !== null}
+							>
+								{dataOpPending === "restore" && (
+									<Loader2 className="size-4 animate-spin" />
+								)}
+								{t("settings.dataManagement.restore")}
+							</Button>
+						</SettingRow>
 
-				<SettingRow
-					label={t("settings.dataManagement.restore")}
-					description={t("settings.dataManagement.restoreDescription")}
-				>
-					<Button
-						variant="outline"
-						onClick={handleRestore}
-						disabled={dataOpPending !== null}
-					>
-						{dataOpPending === "restore" && (
-							<Loader2 className="size-4 animate-spin" />
-						)}
-						{t("settings.dataManagement.restore")}
-					</Button>
-				</SettingRow>
-
-				<SettingRow
-					label={t("settings.dataManagement.wipe")}
-					description={t("settings.dataManagement.wipeDescription")}
-				>
-					<ConfirmationDialog
-						trigger={t("settings.dataManagement.wipe")}
-						title={t("settings.dataManagement.wipeConfirmTitle")}
-						description={t("settings.dataManagement.wipeConfirmDescription")}
-						confirmText={t("settings.dataManagement.wipeConfirmAction")}
-						variant="destructive"
-						isLoading={dataOpPending === "wipe"}
-						onConfirm={handleWipe}
-					/>
-				</SettingRow>
-			</section>
+						<SettingRow
+							label={t("settings.dataManagement.wipe")}
+							description={t("settings.dataManagement.wipeDescription")}
+						>
+							<ConfirmationDialog
+								trigger={t("settings.dataManagement.wipe")}
+								title={t("settings.dataManagement.wipeConfirmTitle")}
+								description={t(
+									"settings.dataManagement.wipeConfirmDescription",
+								)}
+								confirmText={t("settings.dataManagement.wipeConfirmAction")}
+								variant="destructive"
+								isLoading={dataOpPending === "wipe"}
+								onConfirm={handleWipe}
+							/>
+						</SettingRow>
+					</section>
+				</>
+			)}
 
 			{appVersion && (
 				<>

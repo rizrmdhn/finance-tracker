@@ -26,19 +26,12 @@ import { useTranslation } from "react-i18next";
 import { pageHead } from "@/lib/page-head";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { trpc } from "@/lib/trpc";
+import { platform, type DiscoveredPeer } from "@/platform";
 
 export const Route = createFileRoute("/sync")({
 	component: RouteComponent,
 	head: () => pageHead("Sync", "Manage device pairing and local sync."),
 });
-
-interface DiscoveredPeer {
-	deviceId: string;
-	deviceName: string;
-	platform: "desktop" | "mobile";
-	host: string;
-	port: number;
-}
 
 type PairingDialogState =
 	| { open: false }
@@ -94,13 +87,14 @@ function RouteComponent() {
 	);
 
 	useEffect(() => {
-		window.electronSync?.getDeviceInfo().then(setDeviceInfo);
+		if (!platform.sync.isSupported) return;
+		platform.sync.getDeviceInfo().then(setDeviceInfo);
 	}, []);
 
 	useEffect(() => {
-		if (!window.electronSync) return;
+		if (!platform.sync.isSupported) return;
 
-		window.electronSync.onPeerDiscovered((peer) => {
+		platform.sync.onPeerDiscovered((peer) => {
 			setDiscoveredPeers((prev) => {
 				const next = new Map(prev);
 				next.set(peer.deviceId, peer);
@@ -108,7 +102,7 @@ function RouteComponent() {
 			});
 		});
 
-		window.electronSync.onPeerLost(({ deviceId }) => {
+		platform.sync.onPeerLost(({ deviceId }) => {
 			setDiscoveredPeers((prev) => {
 				const next = new Map(prev);
 				next.delete(deviceId);
@@ -116,7 +110,7 @@ function RouteComponent() {
 			});
 		});
 
-		window.electronSync.onPairChallenge(({ deviceId, deviceName, sasCode }) => {
+		platform.sync.onPairChallenge(({ deviceId, deviceName, sasCode }) => {
 			setPairingDeviceId(deviceId);
 			setPairingDialog({
 				open: true,
@@ -127,7 +121,7 @@ function RouteComponent() {
 			});
 		});
 
-		window.electronSync.onPairRequestReceived(
+		platform.sync.onPairRequestReceived(
 			({ deviceId, deviceName, platform: _platform, sasCode }) => {
 				setPairingDeviceId(deviceId);
 				setPairingDialog({
@@ -140,61 +134,58 @@ function RouteComponent() {
 			},
 		);
 
-		window.electronSync.onPairConfirmed(async ({ deviceId: _deviceId }) => {
+		platform.sync.onPairConfirmed(async ({ deviceId: _deviceId }) => {
 			setPairingDialog({ open: false });
 			setPairingDeviceId(null);
 			await queryClient.invalidateQueries(trpc.peer.list.queryOptions());
 			globalSuccessToast(t("sync.toast.paired"));
 		});
 
-		window.electronSync.onPairRejected(() => {
+		platform.sync.onPairRejected(() => {
 			setPairingDialog({ open: false });
 			setPairingDeviceId(null);
 			globalErrorToast(t("sync.toast.pairRejected"));
 		});
 
-		window.electronSync.onSyncComplete(async () => {
+		platform.sync.onSyncComplete(async () => {
 			await queryClient.invalidateQueries();
 		});
 
 		return () => {
-			window.electronSync?.removeAllListeners("sync:peer-discovered");
-			window.electronSync?.removeAllListeners("sync:peer-lost");
-			window.electronSync?.removeAllListeners("sync:pair-challenge");
-			window.electronSync?.removeAllListeners("sync:pair-request-received");
-			window.electronSync?.removeAllListeners("sync:pair-confirmed");
-			window.electronSync?.removeAllListeners("sync:pair-rejected");
-			window.electronSync?.removeAllListeners("sync:sync-complete");
+			platform.sync.removeAllListeners("sync:peer-discovered");
+			platform.sync.removeAllListeners("sync:peer-lost");
+			platform.sync.removeAllListeners("sync:pair-challenge");
+			platform.sync.removeAllListeners("sync:pair-request-received");
+			platform.sync.removeAllListeners("sync:pair-confirmed");
+			platform.sync.removeAllListeners("sync:pair-rejected");
+			platform.sync.removeAllListeners("sync:sync-complete");
 		};
 	}, [queryClient, t]);
 
 	async function handleStartScanning() {
 		setIsScanning(true);
 		setDiscoveredPeers(new Map());
-		await window.electronSync?.startDiscovery();
+		await platform.sync.startDiscovery();
 	}
 
 	async function handleStopScanning() {
-		await window.electronSync?.stopDiscovery();
+		await platform.sync.stopDiscovery();
 		setIsScanning(false);
 	}
 
 	async function handlePair(peer: DiscoveredPeer) {
 		setPairingDeviceId(peer.deviceId);
-		await window.electronSync?.initiatePair({
-			host: peer.host,
-			port: peer.port,
-		});
+		await platform.sync.initiatePair({ host: peer.host, port: peer.port });
 	}
 
 	async function handleConfirmPair() {
 		if (!pairingDialog.open) return;
-		await window.electronSync?.confirmPair(pairingDialog.deviceId);
+		await platform.sync.confirmPair(pairingDialog.deviceId);
 	}
 
 	async function handleRejectPair() {
 		if (!pairingDialog.open) return;
-		await window.electronSync?.rejectPair(pairingDialog.deviceId);
+		await platform.sync.rejectPair(pairingDialog.deviceId);
 		setPairingDialog({ open: false });
 		setPairingDeviceId(null);
 	}
@@ -202,10 +193,7 @@ function RouteComponent() {
 	async function handleSyncNearby(peer: DiscoveredPeer) {
 		setSyncingDeviceId(peer.deviceId);
 		try {
-			await window.electronSync?.syncWithPeer({
-				host: peer.host,
-				port: peer.port,
-			});
+			await platform.sync.syncWithPeer({ host: peer.host, port: peer.port });
 			updateHostMutation.mutate({
 				deviceId: peer.deviceId,
 				host: `${peer.host}:${peer.port}`,
@@ -221,7 +209,6 @@ function RouteComponent() {
 
 	async function handleSyncTrusted(peer: (typeof trustedPeers)[number]) {
 		const storedHost = peer.syncPeer?.lastKnownHost;
-		// Also check if this peer is currently visible via mDNS
 		const discovered = discoveredPeers.get(peer.deviceId);
 		const host =
 			storedHost ??
@@ -241,7 +228,7 @@ function RouteComponent() {
 
 		setSyncingDeviceId(peer.deviceId);
 		try {
-			await window.electronSync?.syncWithPeer({ host: ip, port });
+			await platform.sync.syncWithPeer({ host: ip, port });
 			updateHostMutation.mutate({ deviceId: peer.deviceId, host });
 			await queryClient.invalidateQueries();
 			globalSuccessToast(t("sync.toast.syncComplete"));
@@ -267,7 +254,7 @@ function RouteComponent() {
 		setSyncIpInput("");
 
 		try {
-			await window.electronSync?.syncWithPeer({ host: ip, port });
+			await platform.sync.syncWithPeer({ host: ip, port });
 			updateHostMutation.mutate({ deviceId: capturedDeviceId, host });
 			await queryClient.invalidateQueries();
 			globalSuccessToast(t("sync.toast.syncComplete"));
@@ -289,8 +276,8 @@ function RouteComponent() {
 
 			<Separator />
 
-			{/* This Device */}
-			{deviceInfo && (
+			{/* This Device — only shown in Electron */}
+			{platform.sync.isSupported && deviceInfo && (
 				<section className="flex flex-col gap-3">
 					<h2 className="font-medium text-sm">{t("sync.thisDevice")}</h2>
 					<div className="flex items-center gap-3 rounded-lg border p-4">
@@ -310,9 +297,9 @@ function RouteComponent() {
 				</section>
 			)}
 
-			<Separator />
+			{platform.sync.isSupported && <Separator />}
 
-			{/* Trusted Devices */}
+			{/* Trusted Devices — always shown (data comes from tRPC) */}
 			<section className="flex flex-col gap-3">
 				<h2 className="font-medium text-sm">{t("sync.trustedDevices")}</h2>
 				{isLoading ? (
@@ -349,19 +336,21 @@ function RouteComponent() {
 								</div>
 								<div className="ml-auto flex items-center gap-2">
 									<Badge variant="outline">{t(`sync.${peer.platform}`)}</Badge>
-									<Button
-										size="sm"
-										variant="outline"
-										onClick={() => handleSyncTrusted(peer)}
-										disabled={syncingDeviceId === peer.deviceId}
-									>
-										{syncingDeviceId === peer.deviceId ? (
-											<Loader2 className="size-4 animate-spin" />
-										) : (
-											<RefreshCw className="size-4" />
-										)}
-										{t("sync.syncNow")}
-									</Button>
+									{platform.sync.isSupported && (
+										<Button
+											size="sm"
+											variant="outline"
+											onClick={() => handleSyncTrusted(peer)}
+											disabled={syncingDeviceId === peer.deviceId}
+										>
+											{syncingDeviceId === peer.deviceId ? (
+												<Loader2 className="size-4 animate-spin" />
+											) : (
+												<RefreshCw className="size-4" />
+											)}
+											{t("sync.syncNow")}
+										</Button>
+									)}
 									<Button
 										variant="ghost"
 										size="sm"
@@ -380,99 +369,109 @@ function RouteComponent() {
 				)}
 			</section>
 
-			<Separator />
+			{/* Nearby Devices — only in Electron */}
+			{platform.sync.isSupported && (
+				<>
+					<Separator />
 
-			{/* Nearby Devices (for discovery & pairing new devices) */}
-			<section className="flex flex-col gap-3">
-				<div className="flex items-center justify-between">
-					<h2 className="font-medium text-sm">{t("sync.nearbyDevices")}</h2>
-					<Button
-						variant="outline"
-						size="sm"
-						onClick={isScanning ? handleStopScanning : handleStartScanning}
-					>
-						{isScanning ? (
-							<>
-								<WifiOff className="size-4" />
-								{t("sync.stopScanning")}
-							</>
-						) : (
-							<>
-								<Wifi className="size-4" />
-								{t("sync.startScanning")}
-							</>
-						)}
-					</Button>
-				</div>
-
-				{isScanning && discoveredPeers.size === 0 && (
-					<div className="flex items-center gap-2 text-muted-foreground text-sm">
-						<Loader2 className="size-4 animate-spin" />
-						{t("sync.scanningForDevices")}
-					</div>
-				)}
-
-				{!isScanning && discoveredPeers.size === 0 && (
-					<p className="text-muted-foreground text-sm">
-						{t("sync.noNearbyDevices")}
-					</p>
-				)}
-
-				{discoveredPeers.size > 0 && (
-					<div className="flex flex-col gap-2">
-						{[...discoveredPeers.values()].map((peer) => (
-							<div
-								key={peer.deviceId}
-								className="flex items-center gap-3 rounded-lg border p-4"
+					<section className="flex flex-col gap-3">
+						<div className="flex items-center justify-between">
+							<h2 className="font-medium text-sm">
+								{t("sync.nearbyDevices")}
+							</h2>
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={
+									isScanning ? handleStopScanning : handleStartScanning
+								}
 							>
-								{peer.platform === "desktop" ? (
-									<Monitor className="size-5 text-muted-foreground" />
+								{isScanning ? (
+									<>
+										<WifiOff className="size-4" />
+										{t("sync.stopScanning")}
+									</>
 								) : (
-									<Smartphone className="size-5 text-muted-foreground" />
+									<>
+										<Wifi className="size-4" />
+										{t("sync.startScanning")}
+									</>
 								)}
-								<div className="flex flex-col gap-0.5">
-									<span className="font-medium text-sm">{peer.deviceName}</span>
-									<span className="font-mono text-muted-foreground text-xs">
-										{peer.host}:{peer.port}
-									</span>
-								</div>
-								<Badge variant="outline" className="mr-2 ml-auto">
-									{t(`sync.${peer.platform}`)}
-								</Badge>
-								{trustedDeviceIds.has(peer.deviceId) ? (
-									<div className="flex items-center gap-2">
-										<Badge variant="secondary">{t("sync.paired")}</Badge>
-										<Button
-											size="sm"
-											variant="outline"
-											onClick={() => handleSyncNearby(peer)}
-											disabled={syncingDeviceId === peer.deviceId}
-										>
-											{syncingDeviceId === peer.deviceId ? (
-												<Loader2 className="size-4 animate-spin" />
-											) : (
-												<RefreshCw className="size-4" />
-											)}
-											{t("sync.syncNow")}
-										</Button>
-									</div>
-								) : (
-									<Button
-										size="sm"
-										onClick={() => handlePair(peer)}
-										disabled={pairingDeviceId === peer.deviceId}
-									>
-										{pairingDeviceId === peer.deviceId ? (
-											<Loader2 className="size-4 animate-spin" />
-										) : null}
-										{t("sync.pair")}
-									</Button>
-								)}
+							</Button>
+						</div>
+
+						{isScanning && discoveredPeers.size === 0 && (
+							<div className="flex items-center gap-2 text-muted-foreground text-sm">
+								<Loader2 className="size-4 animate-spin" />
+								{t("sync.scanningForDevices")}
 							</div>
-						))}
-					</div>
-				)}
-			</section>
+						)}
+
+						{!isScanning && discoveredPeers.size === 0 && (
+							<p className="text-muted-foreground text-sm">
+								{t("sync.noNearbyDevices")}
+							</p>
+						)}
+
+						{discoveredPeers.size > 0 && (
+							<div className="flex flex-col gap-2">
+								{[...discoveredPeers.values()].map((peer) => (
+									<div
+										key={peer.deviceId}
+										className="flex items-center gap-3 rounded-lg border p-4"
+									>
+										{peer.platform === "desktop" ? (
+											<Monitor className="size-5 text-muted-foreground" />
+										) : (
+											<Smartphone className="size-5 text-muted-foreground" />
+										)}
+										<div className="flex flex-col gap-0.5">
+											<span className="font-medium text-sm">
+												{peer.deviceName}
+											</span>
+											<span className="font-mono text-muted-foreground text-xs">
+												{peer.host}:{peer.port}
+											</span>
+										</div>
+										<Badge variant="outline" className="mr-2 ml-auto">
+											{t(`sync.${peer.platform}`)}
+										</Badge>
+										{trustedDeviceIds.has(peer.deviceId) ? (
+											<div className="flex items-center gap-2">
+												<Badge variant="secondary">{t("sync.paired")}</Badge>
+												<Button
+													size="sm"
+													variant="outline"
+													onClick={() => handleSyncNearby(peer)}
+													disabled={syncingDeviceId === peer.deviceId}
+												>
+													{syncingDeviceId === peer.deviceId ? (
+														<Loader2 className="size-4 animate-spin" />
+													) : (
+														<RefreshCw className="size-4" />
+													)}
+													{t("sync.syncNow")}
+												</Button>
+											</div>
+										) : (
+											<Button
+												size="sm"
+												onClick={() => handlePair(peer)}
+												disabled={pairingDeviceId === peer.deviceId}
+											>
+												{pairingDeviceId === peer.deviceId ? (
+													<Loader2 className="size-4 animate-spin" />
+												) : null}
+												{t("sync.pair")}
+											</Button>
+										)}
+									</div>
+								))}
+							</div>
+						)}
+					</section>
+				</>
+			)}
 
 			{/* Pairing Dialog */}
 			<Dialog
@@ -503,7 +502,6 @@ function RouteComponent() {
 							</p>
 							<div className="flex gap-2">
 								{pairingDialog.sasCode.split("").map((digit, i) => (
-									// index key is fine here — static 6-digit code, never reordered
 									<div
 										key={i}
 										className="flex h-14 w-10 items-center justify-center rounded-lg border-2 font-bold font-mono text-2xl"
@@ -546,7 +544,7 @@ function RouteComponent() {
 				</DialogContent>
 			</Dialog>
 
-			{/* Sync IP Dialog (for trusted devices without stored host) */}
+			{/* Sync IP Dialog */}
 			<Dialog
 				open={syncIpDialog.open}
 				onOpenChange={(open) => {

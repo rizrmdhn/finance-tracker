@@ -28,6 +28,7 @@ import {
 } from "@/lib/toast";
 import { serializeToCSV, serializeToJSON } from "@/lib/transaction-io";
 import { trpc, trpcClient } from "@/lib/trpc";
+import { platform } from "@/platform";
 import CreateTransactionDialog from "./-components/create-transaction-dialog";
 import EditTransactionDialog from "./-components/edit-transaction-dialog";
 import ImportTransactionsDialog from "./-components/import-transactions-dialog";
@@ -135,7 +136,7 @@ function TransactionsComponent() {
 			const dateStr = format(new Date(), "yyyy-MM-dd");
 			const defaultName = `transactions-${dateStr}.${exportFormat}`;
 
-			const result = await window.electronDataManager.exportFile({
+			const result = await platform.dataManager.exportFile({
 				content,
 				format: exportFormat,
 				defaultName,
@@ -156,7 +157,7 @@ function TransactionsComponent() {
 	}
 
 	async function handleImport() {
-		const result = await window.electronDataManager.importFile();
+		const result = await platform.dataManager.importFile();
 		if (result.cancelled) return;
 		if (!result.success || !result.content || !result.filename) {
 			if (result.error) globalErrorToast(`Import failed: ${result.error}`);
