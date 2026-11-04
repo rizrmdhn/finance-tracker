@@ -1,29 +1,20 @@
 import {
 	APP_SETTINGS_DEFAULTS,
-	CURRENCY_LOCALE_MAP,
 	type GoalErrorCode,
 	LANGUAGE_LOCALE_MAP,
-	type SupportedCurrency,
 	type SupportedLanguage,
 } from "@finance-tracker/constants";
-import type { DurationParts } from "@finance-tracker/utils";
+import {
+	type DurationParts,
+	getGoalAccountOptions,
+	getGoalAllocationDefaults,
+} from "@finance-tracker/utils";
 import { useQuery } from "@tanstack/react-query";
 import type { inferOutput } from "@trpc/tanstack-react-query";
 import { useTranslation } from "react-i18next";
 import { trpc } from "@/lib/trpc";
 
 export type GoalOverviewItem = inferOutput<typeof trpc.goal.overview>[number];
-
-const NO_DECIMAL_CURRENCIES: SupportedCurrency[] = ["IDR", "JPY"];
-
-/** Formats an amount in its own currency (e.g. a goal's), with that currency's locale. */
-export function formatAmount(amount: number, currency: SupportedCurrency) {
-	return new Intl.NumberFormat(CURRENCY_LOCALE_MAP[currency], {
-		style: "currency",
-		currency,
-		maximumFractionDigits: NO_DECIMAL_CURRENCIES.includes(currency) ? 0 : 2,
-	}).format(amount);
-}
 
 /** Duration and date texts for goal estimates, in the app's language. */
 export function useGoalText() {
@@ -98,47 +89,19 @@ export function useGoalText() {
 	return { duration, timeLeft, formatMonth, formatDate };
 }
 
-/**
- * Accounts with their goal allocation state. Rule 1: an account can be linked when no other
- * active goal links it and nothing is set aside from it. Linked accounts can't fund goals.
- */
+/** Accounts with their goal allocation state (see `getGoalAccountOptions`). */
 export function useGoalAccounts(goalId?: string) {
 	const { data: accounts = [] } = useQuery(trpc.account.list.queryOptions());
 	const { data: allocations = [] } = useQuery(
 		trpc.goal.getAccountAllocations.queryOptions(),
 	);
-
-	const byAccount = new Map(allocations.map((a) => [a.accountId, a]));
-	return accounts
-		.filter((account) => !account.deletedAt)
-		.map((account) => {
-			const allocation = byAccount.get(account.id);
-			const linkedElsewhere =
-				!!allocation?.isLinked && allocation.linkedGoalId !== goalId;
-			return {
-				account,
-				freeBalance: allocation?.freeBalance ?? 0,
-				isLinked: allocation?.isLinked ?? false,
-				canLink: !linkedElsewhere && (allocation?.allocated ?? 0) <= 0,
-			};
-		});
+	return getGoalAccountOptions(accounts, allocations, goalId);
 }
 
-/**
- * Rule 5: the share of the surplus other active goals leave free (≥ 0), and the priority that
- * puts a new goal last.
- */
+/** Free allocation % and the next priority (see `getGoalAllocationDefaults`). */
 export function useGoalAllocation(goalId?: string) {
 	const { data: goals = [] } = useQuery(trpc.goal.list.queryOptions());
-	const others = goals.filter((g) => g.status === "active" && g.id !== goalId);
-
-	return {
-		availablePercent: Math.max(
-			100 - others.reduce((sum, g) => sum + g.allocationPercent, 0),
-			0,
-		),
-		nextPriority: Math.max(-1, ...others.map((g) => g.priority)) + 1,
-	};
+	return getGoalAllocationDefaults(goals, goalId);
 }
 
 /** The translated goal rule error, or `fallback(message)` for any other error. */

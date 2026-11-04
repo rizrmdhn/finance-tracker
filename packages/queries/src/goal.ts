@@ -18,6 +18,7 @@ import type {
 	GoalUpdateInput,
 } from "@finance-tracker/schema";
 import {
+	createCurrencyConverter,
 	estimateGoalCompletion,
 	getDurationParts,
 	getTargetDateGap,
@@ -56,15 +57,8 @@ async function getCurrencyConverter(
 	db: AnyDatabase,
 	target: SupportedCurrency,
 ) {
-	// 1 target = rate source, so source → target is amount / rate
-	const rates = new Map(
-		(await getCachedRates(db, target)).map((r) => [r.target, r.rate]),
-	);
-	return (amount: number, source: SupportedCurrency) => {
-		if (source === target) return amount;
-		const rate = rates.get(source);
-		return rate ? amount / rate : amount;
-	};
+	return createCurrencyConverter(target, await getCachedRates(db, target))
+		.toBase;
 }
 
 /** Effect of a transaction on `accountId`'s balance (same rules as getAccountsWithBalance). */

@@ -27,6 +27,7 @@ import {
 	SelectValue,
 } from "@finance-tracker/ui/components/select";
 import { Spinner } from "@finance-tracker/ui/components/spinner";
+import { formatCurrency } from "@finance-tracker/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { useEffect } from "react";
@@ -45,7 +46,6 @@ import {
 	TargetDatePicker,
 } from "./goal-form-fields";
 import {
-	formatAmount,
 	useGoalAccounts,
 	useGoalAllocation,
 	useGoalErrorMessage,
@@ -361,7 +361,7 @@ export default function CreateGoalDialog({
 														>
 															<AccountOption account={account} />
 															<span className="ml-auto text-muted-foreground">
-																{formatAmount(freeBalance, account.currency)}
+																{formatCurrency(freeBalance, account.currency)}
 															</span>
 														</SelectItem>
 													))}
@@ -377,7 +377,7 @@ export default function CreateGoalDialog({
 							<FieldDescription>
 								{source
 									? t("goals.form.freeBalance", {
-											amount: formatAmount(
+											amount: formatCurrency(
 												source.freeBalance,
 												source.account.currency,
 											),

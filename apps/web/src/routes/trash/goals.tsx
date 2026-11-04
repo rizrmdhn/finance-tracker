@@ -11,6 +11,7 @@ import {
 } from "@finance-tracker/ui/components/alert-dialog";
 import { Button } from "@finance-tracker/ui/components/button";
 import { Skeleton } from "@finance-tracker/ui/components/skeleton";
+import { formatCurrency } from "@finance-tracker/utils";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { RotateCcw, Trash2 } from "lucide-react";
@@ -18,7 +19,7 @@ import { useTranslation } from "react-i18next";
 import { ICON_MAP } from "@/components/icon-picker";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
-import { formatAmount, useGoalErrorMessage } from "../-components/goal-utils";
+import { useGoalErrorMessage } from "../-components/goal-utils";
 
 export const Route = createFileRoute("/trash/goals")({
 	component: TrashGoalsComponent,
@@ -152,7 +153,7 @@ function TrashGoalsComponent() {
 							<div className="flex flex-1 flex-col">
 								<span className="font-medium text-sm">{goal.name}</span>
 								<span className="text-muted-foreground text-xs">
-									{formatAmount(goal.targetAmount, goal.currency)}
+									{formatCurrency(goal.targetAmount, goal.currency)}
 								</span>
 							</div>
 							<span className="text-muted-foreground text-xs">

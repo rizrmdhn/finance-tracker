@@ -25,6 +25,11 @@ import {
 } from "@finance-tracker/ui/components/select";
 import { Spinner } from "@finance-tracker/ui/components/spinner";
 import { Textarea } from "@finance-tracker/ui/components/textarea";
+import {
+	formatCurrency,
+	type GoalContributionMode,
+	getGoalContributionOptions,
+} from "@finance-tracker/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
@@ -37,13 +42,10 @@ import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
 import { AccountOption } from "./goal-form-fields";
 import {
-	formatAmount,
 	type GoalOverviewItem,
 	useGoalAccounts,
 	useGoalErrorMessage,
 } from "./goal-utils";
-
-export type GoalContributionMode = "setAside" | "withdraw";
 
 // The amount is entered as a positive number; a withdrawal is stored negative
 const contributionFormSchema = goalContributionSchema.omit({ goalId: true });
@@ -69,17 +71,11 @@ export default function GoalContributionDialog({
 	const goalAccounts = useGoalAccounts(item?.goal.id);
 	const { data: accounts = [] } = useQuery(trpc.account.list.queryOptions());
 
-	// Set aside: rule 2, no linked account can fund a goal; the max is the free balance.
-	// Withdraw: only accounts this goal holds money from; the max is what it holds there.
-	const options: { account: Account; max: number }[] =
-		mode === "setAside"
-			? goalAccounts
-					.filter((a) => !a.isLinked)
-					.map(({ account, freeBalance }) => ({ account, max: freeBalance }))
-			: (item?.progress.contributions ?? []).flatMap(({ accountId, held }) => {
-					const account = accounts.find((a) => a.id === accountId);
-					return account && held > 0 ? [{ account, max: held }] : [];
-				});
+	const options = getGoalContributionOptions(mode, {
+		accountOptions: goalAccounts,
+		accounts,
+		contributions: item?.progress.contributions ?? [],
+	});
 	const available = options.filter((o) => o.max > 0);
 
 	const form = useForm<ContributionForm>({
@@ -102,7 +98,7 @@ export default function GoalContributionDialog({
 	const selected = options.find((o) => o.account.id === accountId);
 	const currency = selected?.account.currency ?? item?.goal.currency;
 	const formatMax = (o: { account: Account; max: number }) =>
-		formatAmount(o.max, o.account.currency);
+		formatCurrency(o.max, o.account.currency);
 
 	const contributionMutation = useMutation(
 		trpc.goal.addContribution.mutationOptions({

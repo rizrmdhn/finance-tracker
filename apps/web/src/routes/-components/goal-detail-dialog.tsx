@@ -9,6 +9,10 @@ import {
 } from "@finance-tracker/ui/components/dialog";
 import { Skeleton } from "@finance-tracker/ui/components/skeleton";
 import { cn } from "@finance-tracker/ui/lib/utils";
+import {
+	formatCurrency,
+	type GoalContributionMode,
+} from "@finance-tracker/utils";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
 	ArrowDownToLineIcon,
@@ -28,12 +32,9 @@ import {
 	GoalProgress,
 	GoalStatusBadge,
 } from "./goal-card";
-import GoalContributionDialog, {
-	type GoalContributionMode,
-} from "./goal-contribution-dialog";
+import GoalContributionDialog from "./goal-contribution-dialog";
 import { AccountOption } from "./goal-form-fields";
 import {
-	formatAmount,
 	type GoalOverviewItem,
 	useGoalErrorMessage,
 	useGoalText,
@@ -133,7 +134,7 @@ function GoalFunding({ item }: { item: GoalOverviewItem }) {
 	const { t } = useTranslation();
 	const { data: accounts = [] } = useQuery(trpc.account.list.queryOptions());
 	const { goal, progress } = item;
-	const format = (amount: number) => formatAmount(amount, goal.currency);
+	const format = (amount: number) => formatCurrency(amount, goal.currency);
 
 	const linkedAccount = accounts.find((a) => a.id === goal.linkedAccountId);
 	const rows = progress.contributions
@@ -184,7 +185,7 @@ function GoalFunding({ item }: { item: GoalOverviewItem }) {
 								<span className="font-medium">{format(row.total)}</span>
 								{row.currency !== goal.currency && (
 									<span className="text-muted-foreground">
-										{formatAmount(row.held, row.currency)}
+										{formatCurrency(row.held, row.currency)}
 									</span>
 								)}
 							</div>
@@ -294,7 +295,7 @@ function GoalContributionList({
 									)}
 								>
 									{isWithdrawal ? "−" : "+"}
-									{formatAmount(
+									{formatCurrency(
 										Math.abs(contribution.amount),
 										contribution.account?.currency ?? item.goal.currency,
 									)}
