@@ -10,6 +10,7 @@ import { migrateWithCrr } from "@finance-tracker/db";
 import {
 	addTrustedPeer,
 	processRecurrences,
+	removeTrustedPeer,
 	updateSyncPeerHost,
 } from "@finance-tracker/queries";
 import {
@@ -67,6 +68,15 @@ interface PendingPairing {
 	sharedSecret: Uint8Array;
 }
 
+/**
+ * A device connected to our server. Trusted once our user confirms; kept until the
+ * connection closes so a `pair-reject` sent after our `pair-accept` can revoke that.
+ */
+interface IncomingPairing extends PendingPairing {
+	/** We stored the initiator and sent `pair-accept` */
+	accepted: boolean;
+}
+
 /** We connected to a host. Trusted once our user confirmed and the host accepted. */
 interface OutgoingPairing extends PendingPairing {
 	host: string; // "ip:port"
@@ -108,8 +118,8 @@ function setupSyncServer(
 	const bonjour = new Bonjour();
 	let browser: ReturnType<typeof bonjour.find> | null = null;
 
-	// Pending pairings indexed by their deviceId
-	const pendingPairings = new Map<string, PendingPairing>();
+	// Incoming pairings indexed by their deviceId, kept until their connection closes
+	const pendingPairings = new Map<string, IncomingPairing>();
 	// Pending outgoing pairings (we initiated)
 	const outgoingPairings = new Map<string, OutgoingPairing>();
 
@@ -147,11 +157,14 @@ function setupSyncServer(
 
 		ws.on("close", () => {
 			clearTimeout(idleTimer);
-			// The initiator went away before our user answered
 			for (const [deviceId, pending] of pendingPairings) {
 				if (pending.ws !== ws) continue;
 				pendingPairings.delete(deviceId);
-				mainWin.webContents.send("sync:pair-failed", { deviceId });
+				// After our accept the initiator closes once it has trusted us too;
+				// before it, closing means it went away before our user answered
+				if (!pending.accepted) {
+					mainWin.webContents.send("sync:pair-failed", { deviceId });
+				}
 			}
 		});
 		ws.on("error", (err) => {
@@ -178,12 +191,21 @@ function setupSyncServer(
 
 			// The initiator of an incoming pairing declined the SAS code
 			if (type === "pair-reject") {
-				const pairReject = msg as PairRejectMsg;
-				if (!pendingPairings.delete(pairReject.deviceId)) return;
-				mainWin.webContents.send("sync:pair-rejected", {
-					deviceId: pairReject.deviceId,
-					reason: pairReject.reason,
-				});
+				const { deviceId, reason } = msg as PairRejectMsg;
+				const pending = pendingPairings.get(deviceId);
+				if (pending?.ws !== ws) return;
+				pendingPairings.delete(deviceId);
+				// It declined after we already trusted it: revoke that so neither side
+				// trusts the other. A rejected re-pair removes the peer too, since
+				// `addTrustedPeer` already replaced its old secret and sync state.
+				if (pending.accepted) {
+					try {
+						await removeTrustedPeer(db, deviceId);
+					} catch (err) {
+						console.error("[sync] revoking rejected device failed:", err);
+					}
+				}
+				mainWin.webContents.send("sync:pair-rejected", { deviceId, reason });
 				return;
 			}
 
@@ -210,6 +232,7 @@ function setupSyncServer(
 					theirPublicKey: base64ToPubKey(pairReq.publicKey),
 					sasCode,
 					sharedSecret,
+					accepted: false,
 				});
 
 				// Send our public key back
@@ -385,9 +408,16 @@ function setupSyncServer(
 		},
 	);
 
+	function rejectMessage(reason?: string): string {
+		return JSON.stringify({
+			type: "pair-reject",
+			deviceId: identity.deviceId,
+			reason,
+		} satisfies PairRejectMsg);
+	}
+
 	/** Our user confirmed and the host accepted: trust the host. */
 	async function completeOutgoing(pairing: OutgoingPairing) {
-		pairing.settle();
 		try {
 			await addTrustedPeer(db, {
 				deviceId: pairing.theirDeviceId,
@@ -399,11 +429,17 @@ function setupSyncServer(
 			await updateSyncPeerHost(db, pairing.theirDeviceId, pairing.host);
 		} catch (err) {
 			console.error("[sync] storing paired device failed:", err);
+			// The host already trusts us: have it revoke that
+			if (pairing.ws.readyState === WebSocket.OPEN) {
+				pairing.ws.send(rejectMessage());
+			}
+			pairing.settle();
 			mainWin.webContents.send("sync:pair-failed", {
 				deviceId: pairing.theirDeviceId,
 			});
 			return;
 		}
+		pairing.settle();
 		mainWin.webContents.send("sync:pair-confirmed", {
 			deviceId: pairing.theirDeviceId,
 			deviceName: pairing.theirDeviceName,
@@ -424,17 +460,27 @@ function setupSyncServer(
 			}
 
 			const pending = pendingPairings.get(deviceId);
-			if (!pending) return;
-			pendingPairings.delete(deviceId);
+			if (!pending || pending.accepted) return;
 
-			await addTrustedPeer(db, {
-				deviceId: pending.theirDeviceId,
-				deviceName: pending.theirDeviceName,
-				platform: pending.theirPlatform,
-				publicKey: pending.theirPublicKey,
-				sharedSecret: secretToHex(pending.sharedSecret),
-			});
+			try {
+				await addTrustedPeer(db, {
+					deviceId: pending.theirDeviceId,
+					deviceName: pending.theirDeviceName,
+					platform: pending.theirPlatform,
+					publicKey: pending.theirPublicKey,
+					sharedSecret: secretToHex(pending.sharedSecret),
+				});
+			} catch (err) {
+				console.error("[sync] storing paired device failed:", err);
+				pendingPairings.delete(deviceId);
+				pending.ws.send(rejectMessage());
+				pending.ws.close();
+				mainWin.webContents.send("sync:pair-failed", { deviceId });
+				return;
+			}
 
+			// Stays pending until the initiator closes: it may still reject
+			pending.accepted = true;
 			const accept: PairAcceptMsg = {
 				type: "pair-accept",
 				deviceId: identity.deviceId,
@@ -456,25 +502,19 @@ function setupSyncServer(
 			_event,
 			{ deviceId, reason }: { deviceId: string; reason?: string },
 		) => {
-			const reject: PairRejectMsg = {
-				type: "pair-reject",
-				deviceId: identity.deviceId,
-				reason,
-			};
-
 			const outgoing = outgoingPairings.get(deviceId);
 			if (outgoing) {
 				if (outgoing.ws.readyState === WebSocket.OPEN) {
-					outgoing.ws.send(JSON.stringify(reject));
+					outgoing.ws.send(rejectMessage(reason));
 				}
 				outgoing.settle();
 				return;
 			}
 
 			const pending = pendingPairings.get(deviceId);
-			if (!pending) return;
+			if (!pending || pending.accepted) return;
 			pendingPairings.delete(deviceId);
-			pending.ws.send(JSON.stringify(reject));
+			pending.ws.send(rejectMessage(reason));
 		},
 	);
 

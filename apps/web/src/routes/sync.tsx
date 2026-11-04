@@ -142,10 +142,12 @@ function RouteComponent() {
 			globalSuccessToast(t("sync.toast.paired"));
 		});
 
-		platform.sync.onPairRejected(() => {
+		platform.sync.onPairRejected(async () => {
 			setPairingDialog({ open: false });
 			setPairingDeviceId(null);
 			globalErrorToast(t("sync.toast.pairRejected"));
+			// A reject after we accepted revokes the device we just trusted
+			await queryClient.invalidateQueries(trpc.peer.list.queryOptions());
 		});
 
 		platform.sync.onPairFailed(() => {

@@ -95,10 +95,16 @@ interface OutgoingPairing {
 	settled: boolean;
 }
 
-/** A device connected to our hosting server. Trusted once our user confirms. */
+/**
+ * A device connected to our hosting server. Trusted once our user confirms; kept
+ * until the connection closes so a `pair-reject` sent after our `pair-accept` can
+ * revoke that.
+ */
 interface IncomingPairing {
 	conn: WsConnection;
 	peer: PairingPeer;
+	/** We stored the initiator and sent `pair-accept` */
+	accepted: boolean;
 }
 
 function toPlatform(platform: unknown): PlatformType {
@@ -159,11 +165,18 @@ export default function SyncScreen() {
 
 	const addPeerMutation = useMutation(
 		trpc.peer.add.mutationOptions({
-			onSuccess: async () => {
-				await queryClient.invalidateQueries(trpc.peer.list.queryOptions());
-				globalSuccessToast(t("sync.toast.paired"));
-			},
+			onSuccess: () =>
+				queryClient.invalidateQueries(trpc.peer.list.queryOptions()),
 			onError: () => globalErrorToast(t("sync.toast.pairFailed")),
+		}),
+	);
+
+	// Undoes a pairing the other device rejected after we trusted it
+	const revokePeerMutation = useMutation(
+		trpc.peer.remove.mutationOptions({
+			onSuccess: () =>
+				queryClient.invalidateQueries(trpc.peer.list.queryOptions()),
+			onError: () => globalErrorToast(t("sync.toast.unpairFailed")),
 		}),
 	);
 
@@ -231,13 +244,28 @@ export default function SyncScreen() {
 	async function completeOutgoing(outgoing: OutgoingPairing) {
 		const { peer, host } = outgoing;
 		if (!peer) return;
-		settleOutgoing(outgoing);
+		// Ignore further messages and cancels, but keep the connection open until
+		// the peer is stored so a failure can still be reported to the host
+		outgoing.settled = true;
+		if (outgoingRef.current === outgoing) outgoingRef.current = null;
 		try {
 			await trustPeer(peer);
+		} catch {
+			// The host already trusts us: have it revoke that
+			if (outgoing.ws.readyState === WebSocket.OPEN) {
+				outgoing.ws.send(rejectMessage());
+			}
+			outgoing.ws.close();
+			setPairingState({ status: "idle" }); // the mutation shows the error toast
+			return;
+		}
+		outgoing.ws.close();
+		globalSuccessToast(t("sync.toast.paired"));
+		try {
 			await updateHostMutation.mutateAsync({ deviceId: peer.deviceId, host });
 			setPairingState({ status: "done" });
 		} catch {
-			setPairingState({ status: "idle" }); // the mutation shows the error toast
+			setPairingState({ status: "idle" });
 		}
 	}
 
@@ -346,6 +374,7 @@ export default function SyncScreen() {
 						publicKey,
 						sharedSecret,
 					},
+					accepted: false,
 				};
 				conn.send(
 					JSON.stringify({
@@ -372,36 +401,55 @@ export default function SyncScreen() {
 		}
 
 		// The initiator declined the SAS code
-		if (msg.type === "pair-reject" && incomingRef.current?.conn === conn) {
+		const incoming = incomingRef.current;
+		if (msg.type === "pair-reject" && incoming?.conn === conn) {
 			incomingRef.current = null;
+			// It declined after we already trusted it: revoke that so neither side
+			// trusts the other. A rejected re-pair removes the peer too, since
+			// `peer.add` already replaced its old secret and sync state.
+			if (incoming.accepted) {
+				revokePeerMutation.mutate({ deviceId: incoming.peer.deviceId });
+			}
 			globalErrorToast(t("sync.toast.pairRejected"));
 			setPairingState({ status: "idle" });
 		}
 	}
 
 	function handleHostConnectionClose(conn: WsConnection) {
-		if (incomingRef.current?.conn !== conn) return;
+		const incoming = incomingRef.current;
+		if (incoming?.conn !== conn) return;
 		incomingRef.current = null;
+		// After our accept the initiator closes once it has trusted us too
+		if (incoming.accepted) return;
 		globalErrorToast(t("sync.toast.pairFailed"));
 		setPairingState({ status: "idle" });
 	}
 
 	async function confirmIncoming(incoming: IncomingPairing) {
-		incomingRef.current = null;
 		try {
 			await trustPeer(incoming.peer);
-			incoming.conn.send(
-				JSON.stringify({
-					type: "pair-accept",
-					deviceId: deviceInfo?.deviceId ?? "",
-				} satisfies PairAcceptMsg),
-			);
-			setPairingState({ status: "done" });
 		} catch {
+			if (incomingRef.current === incoming) incomingRef.current = null;
 			incoming.conn.send(rejectMessage());
 			incoming.conn.close();
 			setPairingState({ status: "idle" }); // the mutation shows the error toast
+			return;
 		}
+		// The initiator rejected, went away or our user cancelled while we stored it
+		if (incomingRef.current !== incoming) {
+			revokePeerMutation.mutate({ deviceId: incoming.peer.deviceId });
+			return;
+		}
+		// Stays in `incomingRef` until the initiator closes: it may still reject
+		incoming.accepted = true;
+		incoming.conn.send(
+			JSON.stringify({
+				type: "pair-accept",
+				deviceId: deviceInfo?.deviceId ?? "",
+			} satisfies PairAcceptMsg),
+		);
+		globalSuccessToast(t("sync.toast.paired"));
+		setPairingState({ status: "done" });
 	}
 
 	// ── Pairing dialog actions ────────────────────────────────────────────
@@ -411,7 +459,7 @@ export default function SyncScreen() {
 		setPairingState({ status: "confirming", sasCode: pairingState.sasCode });
 
 		const incoming = incomingRef.current;
-		if (incoming) {
+		if (incoming && !incoming.accepted) {
 			void confirmIncoming(incoming);
 			return;
 		}
@@ -424,7 +472,7 @@ export default function SyncScreen() {
 
 	function handleRejectPair() {
 		const incoming = incomingRef.current;
-		if (incoming) {
+		if (incoming && !incoming.accepted) {
 			incomingRef.current = null;
 			incoming.conn.send(rejectMessage());
 			incoming.conn.close();
