@@ -11,13 +11,13 @@ export const goalSchema = z.object({
 		.min(1, { error: "Please enter a valid goal name" }),
 	icon: z.enum(ICON_NAMES, { error: "Please select an icon" }),
 	color: z.enum(COLOR_VALUES, { error: "Please select a color" }),
-	imageUri: z.string().optional(),
-	productUrl: z.url({ error: "Please enter a valid URL" }).optional(),
+	imageUri: z.string().nullish(),
+	productUrl: z.url({ error: "Please enter a valid URL" }).nullish(),
 	targetAmount: z
 		.number({ error: "Target amount is required" })
 		.positive({ error: "Target amount must be greater than 0" }),
 	currency: z.enum(SUPPORTED_CURRENCIES, { error: "Please select a currency" }),
-	targetDate: z.number({ error: "Please provide a valid date" }).optional(),
+	targetDate: z.number({ error: "Please provide a valid date" }).nullish(),
 	linkedAccountId: z.string().nullish(),
 	allocationPercent: z
 		.number({ error: "Allocation is required" })
