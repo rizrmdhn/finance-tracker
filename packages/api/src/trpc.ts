@@ -1,4 +1,5 @@
 import type { AnyDatabase } from "@finance-tracker/db";
+import { GoalRuleError } from "@finance-tracker/queries";
 import { initTRPC } from "@trpc/server";
 import SuperJSON from "superjson";
 import { ZodError, z } from "zod";
@@ -42,6 +43,9 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
 				...shape.data,
 				zodError:
 					error.cause instanceof ZodError ? z.treeifyError(error.cause) : null,
+				// Translate with t(`goals.errors.${goalErrorCode}`)
+				goalErrorCode:
+					error.cause instanceof GoalRuleError ? error.cause.code : null,
 			},
 		};
 	},
