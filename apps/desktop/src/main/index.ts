@@ -43,6 +43,7 @@ import { app, BrowserWindow, dialog, ipcMain, shell } from "electron";
 import { autoUpdater } from "electron-updater";
 import { createIPCHandler } from "trpc-electron/main";
 import { WebSocket, WebSocketServer } from "ws";
+import desktopPackage from "../../package.json";
 import { createSqliteSyncStore } from "./sync-store";
 
 const isDev = process.env.NODE_ENV_ELECTRON_VITE === "development";
@@ -577,28 +578,60 @@ function setupSyncServer(
 	};
 }
 
+// Keep in sync with UpdateStatus in apps/web/src/platform/types.ts
+type UpdateStatus =
+	| { state: "idle" }
+	| { state: "checking" }
+	| { state: "up-to-date" }
+	| { state: "error"; message: string }
+	| {
+			state: "available";
+			version: string;
+			releaseNotes: string | null;
+			/** Set when the update must be downloaded by hand (see manualDownload). */
+			manualDownloadUrl: string | null;
+	  }
+	| {
+			state: "downloading";
+			version: string;
+			releaseNotes: string | null;
+			percent: number;
+	  }
+	| { state: "downloaded"; version: string };
+
+// Kept here rather than in the renderer so a page opened after the startup
+// check (e.g. Settings) still sees the current state.
+let updateStatus: UpdateStatus = { state: "idle" };
+
+function setUpdateStatus(status: UpdateStatus) {
+	updateStatus = status;
+	if (!win.isDestroyed()) win.webContents.send("updater:status", status);
+}
+
 function setupAutoUpdater(sqlite: InstanceType<typeof Database>) {
+	ipcMain.handle("updater:get-status", () => updateStatus);
+
 	if (isDev) {
-		ipcMain.on("check-for-updates", () => {
-			win.webContents.send("update-not-available");
-		});
+		ipcMain.on("updater:check", () => setUpdateStatus({ state: "up-to-date" }));
+		ipcMain.handle("updater:set-prerelease", () => {});
 		return;
 	}
 
-	// Auto-download updates without user interaction
-	autoUpdater.autoDownload = true;
+	// Squirrel.Mac only installs code-signed builds and the mac build is not
+	// signed, so on macOS point the user at the release page instead.
+	const manualDownload = process.platform === "darwin";
+	autoUpdater.autoDownload = !manualDownload;
 	autoUpdater.autoInstallOnAppQuit = true;
 
-	// Read and apply pre_release setting from DB
+	// Set explicitly: electron-updater turns prereleases on by itself when the
+	// installed version is a prerelease, which would ignore the user's choice.
 	try {
 		const setting = sqlite
 			.prepare(`SELECT value FROM app_settings WHERE key = 'pre_release'`)
 			.get() as { value: string } | undefined;
-		if (setting?.value === "true") {
-			autoUpdater.allowPrerelease = true;
-		}
+		autoUpdater.allowPrerelease = setting?.value === "true";
 	} catch {
-		// ignore
+		autoUpdater.allowPrerelease = false;
 	}
 
 	ipcMain.handle(
@@ -608,44 +641,67 @@ function setupAutoUpdater(sqlite: InstanceType<typeof Database>) {
 		},
 	);
 
+	autoUpdater.on("checking-for-update", () => {
+		setUpdateStatus({ state: "checking" });
+	});
+
 	autoUpdater.on("update-available", (info) => {
-		win.webContents.send("update-available", {
+		const { owner, repo } = desktopPackage.build.publish;
+		const tag = `${desktopPackage.build.publish.tagNamePrefix}${info.version}`;
+		setUpdateStatus({
+			state: "available",
 			version: info.version,
-			releaseNotes: info.releaseNotes ?? null,
+			releaseNotes:
+				typeof info.releaseNotes === "string" ? info.releaseNotes : null,
+			manualDownloadUrl: manualDownload
+				? `https://github.com/${owner}/${repo}/releases/tag/${encodeURIComponent(tag)}`
+				: null,
 		});
 	});
 
 	autoUpdater.on("update-not-available", () => {
-		win.webContents.send("update-not-available");
+		setUpdateStatus({ state: "up-to-date" });
 	});
 
 	autoUpdater.on("download-progress", (progress) => {
-		win.webContents.send("download-progress", {
+		if (
+			updateStatus.state !== "available" &&
+			updateStatus.state !== "downloading"
+		) {
+			return;
+		}
+		setUpdateStatus({
+			state: "downloading",
+			version: updateStatus.version,
+			releaseNotes: updateStatus.releaseNotes,
 			percent: Math.round(progress.percent),
-			transferred: progress.transferred,
-			total: progress.total,
 		});
 	});
 
-	autoUpdater.on("update-downloaded", () => {
-		win.webContents.send("update-downloaded");
+	autoUpdater.on("update-downloaded", (info) => {
+		setUpdateStatus({ state: "downloaded", version: info.version });
 	});
 
 	autoUpdater.on("error", (error) => {
-		win.webContents.send("update-error", error.message);
+		setUpdateStatus({ state: "error", message: error.message });
 	});
 
-	ipcMain.on("check-for-updates", () => {
-		autoUpdater.checkForUpdates().catch((error) => {
-			win.webContents.send("update-error", (error as Error).message);
+	ipcMain.on("updater:check", () => {
+		autoUpdater.checkForUpdates().catch(() => {
+			// already reported through the "error" event
 		});
 	});
 
-	ipcMain.on("install-update", () => {
+	ipcMain.on("updater:install", () => {
 		// isSilent = true: no installer UI shown
 		// isForceRunAfter = true: relaunch the app after install completes
 		autoUpdater.quitAndInstall(true, true);
 	});
+}
+
+/** Open http(s) links in the user's browser; anything else is dropped. */
+function openExternalLink(url: string) {
+	if (/^https?:\/\//i.test(url)) shell.openExternal(url);
 }
 
 function createWindow() {
@@ -666,11 +722,18 @@ function createWindow() {
 		win.show();
 	});
 
-	// target="_blank" links (e.g. a goal's product link) open in the default browser, never in
-	// an app window; only http(s) URLs are handed to the OS
+	// Links (e.g. in release notes or a goal's product link) would otherwise replace the app inside its
+	// own window, with no way back since the menu is removed.
 	win.webContents.setWindowOpenHandler(({ url }) => {
-		if (/^https?:\/\//i.test(url)) void shell.openExternal(url);
+		openExternalLink(url);
 		return { action: "deny" };
+	});
+	win.webContents.on("will-navigate", (event, url) => {
+		if (new URL(url).origin === new URL(win.webContents.getURL()).origin) {
+			return;
+		}
+		event.preventDefault();
+		openExternalLink(url);
 	});
 
 	const WEB_DEV_URL = process.env.WEB_DEV_URL ?? "http://localhost:3000";

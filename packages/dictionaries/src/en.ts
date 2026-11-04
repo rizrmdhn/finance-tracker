@@ -230,6 +230,9 @@ export const en = {
 			upToDate: "App is up to date",
 			versionAvailable: "Version {{version}} available",
 			downloadingAuto: "The update will be downloaded automatically.",
+			downloadManuallyHint:
+				"Automatic install isn't available on this system. Download the new version and install it manually.",
+			downloadManually: "Download",
 			downloading: "Downloading",
 			downloadApk: "Download APK",
 			readyToInstall: "Ready to install",
@@ -594,6 +597,11 @@ export const en = {
 			title: "Update ready",
 			description: "A new version has been downloaded.",
 			action: "Restart & Install",
+		},
+		manualToast: {
+			title: "Update available",
+			description: "Version {{version}} is ready to download.",
+			action: "Download",
 		},
 	},
 	search: {

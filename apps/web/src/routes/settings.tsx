@@ -29,26 +29,12 @@ import { useOptimisticMutation } from "@/lib/optimistic-update";
 import { pageHead } from "@/lib/page-head";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
-import { platform } from "@/platform";
+import { platform, type UpdateStatus } from "@/platform";
 
 export const Route = createFileRoute("/settings")({
 	component: RouteComponent,
 	head: () => pageHead("Settings", "Manage your Finance Tracker preferences."),
 });
-
-type UpdateStatus =
-	| { state: "idle" }
-	| { state: "checking" }
-	| { state: "up-to-date" }
-	| { state: "error"; message: string }
-	| { state: "available"; version: string; releaseNotes: string | null }
-	| {
-			state: "downloading";
-			version: string;
-			releaseNotes: string | null;
-			percent: number;
-	  }
-	| { state: "downloaded" };
 
 function RouteComponent() {
 	const { t, i18n } = useTranslation();
@@ -128,55 +114,14 @@ function RouteComponent() {
 
 	useEffect(() => {
 		if (!platform.updater.isSupported) return;
-
-		platform.updater.onUpdateAvailable((info) => {
-			setUpdateStatus({
-				state: "available",
-				version: info.version,
-				releaseNotes: info.releaseNotes,
-			});
-		});
-
-		platform.updater.onUpdateNotAvailable(() => {
-			setUpdateStatus({ state: "up-to-date" });
-		});
-
-		platform.updater.onUpdateError((message) => {
-			setUpdateStatus({ state: "error", message });
-		});
-
-		platform.updater.onDownloadProgress((progress) => {
-			setUpdateStatus((prev) => ({
-				state: "downloading",
-				version:
-					prev.state === "available" || prev.state === "downloading"
-						? prev.version
-						: "",
-				releaseNotes:
-					prev.state === "available" || prev.state === "downloading"
-						? prev.releaseNotes
-						: null,
-				percent: progress.percent,
-			}));
-		});
-
-		platform.updater.onUpdateDownloaded(() => {
-			setUpdateStatus({ state: "downloaded" });
-		});
-
-		return () => {
-			platform.updater.removeAllListeners("update-available");
-			platform.updater.removeAllListeners("update-not-available");
-			platform.updater.removeAllListeners("download-progress");
-			platform.updater.removeAllListeners("update-downloaded");
-			platform.updater.removeAllListeners("update-error");
-		};
+		// Subscribe before reading so no status change is missed in between
+		const unsubscribe = platform.updater.onStatus(setUpdateStatus);
+		platform.updater.getStatus().then(setUpdateStatus);
+		return unsubscribe;
 	}, []);
 
-	function handleCheckForUpdates() {
-		setUpdateStatus({ state: "checking" });
-		platform.updater.checkForUpdates();
-	}
+	const manualDownloadUrl =
+		updateStatus.state === "available" ? updateStatus.manualDownloadUrl : null;
 
 	async function handleBackup() {
 		setDataOpPending("backup");
@@ -338,7 +283,7 @@ function RouteComponent() {
 						>
 							<Button
 								variant="outline"
-								onClick={handleCheckForUpdates}
+								onClick={() => platform.updater.checkForUpdates()}
 								disabled={
 									updateStatus.state === "checking" ||
 									updateStatus.state === "downloading" ||
@@ -392,11 +337,24 @@ function RouteComponent() {
 										/>
 									)}
 
-								{updateStatus.state === "available" && (
-									<p className="text-muted-foreground text-xs">
-										{t("settings.advanced.downloadingAuto")}
-									</p>
-								)}
+								{updateStatus.state === "available" &&
+									(manualDownloadUrl ? (
+										<div className="flex items-center justify-between gap-3">
+											<p className="text-muted-foreground text-xs">
+												{t("settings.advanced.downloadManuallyHint")}
+											</p>
+											<Button
+												size="sm"
+												onClick={() => window.open(manualDownloadUrl)}
+											>
+												{t("settings.advanced.downloadManually")}
+											</Button>
+										</div>
+									) : (
+										<p className="text-muted-foreground text-xs">
+											{t("settings.advanced.downloadingAuto")}
+										</p>
+									))}
 
 								{updateStatus.state === "downloading" && (
 									<Progress

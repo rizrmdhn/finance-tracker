@@ -1,0 +1,2 @@
+# bun applies these to LF sources; CRLF from core.autocrlf breaks them
+patches/*.patch text eol=lf

@@ -6,7 +6,6 @@ export type {
 	AppCapability,
 	DataManagerCapability,
 	DiscoveredPeer,
-	DownloadProgress,
 	FileOpResult,
 	ImportResult,
 	PlatformAdapter,
@@ -14,8 +13,8 @@ export type {
 	SyncCapability,
 	SyncErrorCode,
 	SyncWithPeerResult,
-	UpdateInfo,
 	UpdaterCapability,
+	UpdateStatus,
 } from "./types";
 
 function isElectron(): boolean {

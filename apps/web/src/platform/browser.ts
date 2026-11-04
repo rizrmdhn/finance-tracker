@@ -14,14 +14,10 @@ const app: AppCapability = {
 const updater: UpdaterCapability = {
 	isSupported: false,
 	checkForUpdates: () => {},
-	onUpdateAvailable: () => {},
-	onUpdateNotAvailable: () => {},
-	onUpdateError: () => {},
-	onDownloadProgress: () => {},
-	onUpdateDownloaded: () => {},
+	getStatus: () => Promise.resolve({ state: "idle" }),
+	onStatus: () => () => {},
 	installUpdate: () => {},
 	setAllowPrerelease: () => Promise.resolve(),
-	removeAllListeners: () => {},
 };
 
 const dataManager: DataManagerCapability = {

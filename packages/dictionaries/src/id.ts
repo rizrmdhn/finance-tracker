@@ -231,6 +231,9 @@ export const id = {
 			upToDate: "Aplikasi sudah versi terbaru",
 			versionAvailable: "Versi {{version}} tersedia",
 			downloadingAuto: "Pembaruan akan diunduh secara otomatis.",
+			downloadManuallyHint:
+				"Pemasangan otomatis tidak tersedia di sistem ini. Unduh versi baru lalu pasang secara manual.",
+			downloadManually: "Unduh",
 			downloading: "Mengunduh",
 			downloadApk: "Unduh APK",
 			readyToInstall: "Siap dipasang",
@@ -593,6 +596,11 @@ export const id = {
 			title: "Pembaruan siap",
 			description: "Versi baru telah diunduh.",
 			action: "Restart & Pasang",
+		},
+		manualToast: {
+			title: "Pembaruan tersedia",
+			description: "Versi {{version}} siap diunduh.",
+			action: "Unduh",
 		},
 	},
 	search: {
