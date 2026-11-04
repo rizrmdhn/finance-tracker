@@ -18,7 +18,7 @@
     },
     "apps/desktop": {
       "name": "@finance-tracker/desktop",
-      "version": "2.1.0",
+      "version": "2.1.2",
       "dependencies": {
         "@finance-tracker/api": "workspace:*",
         "@finance-tracker/db": "workspace:*",
@@ -47,7 +47,7 @@
     },
     "apps/native": {
       "name": "@finance-tracker/native",
-      "version": "2.1.0",
+      "version": "2.1.2",
       "dependencies": {
         "@dev-plugins/react-query": "^0.4.0",
         "@expo/metro-runtime": "~55.0.6",
@@ -397,8 +397,12 @@
       },
     },
   },
+  "trustedDependencies": [
+    "@vlcn.io/crsqlite",
+  ],
   "patchedDependencies": {
     "electron-updater@6.8.3": "patches/electron-updater@6.8.3.patch",
+    "@vlcn.io/crsqlite@0.16.3": "patches/@vlcn.io+crsqlite@0.16.3.patch",
   },
   "overrides": {
     "commander": "^7.2.0",

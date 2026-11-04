@@ -1,0 +1,15 @@
+diff --git a/nodejs-install-helper.js b/nodejs-install-helper.js
+index 0000000..0000001 100644
+--- a/nodejs-install-helper.js
++++ b/nodejs-install-helper.js
+@@ -9 +9 @@
+-import pkg from "./package.json" assert { type: "json" };
++import pkg from "./package.json" with { type: "json" };
+@@ -95,2 +95,5 @@
+-      process.chdir(join(".", "dist"));
+-      exec("unzip crsqlite.zip", (err, stdout, stderr) => {
++      const extractCommand =
++        process.platform === "win32"
++          ? "tar -xf dist/crsqlite.zip -C dist"
++          : "unzip dist/crsqlite.zip -d dist";
++      exec(extractCommand, (err, stdout, stderr) => {
