@@ -467,6 +467,8 @@ export const id = {
 			removePayment: "Hapus pembayaran",
 			shortfall: "Bayar sisa {{amount}} dari",
 			total: "Total: {{amount}}",
+			target: "Target: {{amount}}",
+			paymentsHelp: "Setiap jumlah dalam mata uang akunnya masing-masing.",
 			category: "Kategori pengeluaran",
 			selectCategory: "Pilih kategori pengeluaran",
 			confirm: "Tandai Sudah Dibeli",

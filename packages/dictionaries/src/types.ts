@@ -433,6 +433,8 @@ export interface Dictionary {
 			removePayment: string;
 			shortfall: string;
 			total: string;
+			target: string;
+			paymentsHelp: string;
 			category: string;
 			selectCategory: string;
 			confirm: string;

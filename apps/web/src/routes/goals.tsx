@@ -34,6 +34,7 @@ import {
 	type GoalOverviewItem,
 	useGoalErrorMessage,
 } from "./-components/goal-utils";
+import PurchaseGoalDialog from "./-components/purchase-goal-dialog";
 
 export const Route = createFileRoute("/goals")({
 	component: GoalsComponent,
@@ -53,6 +54,7 @@ function GoalsComponent() {
 		createGoal: false,
 		goalDetail: false,
 		contribution: false,
+		purchaseGoal: false,
 		editGoal: false,
 		archiveGoal: false,
 		deleteGoal: false,
@@ -115,7 +117,12 @@ function GoalsComponent() {
 	);
 
 	function openFor(
-		modal: "goalDetail" | "editGoal" | "archiveGoal" | "deleteGoal",
+		modal:
+			| "goalDetail"
+			| "purchaseGoal"
+			| "editGoal"
+			| "archiveGoal"
+			| "deleteGoal",
 	) {
 		return (item: GoalOverviewItem) => {
 			setSelected(item);
@@ -135,6 +142,7 @@ function GoalsComponent() {
 		onOpenDetail: openFor("goalDetail"),
 		onSetAside: openContribution("setAside"),
 		onWithdraw: openContribution("withdraw"),
+		onPurchase: openFor("purchaseGoal"),
 		onEdit: openFor("editGoal"),
 		onArchive: openFor("archiveGoal"),
 		onDelete: openFor("deleteGoal"),
@@ -247,6 +255,14 @@ function GoalsComponent() {
 					open ? openModal("contribution") : closeModal("contribution")
 				}
 				mode={contributionMode}
+				item={current}
+			/>
+
+			<PurchaseGoalDialog
+				open={state.purchaseGoal}
+				setIsOpen={(open) =>
+					open ? openModal("purchaseGoal") : closeModal("purchaseGoal")
+				}
 				item={current}
 			/>
 
