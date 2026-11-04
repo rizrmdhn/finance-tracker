@@ -98,6 +98,7 @@ function DrawerLayout() {
 			icon: "pricetag-outline",
 		},
 		{ name: "budgets", title: t("sidebar.budgets"), icon: "flag-outline" },
+		{ name: "goals", title: t("sidebar.goals"), icon: "gift-outline" },
 		{ name: "trash", title: t("sidebar.trash"), icon: "trash-outline" },
 		{ name: "sync", title: t("sync.title"), icon: "wifi-outline" },
 		{
