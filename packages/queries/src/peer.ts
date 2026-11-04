@@ -25,6 +25,7 @@ export async function addTrustedPeer(
 		deviceName: string;
 		platform: "desktop" | "mobile";
 		publicKey: string;
+		sharedSecret: string;
 	},
 ) {
 	const [result] = await db
@@ -35,16 +36,20 @@ export async function addTrustedPeer(
 			set: {
 				deviceName: peer.deviceName,
 				publicKey: peer.publicKey,
+				sharedSecret: peer.sharedSecret,
 				pairedAt: Date.now(),
 			},
 		})
 		.returning();
 
-	// Ensure syncPeers row exists
+	// Ensure syncPeers row exists; on re-pair reset delta state so the next sync is a full sync
 	await db
 		.insert(syncPeers)
 		.values({ deviceId: peer.deviceId })
-		.onConflictDoNothing()
+		.onConflictDoUpdate({
+			target: syncPeers.deviceId,
+			set: { siteId: null, lastSyncedVersion: 0 },
+		})
 		.run();
 
 	return result;
@@ -76,6 +81,44 @@ export async function updateSyncPeerHost(
 	await db
 		.update(syncPeers)
 		.set({ lastKnownHost: host, lastSeenAt: Date.now() })
+		.where(eq(syncPeers.deviceId, deviceId))
+		.run();
+}
+
+/** Auth + delta-sync state for a peer; null if the device is not trusted */
+export async function getPeerSyncState(db: AnyDatabase, deviceId: string) {
+	const [row] = await db
+		.select({
+			sharedSecret: trustedPeers.sharedSecret,
+			siteId: syncPeers.siteId,
+			lastSyncedVersion: syncPeers.lastSyncedVersion,
+		})
+		.from(trustedPeers)
+		.leftJoin(syncPeers, eq(trustedPeers.deviceId, syncPeers.deviceId))
+		.where(eq(trustedPeers.deviceId, deviceId))
+		.limit(1);
+
+	if (!row) return null;
+
+	return {
+		sharedSecret: row.sharedSecret,
+		siteId: row.siteId ?? null,
+		lastSyncedVersion: row.lastSyncedVersion ?? 0,
+	};
+}
+
+export async function savePeerSyncState(
+	db: AnyDatabase,
+	deviceId: string,
+	state: { siteId: string; lastSyncedVersion: number },
+) {
+	await db
+		.update(syncPeers)
+		.set({
+			siteId: state.siteId,
+			lastSyncedVersion: state.lastSyncedVersion,
+			lastSeenAt: Date.now(),
+		})
 		.where(eq(syncPeers.deviceId, deviceId))
 		.run();
 }

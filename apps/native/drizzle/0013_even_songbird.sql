@@ -1,0 +1,1 @@
+ALTER TABLE `trusted_peers` ADD `shared_secret` text;

@@ -10,7 +10,8 @@ export const trustedPeers = sqliteTable("trusted_peers", {
 	deviceId: text("device_id").notNull().unique(), // remote app's UUID
 	deviceName: text("device_name").notNull(),
 	platform: text("platform", { enum: ["desktop", "mobile"] }).notNull(),
-	publicKey: text("public_key").notNull(), // long-term P-256 public key (hex)
+	publicKey: text("public_key").notNull(), // pairing P-256 public key (hex)
+	sharedSecret: text("shared_secret"), // ECDH shared secret from pairing (hex) — null for legacy peers, must re-pair
 	pairedAt: integer("paired_at").notNull(), // epoch ms
 });
 

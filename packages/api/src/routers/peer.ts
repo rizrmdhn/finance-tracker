@@ -1,8 +1,10 @@
 import {
 	addTrustedPeer,
+	getPeerSyncState,
 	getTrustedPeerByDeviceId,
 	getTrustedPeers,
 	removeTrustedPeer,
+	savePeerSyncState,
 	updateSyncPeerHost,
 } from "@finance-tracker/queries";
 import { tryCatchAsync } from "@finance-tracker/utils";
@@ -34,6 +36,7 @@ export const peerRouter = createTRPCRouter({
 				deviceName: z.string(),
 				platform: z.enum(["desktop", "mobile"]),
 				publicKey: z.string(),
+				sharedSecret: z.string(),
 			}),
 		)
 		.mutation(async ({ ctx, input }) => {
@@ -49,6 +52,33 @@ export const peerRouter = createTRPCRouter({
 		.mutation(async ({ ctx, input }) => {
 			const [data, err] = await tryCatchAsync(() =>
 				removeTrustedPeer(ctx.db, input.deviceId),
+			);
+			if (err) throw toTRPCError(err);
+			return data;
+		}),
+
+	syncState: publicProcedure
+		.input(z.object({ deviceId: z.string() }))
+		.query(async ({ ctx, input }) => {
+			const [data, err] = await tryCatchAsync(() =>
+				getPeerSyncState(ctx.db, input.deviceId),
+			);
+			if (err) throw toTRPCError(err);
+			return data;
+		}),
+
+	saveSyncState: publicProcedure
+		.input(
+			z.object({
+				deviceId: z.string(),
+				siteId: z.string(),
+				lastSyncedVersion: z.number().int().nonnegative(),
+			}),
+		)
+		.mutation(async ({ ctx, input }) => {
+			const { deviceId, ...state } = input;
+			const [data, err] = await tryCatchAsync(() =>
+				savePeerSyncState(ctx.db, deviceId, state),
 			);
 			if (err) throw toTRPCError(err);
 			return data;
