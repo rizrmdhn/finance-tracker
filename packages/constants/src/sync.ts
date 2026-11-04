@@ -4,6 +4,8 @@ export const CRDT_TABLES = [
 	"app_settings",
 	"budgets",
 	"categories",
+	"goal_contributions",
+	"goals",
 	"recurrences",
 	"transactions",
 ] as const;
