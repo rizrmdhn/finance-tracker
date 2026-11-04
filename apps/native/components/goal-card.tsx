@@ -1,19 +1,30 @@
 import { formatCurrency, type TargetDateGap } from "@finance-tracker/utils";
-import { LightbulbIcon } from "lucide-react-native";
+import {
+	ExternalLinkIcon,
+	LightbulbIcon,
+	PencilIcon,
+	Trash2Icon,
+} from "lucide-react-native";
 import { useTranslation } from "react-i18next";
-import { Pressable, View } from "react-native";
+import { Linking, Pressable, View } from "react-native";
 import { type GoalOverviewItem, useGoalText } from "@/hooks/use-goal";
 import { ICON_MAP } from "./form/icon-picker";
 import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
 import { Icon as IconComp } from "./ui/icon";
 import { Text } from "./ui/text";
 
+type GoalAction = (item: GoalOverviewItem) => void;
+
+/** Pressing the card calls `onPress` (the detail sheet); edit and delete show when passed. */
 interface GoalCardProps {
 	item: GoalOverviewItem;
-	onPress?: (item: GoalOverviewItem) => void;
+	onPress?: GoalAction;
+	onEdit?: GoalAction;
+	onDelete?: GoalAction;
 }
 
-export function GoalCard({ item, onPress }: GoalCardProps) {
+export function GoalCard({ item, onPress, onEdit, onDelete }: GoalCardProps) {
 	const { t } = useTranslation();
 	const { goal, progress } = item;
 	const isActive = goal.status === "active";
@@ -24,7 +35,35 @@ export function GoalCard({ item, onPress }: GoalCardProps) {
 			onPress={() => onPress?.(item)}
 			className="flex flex-col gap-4 rounded-lg border border-border px-4 py-3 active:bg-accent/50"
 		>
-			<GoalHeader item={item} />
+			<GoalHeader item={item}>
+				{(onEdit || onDelete) && (
+					<View className="flex shrink-0 flex-row items-center">
+						{onEdit && (
+							<Button
+								variant="ghost"
+								size="sm"
+								accessibilityLabel={t("common.edit")}
+								onPress={() => onEdit(item)}
+							>
+								<IconComp as={PencilIcon} className="size-3.5" />
+							</Button>
+						)}
+						{onDelete && (
+							<Button
+								variant="ghost"
+								size="sm"
+								accessibilityLabel={t("common.delete")}
+								onPress={() => onDelete(item)}
+							>
+								<IconComp
+									as={Trash2Icon}
+									className="size-3.5 text-destructive"
+								/>
+							</Button>
+						)}
+					</View>
+				)}
+			</GoalHeader>
 
 			<GoalProgress item={item} />
 
@@ -44,7 +83,7 @@ export function GoalCard({ item, onPress }: GoalCardProps) {
 	);
 }
 
-/** Icon, name and status badge; `children` go next to the badge. */
+/** Icon, name, product link and status badge; `children` go after the badge. */
 export function GoalHeader({
 	item,
 	children,
@@ -52,8 +91,10 @@ export function GoalHeader({
 	item: GoalOverviewItem;
 	children?: React.ReactNode;
 }) {
+	const { t } = useTranslation();
 	const { goal } = item;
 	const Icon = ICON_MAP[goal.icon];
+	const { productUrl } = goal;
 
 	return (
 		<View className="flex flex-row items-center gap-3">
@@ -63,9 +104,26 @@ export function GoalHeader({
 			>
 				{Icon && <IconComp as={Icon} className="size-4" color={goal.color} />}
 			</View>
-			<Text className="min-w-0 flex-1 font-medium text-sm" numberOfLines={1}>
-				{goal.name}
-			</Text>
+			<View className="min-w-0 flex-1 flex-col">
+				<Text className="font-medium text-sm" numberOfLines={1}>
+					{goal.name}
+				</Text>
+				{productUrl && (
+					<Pressable
+						hitSlop={8}
+						className="flex flex-row items-center gap-1 self-start"
+						onPress={() => Linking.openURL(productUrl)}
+					>
+						<IconComp
+							as={ExternalLinkIcon}
+							className="size-3 text-muted-foreground"
+						/>
+						<Text className="text-muted-foreground text-xs">
+							{t("goals.card.openProduct")}
+						</Text>
+					</Pressable>
+				)}
+			</View>
 			<GoalStatusBadge item={item} />
 			{children}
 		</View>

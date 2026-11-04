@@ -28,6 +28,8 @@ type ConfirmationDialogProps = {
 	onConfirm: () => void;
 	confirmClassName?: string;
 	variant?: "default" | "destructive";
+	/** Set inside a `ModalSheet` (`"modal-select"`) so the dialog shows on top of the sheet. */
+	portalHost?: string;
 };
 
 export function ConfirmationDialog({
@@ -43,6 +45,7 @@ export function ConfirmationDialog({
 	onConfirm,
 	confirmClassName,
 	variant = "default",
+	portalHost,
 }: ConfirmationDialogProps) {
 	const { t } = useTranslation();
 	const [internalOpen, setInternalOpen] = useState(false);
@@ -72,7 +75,7 @@ export function ConfirmationDialog({
 	return (
 		<AlertDialog open={open} onOpenChange={setOpen}>
 			{trigger && <AlertDialogTrigger>{trigger}</AlertDialogTrigger>}
-			<AlertDialogContent>
+			<AlertDialogContent portalHost={portalHost}>
 				<AlertDialogHeader>
 					<AlertDialogTitle>{title}</AlertDialogTitle>
 					<AlertDialogDescription>{description}</AlertDialogDescription>

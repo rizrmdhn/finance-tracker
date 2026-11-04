@@ -1,12 +1,15 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useFocusEffect } from "expo-router";
 import { ChevronRightIcon, PiggyBankIcon, PlusIcon } from "lucide-react-native";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { View } from "react-native";
+import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { Container } from "@/components/container";
 import CreateGoalDialog from "@/components/form/create-goal-dialog";
+import EditGoalDialog from "@/components/form/edit-goal-dialog";
 import { GoalCard } from "@/components/goal-card";
+import { GoalDetailSheet } from "@/components/goal-detail-sheet";
 import { Button } from "@/components/ui/button";
 import {
 	Collapsible,
@@ -16,18 +19,25 @@ import {
 import { Icon } from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Text } from "@/components/ui/text";
+import { type GoalOverviewItem, useGoalErrorMessage } from "@/hooks/use-goal";
 import useModalState from "@/hooks/use-modal-state";
-import { trpc } from "@/lib/trpc";
+import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
+import { queryClient, trpc } from "@/lib/trpc";
 import { cn } from "@/lib/utils";
 
 const SKELETON_KEYS = ["first", "second", "third"];
 
 export default function Goals() {
 	const { t } = useTranslation();
+	const goalErrorMessage = useGoalErrorMessage();
 	const { state, openModal, closeModal } = useModalState({
 		createGoal: false,
+		goalDetail: false,
+		editGoal: false,
+		deleteGoal: false,
 	});
 	const [showInactive, setShowInactive] = useState(false);
+	const [selected, setSelected] = useState<GoalOverviewItem | null>(null);
 
 	// In list order: priority, then creation date
 	const {
@@ -44,10 +54,45 @@ export default function Goals() {
 		}, [refetch]),
 	);
 
+	// The latest data of the selected goal, so open sheets follow its changes
+	const current =
+		overview.find((item) => item.goal.id === selected?.goal.id) ?? selected;
+
 	const activeGoals = overview.filter((item) => item.goal.status === "active");
 	const inactiveGoals = overview.filter(
 		(item) => item.goal.status !== "active",
 	);
+
+	const deleteMutation = useMutation(
+		trpc.goal.delete.mutationOptions({
+			onSuccess: async () => {
+				await queryClient.invalidateQueries({ queryKey: trpc.goal.pathKey() });
+				globalSuccessToast(t("goals.toast.deleted"));
+				closeModal("deleteGoal");
+				setSelected(null);
+			},
+			onError: (error) => {
+				globalErrorToast(
+					goalErrorMessage(error, (message) =>
+						t("goals.toast.deleteFailed", { message }),
+					),
+				);
+			},
+		}),
+	);
+
+	function openFor(modal: "goalDetail" | "editGoal" | "deleteGoal") {
+		return (item: GoalOverviewItem) => {
+			setSelected(item);
+			openModal(modal);
+		};
+	}
+
+	const cardActions = {
+		onPress: openFor("goalDetail"),
+		onEdit: openFor("editGoal"),
+		onDelete: openFor("deleteGoal"),
+	};
 
 	return (
 		<Container onRefresh={refetch} refreshing={isRefetching}>
@@ -111,7 +156,7 @@ export default function Goals() {
 				{activeGoals.length > 0 && (
 					<View className="flex flex-col gap-3">
 						{activeGoals.map((item) => (
-							<GoalCard key={item.goal.id} item={item} />
+							<GoalCard key={item.goal.id} item={item} {...cardActions} />
 						))}
 					</View>
 				)}
@@ -138,7 +183,7 @@ export default function Goals() {
 						</CollapsibleTrigger>
 						<CollapsibleContent className="flex flex-col gap-3">
 							{inactiveGoals.map((item) => (
-								<GoalCard key={item.goal.id} item={item} />
+								<GoalCard key={item.goal.id} item={item} {...cardActions} />
 							))}
 						</CollapsibleContent>
 					</Collapsible>
@@ -149,6 +194,39 @@ export default function Goals() {
 					setIsOpen={(open) =>
 						open ? openModal("createGoal") : closeModal("createGoal")
 					}
+				/>
+
+				<GoalDetailSheet
+					open={state.goalDetail}
+					setIsOpen={(open) =>
+						open ? openModal("goalDetail") : closeModal("goalDetail")
+					}
+					item={current}
+				/>
+
+				<EditGoalDialog
+					open={state.editGoal}
+					setIsOpen={(open) =>
+						open ? openModal("editGoal") : closeModal("editGoal")
+					}
+					goal={selected?.goal ?? null}
+				/>
+
+				<ConfirmationDialog
+					open={state.deleteGoal}
+					onOpenChange={(open) =>
+						open ? openModal("deleteGoal") : closeModal("deleteGoal")
+					}
+					title={t("goals.delete.title")}
+					description={t("goals.delete.description", {
+						name: selected?.goal.name,
+					})}
+					confirmText={t("goals.delete.confirm")}
+					variant="destructive"
+					isLoading={deleteMutation.isPending}
+					onConfirm={() => {
+						if (selected) deleteMutation.mutate({ id: selected.goal.id });
+					}}
 				/>
 			</View>
 		</Container>
