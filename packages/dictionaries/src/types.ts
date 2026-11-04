@@ -451,6 +451,7 @@ export interface Dictionary {
 			confirm: string;
 		};
 		allocation: {
+			summary: string;
 			freeBalance: string;
 			allocated: string;
 			linkedTo: string;
