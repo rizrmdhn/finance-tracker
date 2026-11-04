@@ -3,6 +3,7 @@ import { appSettingsRouter } from "./routers/app-settings";
 import { budgetRouter } from "./routers/budget";
 import { categoryRouter } from "./routers/category";
 import { exchangeRateRouter } from "./routers/exchange-rate";
+import { goalRouter } from "./routers/goal";
 import { peerRouter } from "./routers/peer";
 import { recurrenceRouter } from "./routers/recurrence";
 import { transactionRouter } from "./routers/transaction";
@@ -19,6 +20,7 @@ export const appRouter = createTRPCRouter({
 	account: accountRouter,
 	appSetting: appSettingsRouter,
 	budget: budgetRouter,
+	goal: goalRouter,
 	recurrence: recurrenceRouter,
 	exchangeRate: exchangeRateRouter,
 	peer: peerRouter,
