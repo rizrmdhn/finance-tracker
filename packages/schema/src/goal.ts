@@ -42,5 +42,16 @@ export const goalUpdateSchema = goalSchema
 	.partial()
 	.extend({ id: z.string() });
 
+export const goalContributionSchema = z.object({
+	goalId: z.string({ error: "Goal is required" }),
+	accountId: z.string({ error: "Account is required" }),
+	amount: z
+		.number({ error: "Amount is required" })
+		.refine((amount) => amount !== 0, { error: "Amount cannot be 0" }),
+	note: z.string().optional(),
+	date: z.number({ error: "Date is required" }),
+});
+
 export type GoalInput = z.infer<typeof goalSchema>;
 export type GoalUpdateInput = z.infer<typeof goalUpdateSchema>;
+export type GoalContributionInput = z.infer<typeof goalContributionSchema>;
