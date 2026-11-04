@@ -15,6 +15,7 @@ import {
 } from "drizzle-orm/sqlite-core";
 import { timestamp } from "../utils";
 import { accounts } from "./accounts";
+import { goalContributions } from "./goal-contributions";
 
 export const goals = sqliteTable(
 	"goals",
@@ -45,9 +46,10 @@ export const goals = sqliteTable(
 	],
 );
 
-export const goalRelations = relations(goals, ({ one }) => ({
+export const goalRelations = relations(goals, ({ one, many }) => ({
 	linkedAccount: one(accounts, {
 		fields: [goals.linkedAccountId],
 		references: [accounts.id],
 	}),
+	contributions: many(goalContributions),
 }));
