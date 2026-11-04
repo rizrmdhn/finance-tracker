@@ -319,6 +319,7 @@ export interface Dictionary {
 			targetAmount: string;
 			targetDate: string;
 			targetDateHelp: string;
+			clearTargetDate: string;
 			linkedAccount: string;
 			linkedAccountPlaceholder: string;
 			noLinkedAccount: string;
@@ -327,6 +328,7 @@ export interface Dictionary {
 			initialFund: string;
 			initialFundHelp: string;
 			initialFundAccount: string;
+			initialFundAccountRequired: string;
 			freeBalance: string;
 			allocationPercent: string;
 			allocationPercentHelp: string;
