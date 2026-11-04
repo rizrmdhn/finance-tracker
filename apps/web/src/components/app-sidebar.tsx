@@ -13,6 +13,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import {
 	ArrowLeftRight,
 	Home,
+	PiggyBank,
 	Repeat2,
 	Settings,
 	Tag,
@@ -38,6 +39,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
 		{ to: "/recurring", label: t("sidebar.recurring"), icon: Repeat2 },
 		{ to: "/categories", label: t("sidebar.categories"), icon: Tag },
 		{ to: "/budgets", label: t("sidebar.budgets"), icon: Target },
+		{ to: "/goals", label: t("sidebar.goals"), icon: PiggyBank },
 		{ to: "/trash", label: t("sidebar.trash"), icon: Trash },
 		{ to: "/sync", label: t("sync.title"), icon: Wifi },
 	] as const;

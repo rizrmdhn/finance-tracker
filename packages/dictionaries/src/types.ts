@@ -307,6 +307,7 @@ export interface Dictionary {
 		goalCount_other: string;
 		noGoals: string;
 		noGoalsDescription: string;
+		inactiveGoals: string;
 		status: {
 			active: string;
 			reached: string;
