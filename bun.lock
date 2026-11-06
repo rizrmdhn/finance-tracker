@@ -398,7 +398,12 @@
     },
   },
   "trustedDependencies": [
+    "esbuild",
     "@vlcn.io/crsqlite",
+    "msw",
+    "electron-winstaller",
+    "electron",
+    "better-sqlite3",
   ],
   "patchedDependencies": {
     "electron-updater@6.8.3": "patches/electron-updater@6.8.3.patch",
