@@ -778,6 +778,25 @@ export const en = {
 			inverse: "1 {{currency}} = {{rate}}",
 			noRate: "No rate available for this pair yet.",
 		},
+		relativeTime: {
+			justNow: "just now",
+			minutes_one: "{{count}} minute ago",
+			minutes_other: "{{count}} minutes ago",
+			hours_one: "{{count}} hour ago",
+			hours_other: "{{count}} hours ago",
+			days_one: "{{count}} day ago",
+			days_other: "{{count}} days ago",
+		},
+		currencyNames: {
+			IDR: "Indonesian Rupiah",
+			USD: "US Dollar",
+			SGD: "Singapore Dollar",
+			MYR: "Malaysian Ringgit",
+			EUR: "Euro",
+			GBP: "British Pound",
+			JPY: "Japanese Yen",
+			AUD: "Australian Dollar",
+		},
 		empty: {
 			title: "No exchange rates yet",
 			description:

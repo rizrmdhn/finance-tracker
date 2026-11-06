@@ -15,9 +15,15 @@ const CURRENCY_OPTIONS = SUPPORTED_CURRENCIES.map((c) => ({
 interface CurrencySelectProps {
 	value?: SupportedCurrency;
 	onChange: (value: SupportedCurrency) => void;
+	/** The picker sheet's title; "Currency" by default. */
+	title?: string;
 }
 
-export function CurrencySelect({ value, onChange }: CurrencySelectProps) {
+export function CurrencySelect({
+	value,
+	onChange,
+	title,
+}: CurrencySelectProps) {
 	const { t } = useTranslation();
 	return (
 		<OptionSelect
@@ -25,7 +31,7 @@ export function CurrencySelect({ value, onChange }: CurrencySelectProps) {
 			onChange={onChange}
 			options={CURRENCY_OPTIONS}
 			placeholder={t("common.selectCurrency")}
-			title={t("common.currency")}
+			title={title ?? t("common.currency")}
 		/>
 	);
 }
