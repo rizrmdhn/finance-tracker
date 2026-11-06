@@ -40,7 +40,7 @@ describe("getMissingHistorySpans", () => {
 	test("fetches nothing when covered and the tail is fresh", () => {
 		const coverage = {
 			minDate: "2026-04-01",
-			maxDate: "2026-05-08",
+			maxDate: "2026-05-10",
 			lastFetchedAt: now - HOUR,
 		};
 		expect(getMissingHistorySpans({ ...range, coverage, now })).toEqual([]);
@@ -55,6 +55,29 @@ describe("getMissingHistorySpans", () => {
 		expect(getMissingHistorySpans({ ...range, coverage, now })).toEqual([
 			{ from: "2026-04-01", to: "2026-04-30" },
 		]);
+	});
+
+	test("ignores a head gap that can be days without a rate", () => {
+		// 2026-04-01 is a Wednesday; Good Friday to Easter Monday 2026 is 3–6 April
+		const easter = { from: "2026-04-03", to: "2026-05-10" };
+		const coverage = {
+			minDate: "2026-04-07",
+			maxDate: "2026-05-10",
+			lastFetchedAt: now - HOUR,
+		};
+		expect(getMissingHistorySpans({ ...easter, coverage, now })).toEqual([]);
+		expect(
+			getMissingHistorySpans({ ...easter, from: "2026-04-02", coverage, now }),
+		).toEqual([{ from: "2026-04-02", to: "2026-04-06" }]);
+	});
+
+	test("does not refetch a fresh tail that ends before the range (weekend)", () => {
+		const coverage = {
+			minDate: "2026-04-01",
+			maxDate: "2026-05-08", // Friday; `to` is Sunday
+			lastFetchedAt: now - 3 * HOUR,
+		};
+		expect(getMissingHistorySpans({ ...range, coverage, now })).toEqual([]);
 	});
 
 	test("keeps the cache contiguous when the range ends before it", () => {

@@ -32,11 +32,17 @@ export function getRangeDates(range: ExchangeRateRange, today: Date): DateSpan {
 	};
 }
 
+/** Longest run of days without a published rate (e.g. Good Friday to Easter Monday). */
+const MAX_DAYS_WITHOUT_RATE = 4;
+
 /**
  * The spans to fetch so the cached history covers `from`–`to`. The cache is always one
  * contiguous span (no per-day gaps: weekends and holidays legitimately have no rows), so only
- * the head before `minDate` and the tail from `maxDate` can be missing. The tail is refetched
- * once it is stale — the latest day can still change, and new days are published after it.
+ * the head before `minDate` and the tail from `maxDate` can be missing.
+ * - Head: only when `from` is more than `MAX_DAYS_WITHOUT_RATE` days before `minDate` — fewer
+ *   may all be days without a rate, which would be refetched (empty) on every call.
+ * - Tail: only once it is stale. The latest day can still change and new days get published,
+ *   but a fresh tail ending before `to` just means nothing newer exists yet (e.g. a weekend).
  */
 export function getMissingHistorySpans({
 	from,
@@ -50,11 +56,12 @@ export function getMissingHistorySpans({
 	if (!coverage) return [{ from, to }];
 
 	const spans: DateSpan[] = [];
-	if (from < coverage.minDate) {
+	const minDate = parseISO(coverage.minDate);
+	if (from < toDateString(subDays(minDate, MAX_DAYS_WITHOUT_RATE))) {
 		// Ends right before the cache, even past `to`, so the cache stays contiguous
 		spans.push({
 			from,
-			to: toDateString(subDays(parseISO(coverage.minDate), 1)),
+			to: toDateString(subDays(minDate, 1)),
 		});
 	}
 	if (coverage.maxDate <= to && isRateStale(coverage.lastFetchedAt, now)) {
