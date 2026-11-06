@@ -4,11 +4,14 @@ import {
 	type SupportedCurrency,
 } from "@finance-tracker/constants";
 import { formatRate, getRateChangeDirection } from "@finance-tracker/utils";
+import { Circle } from "@shopify/react-native-skia";
 import { ArrowRightIcon } from "lucide-react-native";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { View } from "react-native";
-import { Area, CartesianChart, Line } from "victory-native";
+import { useAnimatedReaction } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
+import { Area, CartesianChart, Line, useChartPressState } from "victory-native";
 import {
 	type PairHistory,
 	type RatePair,
@@ -34,6 +37,11 @@ const EDGE_DATE_FORMAT: Intl.DateTimeFormatOptions = {
 	year: "numeric",
 };
 
+const PRESSED_DATE_FORMAT: Intl.DateTimeFormatOptions = {
+	weekday: "short",
+	...EDGE_DATE_FORMAT,
+};
+
 interface ExchangeRateChartCardProps {
 	pair: RatePair;
 	range: ExchangeRateRange;
@@ -57,7 +65,6 @@ export function ExchangeRateChartCard({
 	onRangeChange,
 }: ExchangeRateChartCardProps) {
 	const { t } = useTranslation();
-	const { formatDay } = useExchangeRateText();
 	const changeColor = useRateChangeColor();
 	const series = history?.series ?? [];
 	const latestRate = history?.latestRate ?? fallbackRate;
@@ -133,31 +140,35 @@ export function ExchangeRateChartCard({
 						</Text>
 					</View>
 				) : (
-					<View className="gap-1">
-						<RateChart series={series} color={color} />
-						<View className="flex-row justify-between">
-							<Text className="text-muted-foreground text-xs">
-								{formatDay(series[0].date, EDGE_DATE_FORMAT)}
-							</Text>
-							<Text className="text-muted-foreground text-xs">
-								{formatDay(series[series.length - 1].date, EDGE_DATE_FORMAT)}
-							</Text>
-						</View>
-					</View>
+					<RateChart series={series} color={color} quote={pair.quote} />
 				)}
 			</CardContent>
 		</Card>
 	);
 }
 
-/** Area chart of the series, its Y axis fitted to the data. */
+/** Area chart of the series (Y axis fitted to the data); touching it shows that day's rate. */
 function RateChart({
 	series,
 	color,
+	quote,
 }: {
 	series: PairHistory["series"];
 	color: string;
+	quote: SupportedCurrency;
 }) {
+	const { formatDay } = useExchangeRateText();
+	const { state, isActive } = useChartPressState({ x: "", y: { rate: 0 } });
+	const [activeIndex, setActiveIndex] = useState(-1);
+
+	// The pressed point's index, mirrored to React to format its date and rate
+	useAnimatedReaction(
+		() => state.matchedIndex.value,
+		(index, previous) => {
+			if (index !== previous) scheduleOnRN(setActiveIndex, index);
+		},
+	);
+
 	// Fitted to the data (not from 0) so day-to-day moves stay visible
 	const domain = useMemo((): [number, number] => {
 		const rates = series.map((p) => p.rate);
@@ -167,32 +178,67 @@ function RateChart({
 		return [min - padding, max + padding];
 	}, [series]);
 
+	const active = isActive ? series[activeIndex] : undefined;
+
 	return (
-		<View style={{ height: CHART_HEIGHT }}>
-			<CartesianChart
-				data={series}
-				xKey="date"
-				yKeys={["rate"]}
-				domain={{ y: domain }}
-			>
-				{({ points, chartBounds }) => (
+		<View className="gap-1">
+			<View style={{ height: CHART_HEIGHT }}>
+				<CartesianChart
+					data={series}
+					xKey="date"
+					yKeys={["rate"]}
+					domain={{ y: domain }}
+					chartPressState={state}
+				>
+					{({ points, chartBounds }) => (
+						<>
+							<Area
+								points={points.rate}
+								y0={chartBounds.bottom}
+								color={color}
+								opacity={0.15}
+								curveType="monotoneX"
+							/>
+							<Line
+								points={points.rate}
+								color={color}
+								strokeWidth={2}
+								curveType="monotoneX"
+							/>
+							{isActive && (
+								<Circle
+									cx={state.x.position}
+									cy={state.y.rate.position}
+									r={5}
+									color={color}
+								/>
+							)}
+						</>
+					)}
+				</CartesianChart>
+			</View>
+			{/* The pressed day, else the range's first and last day */}
+			<View className="flex-row justify-between gap-2">
+				{active ? (
 					<>
-						<Area
-							points={points.rate}
-							y0={chartBounds.bottom}
-							color={color}
-							opacity={0.15}
-							curveType="monotoneX"
-						/>
-						<Line
-							points={points.rate}
-							color={color}
-							strokeWidth={2}
-							curveType="monotoneX"
-						/>
+						<Text className="text-muted-foreground text-xs">
+							{formatDay(active.date, PRESSED_DATE_FORMAT)}
+						</Text>
+						<Text className="font-medium text-xs tabular-nums">
+							{formatRate(active.rate, quote)}
+						</Text>
+					</>
+				) : (
+					<>
+						<Text className="text-muted-foreground text-xs">
+							{formatDay(series[0].date, EDGE_DATE_FORMAT)}
+						</Text>
+						<Text className="text-muted-foreground text-xs">
+							{formatDay(series[series.length - 1].date, EDGE_DATE_FORMAT)}
+						</Text>
 					</>
 				)}
-			</CartesianChart>
+			</View>
 		</View>
 	);
 }
