@@ -1,15 +1,24 @@
 diff --git a/nodejs-install-helper.js b/nodejs-install-helper.js
-index 0000000..0000001 100644
+index 9e0a54e..90df757 100644
 --- a/nodejs-install-helper.js
 +++ b/nodejs-install-helper.js
-@@ -9 +9 @@
+@@ -6,7 +6,7 @@
+ import { join } from "path";
+ import fs from "fs";
+ import https from "https";
 -import pkg from "./package.json" assert { type: "json" };
 +import pkg from "./package.json" with { type: "json" };
-@@ -95,2 +95,5 @@
--      process.chdir(join(".", "dist"));
+ import { exec } from "child_process";
+ let { version } = pkg;
+ 
+@@ -94,7 +94,9 @@ if (process.env.CRSQLITE_NOPREBUILD) {
+       file.close();
+       console.log("Prebuilt binary downloaded");
+       process.chdir(join(".", "dist"));
 -      exec("unzip crsqlite.zip", (err, stdout, stderr) => {
-+      const extractCommand =
-+        process.platform === "win32"
-+          ? "tar -xf dist/crsqlite.zip -C dist"
-+          : "unzip dist/crsqlite.zip -d dist";
-+      exec(extractCommand, (err, stdout, stderr) => {
++      // Windows has no unzip; its bundled bsdtar extracts zip files
++      const extract = process.platform === "win32" ? "tar -xf crsqlite.zip" : "unzip crsqlite.zip";
++      exec(extract, (err, stdout, stderr) => {
+         if (err) {
+           console.log("Error extracting");
+           console.log(err.message);
