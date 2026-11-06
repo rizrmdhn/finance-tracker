@@ -4,6 +4,16 @@ on:
   push:
     tags:
       - "mobile/v*"
+    # Caches saved by a tag run are scoped to that tag, so the next tag can't
+    # read them. Builds on main save the caches instead; tag runs restore them.
+    branches:
+      - main
+    paths:
+      - "apps/native/**"
+      - "packages/**"
+      - "bun.lock"
+      - ".github/workflows/release-android.yml"
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -11,6 +21,7 @@ permissions:
 jobs:
   prepare:
     name: Prepare Release
+    if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     outputs:
       is_prerelease: ${{ steps.prerelease.outputs.is_prerelease }}
@@ -48,7 +59,11 @@ jobs:
   build-android:
     name: Build Android
     needs: prepare
+    # Run even when prepare is skipped (main-branch cache builds).
+    if: ${{ !cancelled() && !failure() }}
     runs-on: ubuntu-latest
+    env:
+      SAVE_CACHE: ${{ github.ref == 'refs/heads/main' }}
 
     steps:
       - name: Checkout
@@ -61,13 +76,27 @@ jobs:
         with:
           java-version: "17"
           distribution: "temurin"
-          cache: "gradle"
+
+      # Caches Gradle dependencies + build cache; writes only from main.
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: ${{ env.SAVE_CACHE != 'true' }}
+
+      # The C++ (CMake) compile for every ABI is most of the build time.
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: android-ccache
+          max-size: 2G
+          save: ${{ env.SAVE_CACHE == 'true' }}
+          verbose: 1
 
       - name: Setup bun
         uses: oven-sh/setup-bun@v2
 
-      - name: Cache bun dependencies
-        uses: actions/cache@v4
+      - name: Restore bun cache
+        uses: actions/cache/restore@v4
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
@@ -77,15 +106,14 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Cache Skia binaries
-        uses: actions/cache@v4
-        id: skia-cache
+      - name: Save bun cache
+        if: env.SAVE_CACHE == 'true'
+        uses: actions/cache/save@v4
         with:
-          path: apps/native/node_modules/@shopify/react-native-skia/libs
-          key: skia-${{ hashFiles('apps/native/node_modules/@shopify/react-native-skia/package.json') }}
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
 
       - name: Install Skia binaries
-        if: steps.skia-cache.outputs.cache-hit != 'true'
         run: bunx install-skia
         working-directory: apps/native
 
@@ -101,14 +129,23 @@ jobs:
         working-directory: apps/native/android
         run: |
           chmod +x gradlew
-          ./gradlew assembleRelease
+          ./gradlew assembleRelease --build-cache
         env:
           ANDROID_KEYSTORE_PATH: release.keystore
           ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          # CMake (>= 3.17) reads these from the environment, so every native
+          # module compiles through ccache without touching its build.gradle.
+          CMAKE_C_COMPILER_LAUNCHER: ccache
+          CMAKE_CXX_COMPILER_LAUNCHER: ccache
+          CCACHE_BASEDIR: ${{ github.workspace }}
+          CCACHE_NOHASHDIR: "true"
+          CCACHE_COMPILERCHECK: content
+          CCACHE_SLOPPINESS: include_file_ctime,include_file_mtime,time_macros
 
       - name: Rename APKs
+        if: startsWith(github.ref, 'refs/tags/')
         run: |
           TAG="${GITHUB_REF#refs/tags/mobile/v}"
           OUT=apps/native/android/app/build/outputs/apk/release
@@ -118,6 +155,7 @@ jobs:
           mv "$OUT/app-universal-release.apk"    "$OUT/Finance-Tracker-${TAG}-universal.apk"
 
       - name: Upload APK artifact
+        if: startsWith(github.ref, 'refs/tags/')
         uses: actions/upload-artifact@v4
         with:
           name: android-release
