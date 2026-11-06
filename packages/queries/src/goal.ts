@@ -1,7 +1,8 @@
-import type {
-	CategoryType,
-	GoalStatus,
-	SupportedCurrency,
+import {
+	type CategoryType,
+	type GoalStatus,
+	SUPPORTED_CURRENCIES,
+	type SupportedCurrency,
 } from "@finance-tracker/constants";
 import {
 	type AnyDatabase,
@@ -21,11 +22,19 @@ import {
 	createCurrencyConverter,
 	estimateGoalCompletion,
 	getDurationParts,
+	getMonthlyAverageRates,
 	getTargetDateGap,
 	median,
 	pickGoalPace,
 } from "@finance-tracker/utils";
-import { eachMonthOfInterval, max, startOfMonth, subMonths } from "date-fns";
+import {
+	eachMonthOfInterval,
+	format,
+	max,
+	startOfMonth,
+	subDays,
+	subMonths,
+} from "date-fns";
 import {
 	and,
 	asc,
@@ -49,7 +58,7 @@ import {
 	RelationNotFoundError,
 	WithdrawalExceedsAllocationError,
 } from "./errors";
-import { getCachedRates } from "./exchange-rate";
+import { getCachedRates, getRateHistory } from "./exchange-rate";
 import { withTransaction } from "./utils/with-transaction";
 
 /** Converts amounts to `target` with the cached rates, like `toDisplay` in getTransactionSummary. */
@@ -533,6 +542,7 @@ export async function deleteGoalContribution(db: AnyDatabase, id: string) {
  * Income − expense per full month (current month excluded), oldest first, for the last
  * `months` months — but never before the month of the first transaction, so a new user
  * isn't dragged down by empty months. `savings` isn't subtracted and transfers are ignored.
+ * Amounts are converted with their month's average rate from the rate history.
  */
 export async function getMonthlySurplus(
 	db: AnyDatabase,
@@ -555,7 +565,7 @@ export async function getMonthlySurplus(
 
 	if (from >= currentMonth) return [];
 
-	const [periodTransactions, toDisplay] = await Promise.all([
+	const [periodTransactions, toDisplay, historyRows] = await Promise.all([
 		db.query.transactions.findMany({
 			where: and(
 				gte(transactions.date, from.getTime()),
@@ -565,7 +575,19 @@ export async function getMonthlySurplus(
 			with: { category: true, account: true },
 		}),
 		getCurrencyConverter(db, input.displayCurrency),
+		getRateHistory(db, {
+			from: format(from, "yyyy-MM-dd"),
+			to: format(subDays(currentMonth, 1), "yyyy-MM-dd"),
+		}),
 	]);
+
+	// Per source currency: average rate to the display currency per `YYYY-MM`
+	const monthlyRates = new Map(
+		SUPPORTED_CURRENCIES.map((currency) => [
+			currency,
+			getMonthlyAverageRates(historyRows, currency, input.displayCurrency),
+		]),
+	);
 
 	const income = new Map<number, number>();
 	const expense = new Map<number, number>();
@@ -579,10 +601,14 @@ export async function getMonthlySurplus(
 		if (!totals) continue;
 
 		const month = startOfMonth(tx.date).getTime();
-		const amount = toDisplay(
-			tx.amount,
-			tx.account?.currency ?? input.displayCurrency,
-		);
+		const currency = tx.account?.currency ?? input.displayCurrency;
+		// That month's average rate; the cached latest rate when the month has no history
+		const monthRate = monthlyRates
+			.get(currency)
+			?.get(format(tx.date, "yyyy-MM"));
+		const amount = monthRate
+			? tx.amount * monthRate
+			: toDisplay(tx.amount, currency);
 		totals.set(month, (totals.get(month) ?? 0) + amount);
 	}
 

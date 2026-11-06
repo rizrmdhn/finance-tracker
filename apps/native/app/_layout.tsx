@@ -4,7 +4,11 @@ import { useReactQueryDevTools } from "@dev-plugins/react-query";
 import { CRDT_TABLES } from "@finance-tracker/constants";
 import { seedDatabase } from "@finance-tracker/db";
 import { PortalHost } from "@rn-primitives/portal";
-import { QueryClientProvider, useQuery } from "@tanstack/react-query";
+import {
+	QueryClientProvider,
+	useMutation,
+	useQuery,
+} from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -35,6 +39,24 @@ async function setupCRDT() {
 function StackLayout() {
 	useNavigationPersistence();
 	useWidgetSync();
+
+	// Rate history (any display currency) for past-month conversions, once per app start;
+	// failures are left alone like useFormatCurrency's fetchIfStale
+	const { mutate: ensureRateHistory } = useMutation(
+		trpc.exchangeRate.ensureHistory.mutationOptions({
+			onSuccess: (spans) => {
+				if (spans.length === 0) return;
+				void queryClient.invalidateQueries({
+					queryKey: trpc.exchangeRate.pathKey(),
+				});
+				void queryClient.invalidateQueries({ queryKey: trpc.goal.pathKey() });
+			},
+		}),
+	);
+
+	useEffect(() => {
+		ensureRateHistory({ range: "1Y" });
+	}, [ensureRateHistory]);
 
 	return (
 		<Stack screenOptions={{}}>

@@ -7,7 +7,7 @@ import {
 	SidebarTrigger,
 } from "@finance-tracker/ui/components/sidebar";
 import type { QueryClient } from "@tanstack/react-query";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import {
 	createRootRouteWithContext,
@@ -80,6 +80,25 @@ function RootComponent() {
 			i18n.changeLanguage(language.value);
 		}
 	}, [language, i18n]);
+
+	// Rate history (any display currency) for past-month conversions, once per app start;
+	// failures are left alone like useFormatCurrency's fetchIfStale
+	const queryClient = useQueryClient();
+	const { mutate: ensureRateHistory } = useMutation(
+		trpc.exchangeRate.ensureHistory.mutationOptions({
+			onSuccess: (spans) => {
+				if (spans.length === 0) return;
+				void queryClient.invalidateQueries({
+					queryKey: trpc.exchangeRate.pathKey(),
+				});
+				void queryClient.invalidateQueries({ queryKey: trpc.goal.pathKey() });
+			},
+		}),
+	);
+
+	useEffect(() => {
+		ensureRateHistory({ range: "1Y" });
+	}, [ensureRateHistory]);
 
 	if (isLoading) {
 		return (
