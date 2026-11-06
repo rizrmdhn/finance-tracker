@@ -1,14 +1,32 @@
-import type { SupportedCurrency } from "@finance-tracker/constants";
+import {
+	SUPPORTED_CURRENCIES,
+	type SupportedCurrency,
+} from "@finance-tracker/constants";
 import {
 	type AnyDatabase,
 	exchangeRateHistory,
 	exchangeRates,
 } from "@finance-tracker/db";
+import type {
+	ExchangeRateEnsureHistoryInput,
+	ExchangeRateOverviewInput,
+	ExchangeRatePairHistoryInput,
+} from "@finance-tracker/schema";
+import {
+	buildPairSeries,
+	downsample,
+	fetchExchangeRateHistory,
+	getChangePercent,
+	getMissingHistorySpans,
+	getRangeDates,
+	isRateStale,
+} from "@finance-tracker/utils";
 import { and, asc, desc, eq, gte, lte, sql } from "drizzle-orm";
 import { withTransaction } from "./utils/with-transaction";
 
 /** Rows per INSERT, well under SQLite's bound-parameter limit (4 columns each). */
 const HISTORY_UPSERT_CHUNK = 1000;
+const SPARKLINE_POINTS = 30;
 
 export async function getCachedRates(db: AnyDatabase, base: SupportedCurrency) {
 	return await db
@@ -115,5 +133,100 @@ export async function getRateHistoryCoverage(db: AnyDatabase) {
 		minDate: first.date,
 		maxDate: last.date,
 		lastFetchedAt: last.fetchedAt,
+	};
+}
+
+/**
+ * Fetches the parts of `range` the cached history lacks (see getMissingHistorySpans) and stores
+ * them; returns the fetched spans. Only adds rows: when a fetch fails, everything cached and
+ * fetched before it stays, and the error is rethrown.
+ */
+export async function ensureRateHistory(
+	db: AnyDatabase,
+	input: ExchangeRateEnsureHistoryInput,
+) {
+	const coverage = await getRateHistoryCoverage(db);
+	const spans = getMissingHistorySpans({
+		...getRangeDates(input.range, new Date()),
+		coverage:
+			coverage && input.force ? { ...coverage, lastFetchedAt: 0 } : coverage,
+		now: Date.now(),
+	});
+
+	for (const span of spans) {
+		const rows = await fetchExchangeRateHistory(span);
+		const fetchedAt = Date.now();
+		await upsertRateHistory(
+			db,
+			rows.map((row) => ({ ...row, fetchedAt })),
+		);
+	}
+
+	return spans;
+}
+
+/** Cached daily `base` → `quote` rates over `range` (no fetching), with the latest point and change. */
+export async function getPairHistory(
+	db: AnyDatabase,
+	input: ExchangeRatePairHistoryInput,
+) {
+	const rows = await getRateHistory(db, getRangeDates(input.range, new Date()));
+	const series = buildPairSeries(rows, input.base, input.quote);
+	const latest = series.at(-1);
+
+	return {
+		series,
+		latestRate: latest?.rate ?? null,
+		latestDate: latest?.date ?? null,
+		changePercent: getChangePercent(series),
+	};
+}
+
+/**
+ * Every other currency against `displayCurrency` over `range`, from the cached history:
+ * `rate` is 1 currency = rate × displayCurrency (the latest cached rate when there's no
+ * history), `sparkline` at most SPARKLINE_POINTS rates. `updatedAt` is when the latest
+ * history day (else the latest rates) was fetched.
+ */
+export async function getRatesOverview(
+	db: AnyDatabase,
+	input: ExchangeRateOverviewInput,
+) {
+	const [rows, cachedRates, coverage] = await Promise.all([
+		getRateHistory(db, getRangeDates(input.range, new Date())),
+		getCachedRates(db, input.displayCurrency),
+		getRateHistoryCoverage(db),
+	]);
+
+	const currencies = SUPPORTED_CURRENCIES.filter(
+		(c) => c !== input.displayCurrency,
+	).map((currency) => {
+		const series = buildPairSeries(rows, currency, input.displayCurrency);
+		const latest = series.at(-1);
+		// Cached rates are 1 displayCurrency = rate × currency
+		const cached = cachedRates.find((r) => r.target === currency);
+
+		return {
+			currency,
+			rate: latest?.rate ?? (cached ? 1 / cached.rate : null),
+			changePercent: getChangePercent(series),
+			sparkline: downsample(
+				series.map((p) => p.rate),
+				SPARKLINE_POINTS,
+			),
+			latestDate: latest?.date ?? null,
+		};
+	});
+
+	const updatedAt =
+		coverage?.lastFetchedAt ??
+		(cachedRates.length > 0
+			? Math.min(...cachedRates.map((r) => r.fetchedAt))
+			: null);
+
+	return {
+		currencies,
+		updatedAt,
+		isStale: updatedAt === null || isRateStale(updatedAt),
 	};
 }
