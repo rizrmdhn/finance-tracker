@@ -3,13 +3,15 @@ import {
 	type ExchangeRateRange,
 	type SupportedCurrency,
 } from "@finance-tracker/constants";
-import { formatRate } from "@finance-tracker/utils";
+import { formatRate, getRateChangeDirection } from "@finance-tracker/utils";
 import { useTranslation } from "react-i18next";
 import { Pressable, View } from "react-native";
+import Svg, { Polyline } from "react-native-svg";
 import {
 	type RatePair,
 	type RatesOverview,
 	useExchangeRateText,
+	useRateChangeColor,
 } from "@/hooks/use-exchange-rate";
 import { cn } from "@/lib/utils";
 import { RateChange } from "./rate-change";
@@ -37,6 +39,7 @@ export function CurrencyRateList({
 }: CurrencyRateListProps) {
 	const { t } = useTranslation();
 	const { currencyName } = useExchangeRateText();
+	const changeColor = useRateChangeColor();
 
 	return (
 		<Card className="gap-4">
@@ -85,6 +88,10 @@ export function CurrencyRateList({
 									{currencyName(item.currency)}
 								</Text>
 							</View>
+							<Sparkline
+								points={item.sparkline}
+								color={changeColor(getRateChangeDirection(item.changePercent))}
+							/>
 							<View className="items-end gap-0.5">
 								<Text className="font-medium text-sm tabular-nums">
 									{item.rate === null
@@ -104,6 +111,43 @@ export function CurrencyRateList({
 	);
 }
 
+const SPARKLINE_WIDTH = 56;
+const SPARKLINE_HEIGHT = 24;
+const SPARKLINE_PADDING = 2;
+
+/** A tiny line of the rate over the range; nothing without at least two points. */
+function Sparkline({ points, color }: { points: number[]; color: string }) {
+	if (points.length < 2) {
+		return <View style={{ width: SPARKLINE_WIDTH }} />;
+	}
+
+	const min = Math.min(...points);
+	const span = Math.max(...points) - min;
+	const innerHeight = SPARKLINE_HEIGHT - SPARKLINE_PADDING * 2;
+	const coordinates = points
+		.map((point, i) => {
+			const x = (i / (points.length - 1)) * SPARKLINE_WIDTH;
+			// A flat line sits in the middle
+			const ratio = span === 0 ? 0.5 : (point - min) / span;
+			const y = SPARKLINE_PADDING + (1 - ratio) * innerHeight;
+			return `${x.toFixed(1)},${y.toFixed(1)}`;
+		})
+		.join(" ");
+
+	return (
+		<Svg width={SPARKLINE_WIDTH} height={SPARKLINE_HEIGHT}>
+			<Polyline
+				points={coordinates}
+				fill="none"
+				stroke={color}
+				strokeWidth={1.5}
+				strokeLinejoin="round"
+				strokeLinecap="round"
+			/>
+		</Svg>
+	);
+}
+
 export function CurrencyRateListSkeleton() {
 	return (
 		<Card className="gap-4">
@@ -118,6 +162,7 @@ export function CurrencyRateListSkeleton() {
 							<Skeleton className="h-3 w-12" />
 							<Skeleton className="h-3 w-28" />
 						</View>
+						<Skeleton className="h-6 w-16" />
 						<View className="items-end gap-1.5">
 							<Skeleton className="h-4 w-24" />
 							<Skeleton className="h-3 w-14" />
