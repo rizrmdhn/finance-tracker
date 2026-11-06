@@ -10,18 +10,18 @@ export type WidgetBudget = {
 	spent: number;
 	remaining: number;
 	isOverBudget: boolean;
-	period: string;
+	period: "monthly" | "weekly";
+	/** Amounts are in the budget's own currency. */
+	currency: SupportedCurrency;
 	category: {
 		name: string;
-		color: string | null;
+		color: string;
 	} | null;
 };
 
 export type WidgetData = {
 	budgets: WidgetBudget[];
 	language: string;
-	currency: string;
-	currencyLocale: string;
 	lastUpdated: number;
 };
 

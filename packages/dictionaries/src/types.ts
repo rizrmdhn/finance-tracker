@@ -72,6 +72,7 @@ export interface Dictionary {
 		noTransactions: string;
 		loading: string;
 		more: string;
+		moreCount: string;
 	};
 	errors: {
 		noData: string;
@@ -283,6 +284,12 @@ export interface Dictionary {
 		remaining: string;
 		overBy: string;
 		overBudget: string;
+		widget: {
+			noBudgets: string;
+			openApp: string;
+			staleMessage: string;
+			tapToRefresh: string;
+		};
 		create: {
 			title: string;
 		};

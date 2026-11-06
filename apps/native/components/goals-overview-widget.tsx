@@ -136,8 +136,10 @@ export function GoalsOverviewWidget() {
 								hitSlop={8}
 							>
 								<Text className="text-center text-muted-foreground text-xs">
-									+{activeGoals.length - MAX_GOALS} {t("common.more")} ·{" "}
-									{t("common.viewAll")}
+									{t("common.moreCount", {
+										count: activeGoals.length - MAX_GOALS,
+									})}{" "}
+									· {t("common.viewAll")}
 								</Text>
 							</Pressable>
 						)}

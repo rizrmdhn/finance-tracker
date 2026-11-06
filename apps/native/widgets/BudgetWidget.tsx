@@ -1,60 +1,50 @@
 "use no memo";
 
+import type { BudgetWithSpent } from "@finance-tracker/types";
+import { formatCurrency } from "@finance-tracker/utils";
 import { FlexWidget, TextWidget } from "react-native-android-widget";
-import type { WidgetData } from "../lib/widget-storage";
+import i18n from "../lib/i18n";
+import type { WidgetBudget, WidgetData } from "../lib/widget-storage";
+import { fitRows } from "./layout";
 
 const BUDGETS_URI = "finance-tracker:///budgets";
 const STALE_MS = 60 * 60 * 1000; // 1 hour
+const MAX_BUDGETS = 4;
 
-const STRINGS = {
-	en: {
-		title: "Budgets",
-		spent: "Spent",
-		remaining: "Remaining",
-		overBudget: "Over Budget",
-		overBy: "Over by",
-		monthly: "Monthly",
-		weekly: "Weekly",
-		noBudgets: "No budgets yet.\nOpen the app to add one.",
-		staleMessage: "Data may be outdated",
-		tapToRefresh: "Tap to refresh",
-	},
-	id: {
-		title: "Anggaran",
-		spent: "Terpakai",
-		remaining: "Sisa",
-		overBudget: "Melewati Anggaran",
-		overBy: "Lebih",
-		monthly: "Bulanan",
-		weekly: "Mingguan",
-		noBudgets: "Belum ada anggaran.\nBuka aplikasi untuk menambah.",
-		staleMessage: "Data mungkin sudah lama",
-		tapToRefresh: "Ketuk untuk perbarui",
-	},
-} as const;
-
-const CURRENCY_LOCALE_MAP: Record<string, string> = {
-	IDR: "id-ID",
-	USD: "en-US",
-};
-
-function fmt(amount: number, currency: string, locale: string) {
-	return new Intl.NumberFormat(locale, {
-		style: "currency",
-		currency,
-		maximumFractionDigits: 0,
-	}).format(amount);
+function usage(budget: { spent: number; amount: number }) {
+	return budget.amount > 0 ? budget.spent / budget.amount : 0;
 }
 
-type Props = { data: WidgetData | null };
+/** The budgets that need attention most: over budget first, then by share used. */
+export function toWidgetBudgets(budgets: BudgetWithSpent[]): WidgetBudget[] {
+	return [...budgets]
+		.sort((a, b) =>
+			a.isOverBudget !== b.isOverBudget
+				? a.isOverBudget
+					? -1
+					: 1
+				: usage(b) - usage(a),
+		)
+		.slice(0, MAX_BUDGETS)
+		.map((b) => ({
+			id: b.id,
+			amount: b.amount,
+			spent: b.spent,
+			remaining: b.remaining,
+			isOverBudget: b.isOverBudget,
+			period: b.period,
+			currency: b.currency,
+			category: b.category
+				? { name: b.category.name, color: b.category.color }
+				: null,
+		}));
+}
 
-export function BudgetWidget({ data }: Props) {
-	const lang = (data?.language ?? "id") as keyof typeof STRINGS;
-	const t = STRINGS[lang] ?? STRINGS.id;
-	const currency = data?.currency ?? "IDR";
-	const locale =
-		data?.currencyLocale ?? CURRENCY_LOCALE_MAP[currency] ?? "id-ID";
-	const budgets = data?.budgets ?? [];
+type Props = { data: WidgetData | null; height: number };
+
+export function BudgetWidget({ data, height }: Props) {
+	const t = i18n.getFixedT(data?.language ?? i18n.language);
+	const budgets = (data?.budgets ?? []).slice(0, fitRows(height, MAX_BUDGETS));
 
 	const isStale =
 		!!data?.lastUpdated && Date.now() - data.lastUpdated > STALE_MS;
@@ -82,7 +72,7 @@ export function BudgetWidget({ data }: Props) {
 			>
 				{/* Header */}
 				<TextWidget
-					text={t.title}
+					text={t("budgets.title")}
 					style={{
 						fontSize: 15,
 						fontWeight: "bold",
@@ -101,14 +91,13 @@ export function BudgetWidget({ data }: Props) {
 						}}
 					>
 						<TextWidget
-							text={t.noBudgets}
+							text={`${t("budgets.widget.noBudgets")}\n${t("budgets.widget.openApp")}`}
 							style={{ fontSize: 12, color: "#71717a", textAlign: "center" }}
 						/>
 					</FlexWidget>
 				) : (
-					budgets.slice(0, 4).map((budget) => {
-						const percent =
-							budget.amount > 0 ? Math.min(budget.spent / budget.amount, 1) : 0;
+					budgets.map((budget) => {
+						const percent = Math.min(usage(budget), 1);
 						const remaining = 1 - percent;
 
 						return (
@@ -132,6 +121,8 @@ export function BudgetWidget({ data }: Props) {
 									<FlexWidget style={{ flex: 1 }}>
 										<TextWidget
 											text={budget.category?.name ?? "—"}
+											maxLines={1}
+											truncate="END"
 											style={{
 												fontSize: 12,
 												fontWeight: "bold",
@@ -143,10 +134,10 @@ export function BudgetWidget({ data }: Props) {
 									<TextWidget
 										text={
 											budget.isOverBudget
-												? t.overBudget
+												? t("budgets.overBudget")
 												: budget.period === "monthly"
-													? t.monthly
-													: t.weekly
+													? t("budgets.monthly")
+													: t("budgets.weekly")
 										}
 										style={{
 											fontSize: 10,
@@ -192,14 +183,24 @@ export function BudgetWidget({ data }: Props) {
 									}}
 								>
 									<TextWidget
-										text={`${t.spent}: ${fmt(budget.spent, currency, locale)}`}
+										text={`${t("budgets.spent")}: ${formatCurrency(budget.spent, budget.currency)}`}
 										style={{ fontSize: 10, color: "#71717a" }}
 									/>
 									<TextWidget
 										text={
 											budget.isOverBudget
-												? `${t.overBy} ${fmt(Math.abs(budget.remaining), currency, locale)}`
-												: `${t.remaining}: ${fmt(budget.remaining, currency, locale)}`
+												? t("budgets.overBy", {
+														amount: formatCurrency(
+															Math.abs(budget.remaining),
+															budget.currency,
+														),
+													})
+												: t("budgets.remaining", {
+														amount: formatCurrency(
+															budget.remaining,
+															budget.currency,
+														),
+													})
 										}
 										style={{
 											fontSize: 10,
@@ -228,7 +229,7 @@ export function BudgetWidget({ data }: Props) {
 					}}
 				>
 					<TextWidget
-						text={t.tapToRefresh}
+						text={t("budgets.widget.tapToRefresh")}
 						style={{
 							fontSize: 14,
 							fontWeight: "bold",
@@ -236,7 +237,7 @@ export function BudgetWidget({ data }: Props) {
 						}}
 					/>
 					<TextWidget
-						text={t.staleMessage}
+						text={t("budgets.widget.staleMessage")}
 						style={{
 							fontSize: 11,
 							color: "#a1a1aa",

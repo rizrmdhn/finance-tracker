@@ -1,5 +1,4 @@
 import type { SupportedCurrency } from "@finance-tracker/constants";
-import { createId } from "@paralleldrive/cuid2";
 import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { Target } from "lucide-react-native";
@@ -12,6 +11,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Icon } from "./ui/icon";
 import { Skeleton } from "./ui/skeleton";
 import { Text } from "./ui/text";
+
+const MAX_BUDGETS = 5;
+const SKELETON_KEYS = ["first", "second", "third"];
 
 interface BudgetOverviewWidgetProps {
 	from: number;
@@ -33,7 +35,7 @@ export function BudgetOverviewWidget({ from, to }: BudgetOverviewWidgetProps) {
 		return bPercent - aPercent;
 	});
 
-	const displayed = sorted.slice(0, 5);
+	const displayed = sorted.slice(0, MAX_BUDGETS);
 
 	return (
 		<Card>
@@ -56,8 +58,8 @@ export function BudgetOverviewWidget({ from, to }: BudgetOverviewWidgetProps) {
 			<CardContent>
 				{isPending ? (
 					<View className="gap-3">
-						{Array.from({ length: 3 }).map((_, _i) => (
-							<View key={createId()} className="gap-1.5">
+						{SKELETON_KEYS.map((key) => (
+							<View key={key} className="gap-1.5">
 								<View className="flex-row items-center justify-between">
 									<View className="flex-row items-center gap-2">
 										<Skeleton className="size-3.5 rounded-full" />
@@ -142,15 +144,17 @@ export function BudgetOverviewWidget({ from, to }: BudgetOverviewWidgetProps) {
 							);
 						})}
 
-						{budgets.length > 5 && (
+						{budgets.length > MAX_BUDGETS && (
 							<Pressable
 								onPress={() => router.push("/budgets")}
 								className="items-center pt-1"
 								hitSlop={8}
 							>
 								<Text className="text-center text-muted-foreground text-xs">
-									+{budgets.length - 5} {t("common.more")} ·{" "}
-									{t("common.viewAll")}
+									{t("common.moreCount", {
+										count: budgets.length - MAX_BUDGETS,
+									})}{" "}
+									· {t("common.viewAll")}
 								</Text>
 							</Pressable>
 						)}

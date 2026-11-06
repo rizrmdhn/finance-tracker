@@ -1,45 +1,39 @@
 "use no memo";
 
+import { APP_SETTINGS_DEFAULTS } from "@finance-tracker/constants";
 import {
 	getAppSettingByKey,
 	getBudgetsWithSpent,
 } from "@finance-tracker/queries";
-import type { WidgetTaskHandlerProps } from "react-native-android-widget";
+import {
+	requestWidgetUpdate,
+	type WidgetTaskHandlerProps,
+} from "react-native-android-widget";
 import { db } from "../lib/db";
 import { getCurrentMonthRange } from "../lib/utils";
 import { getWidgetData, saveWidgetData } from "../lib/widget-storage";
-import { BudgetWidget } from "./BudgetWidget";
-
-const CURRENCY_LOCALE_MAP: Record<string, string> = {
-	IDR: "id-ID",
-	USD: "en-US",
-};
+import { BudgetWidget, toWidgetBudgets } from "./BudgetWidget";
 
 async function fetchAndSaveWidgetData() {
 	const { from, to } = getCurrentMonthRange();
-	const [budgets, langSetting, currencySetting] = await Promise.all([
+	const [budgets, langSetting] = await Promise.all([
 		getBudgetsWithSpent(db, { from, to }),
 		getAppSettingByKey(db, "language"),
-		getAppSettingByKey(db, "currency"),
 	]);
 
-	const currency = currencySetting?.value ?? "IDR";
-
 	saveWidgetData({
-		budgets: budgets.map((b) => ({
-			id: b.id,
-			amount: b.amount,
-			spent: b.spent,
-			remaining: b.remaining,
-			isOverBudget: b.isOverBudget,
-			period: b.period,
-			category: b.category
-				? { name: b.category.name, color: b.category.color }
-				: null,
-		})),
-		language: langSetting?.value ?? "id",
-		currency,
-		currencyLocale: CURRENCY_LOCALE_MAP[currency] ?? "id-ID",
+		budgets: toWidgetBudgets(budgets),
+		language: langSetting?.value ?? APP_SETTINGS_DEFAULTS.language,
+	});
+}
+
+/** Re-reads the database and redraws every budget widget on the home screen. */
+export async function updateBudgetWidgets() {
+	await fetchAndSaveWidgetData();
+	const data = getWidgetData();
+	await requestWidgetUpdate({
+		widgetName: "BudgetWidget",
+		renderWidget: ({ height }) => <BudgetWidget data={data} height={height} />,
 	});
 }
 
@@ -47,18 +41,17 @@ export async function budgetWidgetTaskHandler(props: WidgetTaskHandlerProps) {
 	switch (props.widgetAction) {
 		case "WIDGET_ADDED":
 		case "WIDGET_UPDATE":
-		case "WIDGET_RESIZED": {
-			const data = getWidgetData();
-			props.renderWidget(<BudgetWidget data={data} />);
+		case "WIDGET_RESIZED":
+			await fetchAndSaveWidgetData();
 			break;
-		}
-		default: {
-			if ((props.widgetAction as string) === "REFRESH_WIDGET") {
-				await fetchAndSaveWidgetData();
-				const fresh = getWidgetData();
-				props.renderWidget(<BudgetWidget data={fresh} />);
-			}
+		case "WIDGET_CLICK":
+			if (props.clickAction !== "REFRESH_WIDGET") return;
+			await fetchAndSaveWidgetData();
 			break;
-		}
+		default:
+			return;
 	}
+	props.renderWidget(
+		<BudgetWidget data={getWidgetData()} height={props.widgetInfo.height} />,
+	);
 }

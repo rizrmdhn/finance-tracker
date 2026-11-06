@@ -6,6 +6,7 @@ import { FlexWidget, TextWidget } from "react-native-android-widget";
 import { formatGoalTimeLeft } from "../lib/goal-text";
 import i18n from "../lib/i18n";
 import type { GoalWidgetData, WidgetGoal } from "../lib/widget-storage";
+import { fitRows } from "./layout";
 
 const GOALS_URI = "finance-tracker:///goals";
 const STALE_MS = 60 * 60 * 1000; // 1 hour
@@ -48,11 +49,11 @@ export function toWidgetGoals(overview: OverviewItem[]): WidgetGoal[] {
 		}));
 }
 
-type Props = { data: GoalWidgetData | null };
+type Props = { data: GoalWidgetData | null; height: number };
 
-export function GoalWidget({ data }: Props) {
+export function GoalWidget({ data, height }: Props) {
 	const t = i18n.getFixedT(data?.language ?? i18n.language);
-	const goals = data?.goals ?? [];
+	const goals = (data?.goals ?? []).slice(0, fitRows(height, MAX_GOALS));
 
 	const isStale =
 		!!data?.lastUpdated && Date.now() - data.lastUpdated > STALE_MS;
