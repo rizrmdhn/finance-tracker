@@ -1,11 +1,9 @@
-import { APP_SETTINGS_DEFAULTS } from "@finance-tracker/constants";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useFocusEffect } from "expo-router";
 import { ChevronRightIcon, PiggyBankIcon, PlusIcon } from "lucide-react-native";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { View } from "react-native";
-import { requestWidgetUpdate } from "react-native-android-widget";
 import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { Container } from "@/components/container";
 import CreateGoalDialog from "@/components/form/create-goal-dialog";
@@ -26,8 +24,6 @@ import useModalState from "@/hooks/use-modal-state";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
 import { cn } from "@/lib/utils";
-import { saveGoalWidgetData } from "@/lib/widget-storage";
-import { GoalWidget, toWidgetGoals } from "@/widgets/GoalWidget";
 
 const SKELETON_KEYS = ["first", "second", "third"];
 
@@ -51,35 +47,12 @@ export default function Goals() {
 		refetch,
 	} = useQuery(trpc.goal.overview.queryOptions());
 
-	const { data: languageSetting } = useQuery(
-		trpc.appSetting.get.queryOptions({ key: "language" }),
-	);
-
 	// Balances and estimates change with transactions made elsewhere
 	useFocusEffect(
 		useCallback(() => {
 			refetch();
 		}, [refetch]),
 	);
-
-	useEffect(() => {
-		if (isLoading) return;
-		const widgetPayload = {
-			goals: toWidgetGoals(overview),
-			language: languageSetting?.value ?? APP_SETTINGS_DEFAULTS.language,
-		};
-		saveGoalWidgetData(widgetPayload);
-
-		// Push fresh data to the home-screen widget
-		requestWidgetUpdate({
-			widgetName: "GoalWidget",
-			renderWidget: () => (
-				<GoalWidget data={{ ...widgetPayload, lastUpdated: Date.now() }} />
-			),
-		}).catch(() => {
-			// No widget on home screen — ignore
-		});
-	}, [overview, isLoading, languageSetting]);
 
 	// The latest data of the selected goal, so open sheets follow its changes
 	const current =

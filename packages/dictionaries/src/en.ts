@@ -76,6 +76,7 @@ export const en = {
 		noTransactions: "No transactions",
 		loading: "Loading...",
 		more: "More",
+		moreCount: "+{{count}} more",
 	},
 	errors: {
 		noData: "No data",
@@ -303,6 +304,12 @@ export const en = {
 		remaining: "Remaining: {{amount}}",
 		overBy: "Over by {{amount}}",
 		overBudget: "Over budget",
+		widget: {
+			noBudgets: "No budgets yet",
+			openApp: "Open the app to add one.",
+			staleMessage: "Data may be outdated",
+			tapToRefresh: "Tap to refresh",
+		},
 		create: {
 			title: "Create Budget",
 		},

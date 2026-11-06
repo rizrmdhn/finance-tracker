@@ -76,6 +76,7 @@ export const id = {
 		noTransactions: "Tidak ada transaksi yang ditemukan",
 		loading: "Memuat...",
 		more: "Lainnya",
+		moreCount: "+{{count}} lainnya",
 	},
 	errors: {
 		noData: "Tidak ada data",
@@ -303,6 +304,12 @@ export const id = {
 		remaining: "Sisa: {{amount}}",
 		overBy: "Melebihi {{amount}}",
 		overBudget: "Melebihi anggaran",
+		widget: {
+			noBudgets: "Belum ada anggaran",
+			openApp: "Buka aplikasi untuk menambah.",
+			staleMessage: "Data mungkin sudah lama",
+			tapToRefresh: "Ketuk untuk perbarui",
+		},
 		create: {
 			title: "Buat Anggaran",
 		},

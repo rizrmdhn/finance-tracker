@@ -18,6 +18,7 @@ import { SplashScreen } from "@/components/splash-screen";
 import { Text } from "@/components/ui/text";
 import { AppThemeProvider } from "@/contexts/app-theme-context";
 import { useNavigationPersistence } from "@/hooks/use-navigation-persistence";
+import { useWidgetSync } from "@/hooks/use-widget-sync";
 import { db, migrateDatabase, sqlite } from "@/lib/db";
 import { queryClient, trpc } from "@/lib/trpc";
 
@@ -33,6 +34,7 @@ async function setupCRDT() {
 
 function StackLayout() {
 	useNavigationPersistence();
+	useWidgetSync();
 
 	return (
 		<Stack screenOptions={{}}>
