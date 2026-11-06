@@ -1,5 +1,6 @@
 import {
 	APP_SETTINGS_DEFAULTS,
+	type ExchangeRateRange,
 	type SupportedCurrency,
 } from "@finance-tracker/constants";
 import { exchangeRatesSearchSchema } from "@finance-tracker/schema";
@@ -17,9 +18,17 @@ import { pageHead } from "@/lib/page-head";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
 import { queryClient, trpc, trpcClient } from "@/lib/trpc";
 import {
+	CurrencyConverterCard,
+	CurrencyConverterCardSkeleton,
+} from "./-components/currency-converter-card";
+import {
 	CurrencyRateTable,
 	CurrencyRateTableSkeleton,
 } from "./-components/currency-rate-table";
+import {
+	ExchangeRateChartCard,
+	ExchangeRateChartCardSkeleton,
+} from "./-components/exchange-rate-chart-card";
 import {
 	type RatePair,
 	useExchangeRateText,
@@ -64,6 +73,21 @@ function ExchangeRatesComponent() {
 		placeholderData: keepPreviousData,
 	});
 
+	const { data: pairHistory } = useQuery({
+		...trpc.exchangeRate.getPairHistory.queryOptions({ ...pair, range }),
+		enabled: currencyLoaded,
+		placeholderData: keepPreviousData,
+	});
+
+	// Without history, derive the pair from the latest rates (1 currency = rate × display)
+	const rateInDisplay = (currency: SupportedCurrency) =>
+		currency === displayCurrency
+			? 1
+			: overview?.currencies.find((c) => c.currency === currency)?.rate;
+	const baseRate = rateInDisplay(pair.base);
+	const quoteRate = rateInDisplay(pair.quote);
+	const fallbackRate = baseRate && quoteRate ? baseRate / quoteRate : null;
+
 	// Fill the range's missing history; on failure the cached rates stay on screen
 	const {
 		mutate: ensureHistory,
@@ -102,6 +126,18 @@ function ExchangeRatesComponent() {
 
 	function setPair(next: RatePair) {
 		navigate({ search: (prev) => ({ ...prev, ...next }) });
+	}
+
+	function changeCurrency(side: keyof RatePair, currency: SupportedCurrency) {
+		const other = side === "base" ? "quote" : "base";
+		const next = { ...pair, [side]: currency };
+		// Picking the other side's currency swaps the pair
+		if (currency === pair[other]) next[other] = pair[side];
+		setPair(next);
+	}
+
+	function setRange(next: ExchangeRateRange) {
+		navigate({ search: (prev) => ({ ...prev, range: next }) });
 	}
 
 	const hasRates = overview?.currencies.some((c) => c.rate !== null) ?? false;
@@ -144,6 +180,8 @@ function ExchangeRatesComponent() {
 
 			{isLoading && (
 				<div className={GRID_CLASS}>
+					<ExchangeRateChartCardSkeleton className="lg:col-span-2" />
+					<CurrencyConverterCardSkeleton />
 					<CurrencyRateTableSkeleton className="lg:col-span-3" />
 				</div>
 			)}
@@ -173,6 +211,21 @@ function ExchangeRatesComponent() {
 						</p>
 					)}
 					<div className={GRID_CLASS}>
+						<ExchangeRateChartCard
+							className="lg:col-span-2"
+							pair={pair}
+							range={range}
+							history={pairHistory}
+							fallbackRate={fallbackRate}
+							onCurrencyChange={changeCurrency}
+							onRangeChange={setRange}
+						/>
+						<CurrencyConverterCard
+							pair={pair}
+							rate={pairHistory?.latestRate ?? fallbackRate}
+							onCurrencyChange={changeCurrency}
+							onSwap={() => setPair({ base: pair.quote, quote: pair.base })}
+						/>
 						<CurrencyRateTable
 							className="lg:col-span-3"
 							overview={overview}

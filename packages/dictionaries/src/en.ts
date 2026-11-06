@@ -763,6 +763,21 @@ export const en = {
 			change: "Change ({{range}})",
 			trend: "Trend",
 		},
+		chart: {
+			base: "Base currency",
+			quote: "Quote currency",
+			rate: "Rate",
+			noHistory: "No rate history for this range yet.",
+		},
+		converter: {
+			title: "Converter",
+			amount: "Amount",
+			from: "From",
+			to: "To",
+			swap: "Swap currencies",
+			inverse: "1 {{currency}} = {{rate}}",
+			noRate: "No rate available for this pair yet.",
+		},
 		empty: {
 			title: "No exchange rates yet",
 			description:

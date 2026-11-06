@@ -7,10 +7,13 @@ import {
 import type { RateChangeDirection } from "@finance-tracker/utils";
 import { useQuery } from "@tanstack/react-query";
 import type { inferOutput } from "@trpc/tanstack-react-query";
+import { parseISO } from "date-fns";
 import { MinusIcon, TrendingDownIcon, TrendingUpIcon } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 
 export type RatesOverview = inferOutput<typeof trpc.exchangeRate.getOverview>;
+
+export type PairHistory = inferOutput<typeof trpc.exchangeRate.getPairHistory>;
 
 export type RatePair = { base: SupportedCurrency; quote: SupportedCurrency };
 
@@ -64,5 +67,10 @@ export function useExchangeRateText() {
 		);
 	}
 
-	return { locale, formatChange, currencyName };
+	/** A history `YYYY-MM-DD` day (local calendar day). */
+	function formatDay(day: string, options: Intl.DateTimeFormatOptions) {
+		return new Intl.DateTimeFormat(locale, options).format(parseISO(day));
+	}
+
+	return { locale, formatChange, currencyName, formatDay };
 }

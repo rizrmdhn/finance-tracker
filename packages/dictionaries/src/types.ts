@@ -693,6 +693,21 @@ export interface Dictionary {
 			change: string;
 			trend: string;
 		};
+		chart: {
+			base: string;
+			quote: string;
+			rate: string;
+			noHistory: string;
+		};
+		converter: {
+			title: string;
+			amount: string;
+			from: string;
+			to: string;
+			swap: string;
+			inverse: string;
+			noRate: string;
+		};
 		empty: {
 			title: string;
 			description: string;
