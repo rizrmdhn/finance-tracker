@@ -81,6 +81,6 @@ export async function fetchExchangeRateHistory({
 	return json.map(({ quote, date, rate }) => ({ target: quote, date, rate }));
 }
 
-export function isRateStale(fetchedAt: number): boolean {
-	return Date.now() - fetchedAt > STALE_AFTER_MS;
+export function isRateStale(fetchedAt: number, now = Date.now()): boolean {
+	return now - fetchedAt > STALE_AFTER_MS;
 }
