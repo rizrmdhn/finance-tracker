@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, test } from "bun:test";
 import { exchangeRates, goals } from "@finance-tracker/db";
-import { addDays, startOfMonth, subMonths } from "date-fns";
+import { addDays, format, startOfMonth, subMonths } from "date-fns";
 import { eq } from "drizzle-orm";
+import { upsertRateHistory } from "./exchange-rate";
 import {
 	addGoalContribution,
 	archiveGoal,
@@ -177,6 +178,53 @@ describe("getMonthlySurplus", () => {
 				expense: 600_000,
 				surplus: 1_000_000,
 			},
+		]);
+	});
+});
+
+describe("getMonthlySurplus with rate history", () => {
+	/** `YYYY-MM-DD` of day `day` (1-based) of the month `monthsAgo` months back. */
+	function historyDate(monthsAgo: number, day: number) {
+		return format(
+			addDays(new Date(monthStart(monthsAgo)), day - 1),
+			"yyyy-MM-dd",
+		);
+	}
+
+	test("converts each month with its average rate, falling back to the latest rate", async () => {
+		const usd = await seedAccount(db, { currency: "USD" });
+		const income = await seedCategory(db, "income");
+		// Latest: 1 USD = 16,000 IDR
+		await db
+			.insert(exchangeRates)
+			.values({ base: "IDR", target: "USD", rate: 0.0000625, fetchedAt: 0 });
+		// Two months ago: 1 USD = 16,000 then 17,000 IDR → average 16,500; last month: no history
+		await upsertRateHistory(
+			db,
+			[
+				{ target: "USD" as const, date: historyDate(2, 3), rate: 1.25 },
+				{ target: "IDR" as const, date: historyDate(2, 3), rate: 20_000 },
+				{ target: "USD" as const, date: historyDate(2, 4), rate: 1.25 },
+				{ target: "IDR" as const, date: historyDate(2, 4), rate: 21_250 },
+			].map((row) => ({ ...row, fetchedAt: 0 })),
+		);
+
+		for (const monthsAgo of [2, 1]) {
+			await seedTransaction(db, {
+				accountId: usd.id,
+				categoryId: income.id,
+				amount: 100,
+				date: midMonth(monthsAgo),
+			});
+		}
+
+		const result = await getMonthlySurplus(db, {
+			months: 6,
+			displayCurrency: "IDR",
+		});
+		expect(result.map((m) => [m.month, m.income])).toEqual([
+			[monthStart(2), 1_650_000],
+			[monthStart(1), 1_600_000],
 		]);
 	});
 });

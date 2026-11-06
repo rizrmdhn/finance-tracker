@@ -15,6 +15,7 @@ import { Route as SyncRouteImport } from './routes/sync'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as RecurringRouteImport } from './routes/recurring'
 import { Route as GoalsRouteImport } from './routes/goals'
+import { Route as ExchangeRatesRouteImport } from './routes/exchange-rates'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as BudgetsRouteImport } from './routes/budgets'
 import { Route as AccountsRouteImport } from './routes/accounts'
@@ -51,6 +52,11 @@ const RecurringRoute = RecurringRouteImport.update({
 const GoalsRoute = GoalsRouteImport.update({
   id: '/goals',
   path: '/goals',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExchangeRatesRoute = ExchangeRatesRouteImport.update({
+  id: '/exchange-rates',
+  path: '/exchange-rates',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CategoriesRoute = CategoriesRouteImport.update({
@@ -94,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/accounts': typeof AccountsRoute
   '/budgets': typeof BudgetsRoute
   '/categories': typeof CategoriesRoute
+  '/exchange-rates': typeof ExchangeRatesRoute
   '/goals': typeof GoalsRoute
   '/recurring': typeof RecurringRoute
   '/settings': typeof SettingsRoute
@@ -109,6 +116,7 @@ export interface FileRoutesByTo {
   '/accounts': typeof AccountsRoute
   '/budgets': typeof BudgetsRoute
   '/categories': typeof CategoriesRoute
+  '/exchange-rates': typeof ExchangeRatesRoute
   '/goals': typeof GoalsRoute
   '/recurring': typeof RecurringRoute
   '/settings': typeof SettingsRoute
@@ -125,6 +133,7 @@ export interface FileRoutesById {
   '/accounts': typeof AccountsRoute
   '/budgets': typeof BudgetsRoute
   '/categories': typeof CategoriesRoute
+  '/exchange-rates': typeof ExchangeRatesRoute
   '/goals': typeof GoalsRoute
   '/recurring': typeof RecurringRoute
   '/settings': typeof SettingsRoute
@@ -142,6 +151,7 @@ export interface FileRouteTypes {
     | '/accounts'
     | '/budgets'
     | '/categories'
+    | '/exchange-rates'
     | '/goals'
     | '/recurring'
     | '/settings'
@@ -157,6 +167,7 @@ export interface FileRouteTypes {
     | '/accounts'
     | '/budgets'
     | '/categories'
+    | '/exchange-rates'
     | '/goals'
     | '/recurring'
     | '/settings'
@@ -172,6 +183,7 @@ export interface FileRouteTypes {
     | '/accounts'
     | '/budgets'
     | '/categories'
+    | '/exchange-rates'
     | '/goals'
     | '/recurring'
     | '/settings'
@@ -188,6 +200,7 @@ export interface RootRouteChildren {
   AccountsRoute: typeof AccountsRoute
   BudgetsRoute: typeof BudgetsRoute
   CategoriesRoute: typeof CategoriesRoute
+  ExchangeRatesRoute: typeof ExchangeRatesRoute
   GoalsRoute: typeof GoalsRoute
   RecurringRoute: typeof RecurringRoute
   SettingsRoute: typeof SettingsRoute
@@ -238,6 +251,13 @@ declare module '@tanstack/react-router' {
       path: '/goals'
       fullPath: '/goals'
       preLoaderRoute: typeof GoalsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/exchange-rates': {
+      id: '/exchange-rates'
+      path: '/exchange-rates'
+      fullPath: '/exchange-rates'
+      preLoaderRoute: typeof ExchangeRatesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/categories': {
@@ -311,6 +331,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountsRoute: AccountsRoute,
   BudgetsRoute: BudgetsRoute,
   CategoriesRoute: CategoriesRoute,
+  ExchangeRatesRoute: ExchangeRatesRoute,
   GoalsRoute: GoalsRoute,
   RecurringRoute: RecurringRoute,
   SettingsRoute: SettingsRoute,

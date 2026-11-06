@@ -11,6 +11,7 @@ export interface Dictionary {
 		recurring: string;
 		budgets: string;
 		goals: string;
+		exchangeRates: string;
 		trash: string;
 		settings: string;
 	};
@@ -663,6 +664,73 @@ export interface Dictionary {
 			connectionClosed: string;
 			timeout: string;
 			internal: string;
+		};
+	};
+	exchangeRates: {
+		title: string;
+		description: string;
+		updated: string;
+		notUpdated: string;
+		outdated: string;
+		refresh: string;
+		historyFailed: string;
+		toast: {
+			refreshed: string;
+			refreshFailed: string;
+		};
+		ranges: {
+			"1W": string;
+			"1M": string;
+			"3M": string;
+			"6M": string;
+			"1Y": string;
+			"5Y": string;
+		};
+		table: {
+			title: string;
+			currency: string;
+			rate: string;
+			change: string;
+			trend: string;
+		};
+		chart: {
+			base: string;
+			quote: string;
+			rate: string;
+			noHistory: string;
+		};
+		converter: {
+			title: string;
+			amount: string;
+			from: string;
+			to: string;
+			swap: string;
+			inverse: string;
+			noRate: string;
+		};
+		relativeTime: {
+			justNow: string;
+			minutes_one: string;
+			minutes_other: string;
+			hours_one: string;
+			hours_other: string;
+			days_one: string;
+			days_other: string;
+		};
+		currencyNames: {
+			IDR: string;
+			USD: string;
+			SGD: string;
+			MYR: string;
+			EUR: string;
+			GBP: string;
+			JPY: string;
+			AUD: string;
+		};
+		empty: {
+			title: string;
+			description: string;
+			retry: string;
 		};
 	};
 }

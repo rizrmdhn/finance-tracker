@@ -12,6 +12,7 @@ import {
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
 	ArrowLeftRight,
+	Coins,
 	Home,
 	PiggyBank,
 	Repeat2,
@@ -42,6 +43,11 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
 		{ to: "/goals", label: t("sidebar.goals"), icon: PiggyBank },
 		{ to: "/trash", label: t("sidebar.trash"), icon: Trash },
 		{ to: "/sync", label: t("sync.title"), icon: Wifi },
+		{
+			to: "/exchange-rates",
+			label: t("sidebar.exchangeRates"),
+			icon: Coins,
+		},
 	] as const;
 
 	return (

@@ -1,12 +1,18 @@
 import { SUPPORTED_CURRENCIES } from "@finance-tracker/constants";
 import {
+	ensureRateHistory,
 	getCachedRate,
 	getCachedRates,
+	getPairHistory,
+	getRatesOverview,
 	upsertRates,
 } from "@finance-tracker/queries";
 import {
+	exchangeRateEnsureHistorySchema,
 	exchangeRateFetchSchema,
 	exchangeRateGetSchema,
+	exchangeRateOverviewSchema,
+	exchangeRatePairHistorySchema,
 } from "@finance-tracker/schema";
 import {
 	fetchExchangeRates,
@@ -70,6 +76,37 @@ export const exchangeRateRouter = createTRPCRouter({
 		.query(async ({ ctx, input }) => {
 			const [data, err] = await tryCatchAsync(() =>
 				getCachedRate(ctx.db, input.base, input.target),
+			);
+			if (err) throw toTRPCError(err);
+			return data;
+		}),
+
+	/** Fetches the history `range` still lacks; on failure the cached history stays usable. */
+	ensureHistory: publicProcedure
+		.input(exchangeRateEnsureHistorySchema)
+		.mutation(async ({ ctx, input }) => {
+			const [data, err] = await tryCatchAsync(() =>
+				ensureRateHistory(ctx.db, input),
+			);
+			if (err) throw toTRPCError(err);
+			return data;
+		}),
+
+	getPairHistory: publicProcedure
+		.input(exchangeRatePairHistorySchema)
+		.query(async ({ ctx, input }) => {
+			const [data, err] = await tryCatchAsync(() =>
+				getPairHistory(ctx.db, input),
+			);
+			if (err) throw toTRPCError(err);
+			return data;
+		}),
+
+	getOverview: publicProcedure
+		.input(exchangeRateOverviewSchema)
+		.query(async ({ ctx, input }) => {
+			const [data, err] = await tryCatchAsync(() =>
+				getRatesOverview(ctx.db, input),
 			);
 			if (err) throw toTRPCError(err);
 			return data;
