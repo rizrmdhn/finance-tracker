@@ -102,6 +102,11 @@ function DrawerLayout() {
 		{ name: "trash", title: t("sidebar.trash"), icon: "trash-outline" },
 		{ name: "sync", title: t("sync.title"), icon: "wifi-outline" },
 		{
+			name: "exchange-rates",
+			title: t("sidebar.exchangeRates"),
+			icon: "cash-outline",
+		},
+		{
 			name: "settings",
 			title: t("sidebar.settings"),
 			icon: "settings-outline",

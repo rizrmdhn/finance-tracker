@@ -780,6 +780,25 @@ export const id = {
 			inverse: "1 {{currency}} = {{rate}}",
 			noRate: "Belum ada kurs untuk pasangan ini.",
 		},
+		relativeTime: {
+			justNow: "baru saja",
+			minutes_one: "{{count}} menit yang lalu",
+			minutes_other: "{{count}} menit yang lalu",
+			hours_one: "{{count}} jam yang lalu",
+			hours_other: "{{count}} jam yang lalu",
+			days_one: "{{count}} hari yang lalu",
+			days_other: "{{count}} hari yang lalu",
+		},
+		currencyNames: {
+			IDR: "Rupiah Indonesia",
+			USD: "Dolar AS",
+			SGD: "Dolar Singapura",
+			MYR: "Ringgit Malaysia",
+			EUR: "Euro",
+			GBP: "Pound Sterling Inggris",
+			JPY: "Yen Jepang",
+			AUD: "Dolar Australia",
+		},
 		empty: {
 			title: "Belum ada kurs mata uang",
 			description:

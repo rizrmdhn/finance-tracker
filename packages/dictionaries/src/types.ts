@@ -708,6 +708,25 @@ export interface Dictionary {
 			inverse: string;
 			noRate: string;
 		};
+		relativeTime: {
+			justNow: string;
+			minutes_one: string;
+			minutes_other: string;
+			hours_one: string;
+			hours_other: string;
+			days_one: string;
+			days_other: string;
+		};
+		currencyNames: {
+			IDR: string;
+			USD: string;
+			SGD: string;
+			MYR: string;
+			EUR: string;
+			GBP: string;
+			JPY: string;
+			AUD: string;
+		};
 		empty: {
 			title: string;
 			description: string;
