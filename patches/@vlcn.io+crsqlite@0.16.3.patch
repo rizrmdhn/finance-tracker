@@ -1,5 +1,5 @@
 diff --git a/nodejs-install-helper.js b/nodejs-install-helper.js
-index 9e0a54e..90df757 100644
+index 9e0a54e..b3157b4 100644
 --- a/nodejs-install-helper.js
 +++ b/nodejs-install-helper.js
 @@ -6,7 +6,7 @@
@@ -11,13 +11,17 @@ index 9e0a54e..90df757 100644
  import { exec } from "child_process";
  let { version } = pkg;
  
-@@ -94,7 +94,9 @@ if (process.env.CRSQLITE_NOPREBUILD) {
+@@ -94,7 +94,13 @@ if (process.env.CRSQLITE_NOPREBUILD) {
        file.close();
        console.log("Prebuilt binary downloaded");
        process.chdir(join(".", "dist"));
 -      exec("unzip crsqlite.zip", (err, stdout, stderr) => {
-+      // Windows has no unzip; its bundled bsdtar extracts zip files
-+      const extract = process.platform === "win32" ? "tar -xf crsqlite.zip" : "unzip crsqlite.zip";
++      // Windows has no unzip. Call its bundled bsdtar by path: the `tar` first on PATH
++      // is often GNU tar from Git, which cannot read zip files.
++      const extract =
++        process.platform === "win32"
++          ? `"${join(process.env.SystemRoot, "System32", "tar.exe")}" -xf crsqlite.zip`
++          : "unzip crsqlite.zip";
 +      exec(extract, (err, stdout, stderr) => {
          if (err) {
            console.log("Error extracting");
