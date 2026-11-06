@@ -81,7 +81,9 @@ export interface Dictionary {
 		goBack: string;
 		goHome: string;
 		oops: string;
-		refresh: string;
+		tryAgain: string;
+		unexpectedDescription: string;
+		showDetails: string;
 		validationFailed: string;
 	};
 	dashboard: {
@@ -499,6 +501,8 @@ export interface Dictionary {
 		title: string;
 		ruleCount: string;
 		noRules: string;
+		noCategories: string;
+		createCategory: string;
 		nextRun: string;
 		active: string;
 		paused: string;

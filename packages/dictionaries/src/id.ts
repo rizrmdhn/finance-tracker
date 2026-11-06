@@ -86,7 +86,10 @@ export const id = {
 		goBack: "Kembali",
 		goHome: "Ke Beranda",
 		oops: "Ups!",
-		refresh: "Segarkan",
+		tryAgain: "Coba Lagi",
+		unexpectedDescription:
+			"Terjadi kesalahan yang tidak terduga. Coba lagi, atau kembali ke halaman utama.",
+		showDetails: "Lihat detail error",
 		validationFailed: "Validasi gagal",
 	},
 	dashboard: {
@@ -543,6 +546,9 @@ export const id = {
 		ruleCount: "{{count}} aturan",
 		noRules:
 			'Belum ada transaksi berulang. Buat transaksi dan centang "Ulangi" untuk memulai.',
+		noCategories:
+			"Kamu belum punya kategori. Buat kategori terlebih dahulu sebelum menambahkan transaksi berulang.",
+		createCategory: "Buat kategori",
 		nextRun: "Jadwal berikutnya",
 		active: "Aktif",
 		paused: "Dijeda",

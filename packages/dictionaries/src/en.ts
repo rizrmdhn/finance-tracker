@@ -86,7 +86,10 @@ export const en = {
 		goBack: "Go Back",
 		goHome: "Go Home",
 		oops: "Oops!",
-		refresh: "Refresh",
+		tryAgain: "Try Again",
+		unexpectedDescription:
+			"An unexpected error occurred. Try again, or go back to the home page.",
+		showDetails: "Show error details",
 		validationFailed: "Validation failed",
 	},
 	dashboard: {
@@ -543,6 +546,9 @@ export const en = {
 		ruleCount: "{{count}} rules",
 		noRules:
 			'No recurring transactions yet. Create a transaction and check "Repeat" to get started.',
+		noCategories:
+			"You don't have any categories yet. Create a category first before adding recurring transactions.",
+		createCategory: "Create category",
 		nextRun: "Next run",
 		active: "Active",
 		paused: "Paused",
