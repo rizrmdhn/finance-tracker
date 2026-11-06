@@ -63,6 +63,9 @@ export const trpcClient = createTRPCClient<AppRouter>({
 			createContext: () =>
 				createTRPCContext({ db: db as unknown as AnyDatabase }),
 			onError: (error) => {
+				// Background history fill: the rates screen shows its own inline note, so being
+				// offline doesn't toast on every focus or range change
+				if (error.path === "exchangeRate.ensureHistory") return;
 				globalErrorToast(`${error.error || "An unexpected error occurred"}`);
 			},
 		}),
