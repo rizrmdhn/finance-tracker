@@ -6,6 +6,7 @@ import {
 	RouterProvider,
 } from "@tanstack/react-router";
 import ReactDOM from "react-dom/client";
+import { ErrorComponent } from "./components/error";
 import { SplashScreen } from "./components/splash-screen";
 import { queryClient, trpc } from "./lib/trpc";
 import { routeTree } from "./routeTree.gen";
@@ -21,6 +22,7 @@ const router = createRouter({
 	scrollRestoration: true,
 	context: { trpc, queryClient },
 	defaultPendingComponent: () => <SplashScreen />,
+	defaultErrorComponent: ErrorComponent,
 	Wrap: function WrapComponent({ children }: { children: React.ReactNode }) {
 		return (
 			<QueryClientProvider client={queryClient}>{children}</QueryClientProvider>

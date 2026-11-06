@@ -1,10 +1,13 @@
 import { Button } from "@finance-tracker/ui/components/button";
-import { useRouter } from "@tanstack/react-router";
+import { cn } from "@finance-tracker/ui/lib/utils";
+import { type ErrorComponentProps, useRouter } from "@tanstack/react-router";
 import { AlertTriangle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 
-export function ErrorComponent({ error }: { error: Error }) {
+type Props = ErrorComponentProps & { fullScreen?: boolean };
+
+export function ErrorComponent({ error, reset, fullScreen }: Props) {
 	const { t } = useTranslation();
 
 	const router = useRouter();
@@ -79,19 +82,36 @@ export function ErrorComponent({ error }: { error: Error }) {
 		}
 
 		return (
-			<p className="max-w-md text-muted-foreground">
-				{error.message || t("errors.somethingWentWrong")}
-			</p>
+			<div className="flex max-w-md flex-col items-center gap-4">
+				<p className="text-muted-foreground">
+					{t("errors.unexpectedDescription")}
+				</p>
+				{error.message && (
+					<details className="w-full rounded-lg border bg-muted/50 px-4 py-2 text-left">
+						<summary className="cursor-pointer text-muted-foreground text-sm">
+							{t("errors.showDetails")}
+						</summary>
+						<pre className="mt-2 whitespace-pre-wrap break-words font-mono text-destructive text-xs">
+							{error.message}
+						</pre>
+					</details>
+				)}
+			</div>
 		);
 	};
 
 	return (
-		<div className="flex min-h-screen flex-col items-center justify-center px-4">
+		<div
+			className={cn(
+				"flex flex-col items-center justify-center px-4",
+				fullScreen ? "min-h-svh" : "min-h-[70svh]",
+			)}
+		>
 			<div className="flex flex-col items-center space-y-6 text-center">
 				<div className="rounded-full bg-destructive/10 p-6">
 					<AlertTriangle className="h-16 w-16 text-destructive" />
 				</div>
-				<div className="space-y-2">
+				<div className="flex flex-col items-center space-y-2">
 					<h1 className="font-bold text-4xl tracking-tight">
 						{t("errors.oops")}
 					</h1>
@@ -101,8 +121,14 @@ export function ErrorComponent({ error }: { error: Error }) {
 					{getErrorMessage()}
 				</div>
 				<div className="flex gap-4">
-					<Button variant="outline" onClick={() => window.location.reload()}>
-						{t("errors.refresh")}
+					<Button
+						variant="outline"
+						onClick={() => {
+							reset();
+							router.invalidate();
+						}}
+					>
+						{t("errors.tryAgain")}
 					</Button>
 					<Button onClick={() => router.navigate({ to: "/" })}>
 						{t("errors.goHome")}

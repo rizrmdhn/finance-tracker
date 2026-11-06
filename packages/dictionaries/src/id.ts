@@ -86,7 +86,10 @@ export const id = {
 		goBack: "Kembali",
 		goHome: "Ke Beranda",
 		oops: "Ups!",
-		refresh: "Segarkan",
+		tryAgain: "Coba Lagi",
+		unexpectedDescription:
+			"Terjadi kesalahan yang tidak terduga. Coba lagi, atau kembali ke halaman utama.",
+		showDetails: "Lihat detail error",
 		validationFailed: "Validasi gagal",
 	},
 	dashboard: {

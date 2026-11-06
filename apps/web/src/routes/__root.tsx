@@ -11,7 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import {
 	createRootRouteWithContext,
-	ErrorComponent,
+	type ErrorComponentProps,
 	HeadContent,
 	Outlet,
 } from "@tanstack/react-router";
@@ -20,6 +20,7 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Toaster } from "sonner";
 import { AppSidebar } from "@/components/app-sidebar";
+import { ErrorComponent } from "@/components/error";
 import { GlobalSearch, SearchTrigger } from "@/components/global-search";
 import { NotFoundComponent } from "@/components/not-found";
 import { OnboardingScreen } from "@/components/onboarding-screen";
@@ -38,7 +39,7 @@ export interface RouterAppContext {
 export const Route = createRootRouteWithContext<RouterAppContext>()({
 	component: RootComponent,
 	notFoundComponent: NotFoundComponent,
-	errorComponent: ErrorComponent,
+	errorComponent: RootErrorComponent,
 	head: () => ({
 		...pageHead(
 			"Finance Tracker",
@@ -52,6 +53,16 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 		],
 	}),
 });
+
+// The root layout (and its ThemeProvider) is gone when it throws, so the
+// error page brings its own theme and fills the screen.
+function RootErrorComponent(props: ErrorComponentProps) {
+	return (
+		<ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+			<ErrorComponent {...props} fullScreen />
+		</ThemeProvider>
+	);
+}
 
 function RootComponent() {
 	const { i18n } = useTranslation();

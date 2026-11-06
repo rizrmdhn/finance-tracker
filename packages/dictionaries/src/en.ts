@@ -86,7 +86,10 @@ export const en = {
 		goBack: "Go Back",
 		goHome: "Go Home",
 		oops: "Oops!",
-		refresh: "Refresh",
+		tryAgain: "Try Again",
+		unexpectedDescription:
+			"An unexpected error occurred. Try again, or go back to the home page.",
+		showDetails: "Show error details",
 		validationFailed: "Validation failed",
 	},
 	dashboard: {
