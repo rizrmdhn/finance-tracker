@@ -6,8 +6,10 @@ import type {
 import { and, eq, isNull, lte } from "drizzle-orm";
 import { NotFoundError } from "./errors";
 
+// A permanently deleted template leaves its recurrence behind (CRDT tables
+// carry no foreign keys), so rules without a template are skipped.
 export async function getRecurrences(db: AnyDatabase) {
-	return await db.query.recurrences.findMany({
+	const rows = await db.query.recurrences.findMany({
 		where: isNull(recurrences.deletedAt),
 		with: {
 			templateTransaction: {
@@ -16,6 +18,7 @@ export async function getRecurrences(db: AnyDatabase) {
 		},
 		orderBy: (r, { asc }) => [asc(r.nextRunAt)],
 	});
+	return rows.filter((r) => r.templateTransaction);
 }
 
 export async function getRecurrenceById(db: AnyDatabase, id: string) {
@@ -38,7 +41,7 @@ export async function getRecurrenceByTemplateId(
 
 export async function getDueRecurrences(db: AnyDatabase) {
 	const now = Date.now();
-	return await db.query.recurrences.findMany({
+	const rows = await db.query.recurrences.findMany({
 		where: and(
 			eq(recurrences.isActive, true),
 			isNull(recurrences.deletedAt),
@@ -46,6 +49,7 @@ export async function getDueRecurrences(db: AnyDatabase) {
 		),
 		with: { templateTransaction: true },
 	});
+	return rows.filter((r) => r.templateTransaction);
 }
 
 export async function createRecurrence(

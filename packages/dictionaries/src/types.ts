@@ -499,6 +499,8 @@ export interface Dictionary {
 		title: string;
 		ruleCount: string;
 		noRules: string;
+		noCategories: string;
+		createCategory: string;
 		nextRun: string;
 		active: string;
 		paused: string;

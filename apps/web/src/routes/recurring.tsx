@@ -3,7 +3,7 @@ import type { RecurrenceWithTemplate } from "@finance-tracker/types";
 import { Button } from "@finance-tracker/ui/components/button";
 import { Skeleton } from "@finance-tracker/ui/components/skeleton";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { PauseIcon, PencilIcon, PlayIcon, Trash2Icon } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -39,6 +39,11 @@ function RecurringComponent() {
 	const { data: recurrences = [], isLoading } = useQuery(
 		trpc.recurrence.list.queryOptions(),
 	);
+
+	const { data: categories, isLoading: isCategoriesLoading } = useQuery(
+		trpc.category.list.queryOptions(),
+	);
+	const hasNoCategories = !isCategoriesLoading && categories?.length === 0;
 
 	const toggleMutation = useMutation(
 		trpc.recurrence.toggle.mutationOptions({
@@ -102,6 +107,22 @@ function RecurringComponent() {
 					)}
 				</div>
 			</div>
+
+			{hasNoCategories && (
+				<div className="flex flex-col items-center gap-3 rounded-lg border border-dashed px-4 py-6 text-center">
+					<p className="text-muted-foreground text-sm">
+						{t("recurrences.noCategories")}
+					</p>
+					<Button
+						variant="outline"
+						size="sm"
+						nativeButton={false}
+						render={<Link to="/categories" />}
+					>
+						{t("recurrences.createCategory")}
+					</Button>
+				</div>
+			)}
 
 			<div className="flex flex-col gap-3">
 				{recurrences.map((rule) => {
@@ -237,7 +258,7 @@ function RecurringComponent() {
 					))}
 
 				{/* Empty state */}
-				{recurrences.length === 0 && !isLoading && (
+				{recurrences.length === 0 && !isLoading && !hasNoCategories && (
 					<p className="py-6 text-center text-muted-foreground text-sm">
 						{t("recurrences.noRules")}
 					</p>
