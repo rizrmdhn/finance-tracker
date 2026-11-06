@@ -58,6 +58,8 @@ interface ExchangeRateChartCardProps {
 	pair: RatePair;
 	range: ExchangeRateRange;
 	history: PairHistory | undefined;
+	/** The selected pair's history is still loading. */
+	isHistoryLoading: boolean;
 	/** The pair's rate from the latest cached rates, when there's no history. */
 	fallbackRate: number | null;
 	onCurrencyChange: (side: keyof RatePair, currency: SupportedCurrency) => void;
@@ -70,6 +72,7 @@ export function ExchangeRateChartCard({
 	pair,
 	range,
 	history,
+	isHistoryLoading,
 	fallbackRate,
 	onCurrencyChange,
 	onRangeChange,
@@ -149,7 +152,9 @@ export function ExchangeRateChartCard({
 				</ToggleGroup>
 			</CardHeader>
 			<CardContent>
-				{series.length < 2 ? (
+				{isHistoryLoading ? (
+					<Skeleton className={CHART_CLASS} />
+				) : series.length < 2 ? (
 					<div
 						className={cn(
 							CHART_CLASS,
