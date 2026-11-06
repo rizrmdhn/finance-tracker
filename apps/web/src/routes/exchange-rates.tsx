@@ -73,10 +73,18 @@ function ExchangeRatesComponent() {
 		placeholderData: keepPreviousData,
 	});
 
-	const { data: pairHistory } = useQuery({
+	const { data: pairHistory, isPending: isPairHistoryPending } = useQuery({
 		...trpc.exchangeRate.getPairHistory.queryOptions({ ...pair, range }),
 		enabled: currencyLoaded,
-		placeholderData: keepPreviousData,
+		// Keep the old series only while the range changes; another pair's numbers would mislead
+		placeholderData: (previous, previousQuery) => {
+			const input = (
+				previousQuery?.queryKey[1] as { input?: RatePair } | undefined
+			)?.input;
+			return input?.base === pair.base && input?.quote === pair.quote
+				? previous
+				: undefined;
+		},
 	});
 
 	// Without history, derive the pair from the latest rates (1 currency = rate × display)
@@ -216,6 +224,7 @@ function ExchangeRatesComponent() {
 							pair={pair}
 							range={range}
 							history={pairHistory}
+							isHistoryLoading={isPairHistoryPending}
 							fallbackRate={fallbackRate}
 							onCurrencyChange={changeCurrency}
 							onRangeChange={setRange}
