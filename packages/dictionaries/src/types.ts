@@ -11,6 +11,7 @@ export interface Dictionary {
 		recurring: string;
 		budgets: string;
 		goals: string;
+		exchangeRates: string;
 		trash: string;
 		settings: string;
 	};
@@ -663,6 +664,39 @@ export interface Dictionary {
 			connectionClosed: string;
 			timeout: string;
 			internal: string;
+		};
+	};
+	exchangeRates: {
+		title: string;
+		description: string;
+		updated: string;
+		notUpdated: string;
+		outdated: string;
+		refresh: string;
+		historyFailed: string;
+		toast: {
+			refreshed: string;
+			refreshFailed: string;
+		};
+		ranges: {
+			"1W": string;
+			"1M": string;
+			"3M": string;
+			"6M": string;
+			"1Y": string;
+			"5Y": string;
+		};
+		table: {
+			title: string;
+			currency: string;
+			rate: string;
+			change: string;
+			trend: string;
+		};
+		empty: {
+			title: string;
+			description: string;
+			retry: string;
 		};
 	};
 }

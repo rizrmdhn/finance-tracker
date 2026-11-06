@@ -20,6 +20,7 @@ export const en = {
 		recurring: "Recurring",
 		budgets: "Budgets",
 		goals: "Goals",
+		exchangeRates: "Exchange Rates",
 		trash: "Trash",
 		settings: "Settings",
 	},
@@ -732,6 +733,41 @@ export const en = {
 			timeout:
 				"The other device took too long to respond. Make sure it is on the same network with the app open, then try again.",
 			internal: "Something went wrong while syncing. Please try again.",
+		},
+	},
+	exchangeRates: {
+		title: "Exchange Rates",
+		description: "Rates against your display currency ({{currency}})",
+		updated: "Updated {{time}}",
+		notUpdated: "Not updated yet",
+		outdated: "Outdated",
+		refresh: "Refresh",
+		historyFailed:
+			"Couldn't load the latest rate history. Showing the rates saved on this device.",
+		toast: {
+			refreshed: "Exchange rates updated",
+			refreshFailed: "Failed to update exchange rates: {{message}}",
+		},
+		ranges: {
+			"1W": "1W",
+			"1M": "1M",
+			"3M": "3M",
+			"6M": "6M",
+			"1Y": "1Y",
+			"5Y": "5Y",
+		},
+		table: {
+			title: "All currencies vs {{currency}}",
+			currency: "Currency",
+			rate: "Rate",
+			change: "Change ({{range}})",
+			trend: "Trend",
+		},
+		empty: {
+			title: "No exchange rates yet",
+			description:
+				"Rates couldn't be loaded. Check your internet connection and try again.",
+			retry: "Try again",
 		},
 	},
 } satisfies Dictionary;

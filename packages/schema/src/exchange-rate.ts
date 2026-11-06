@@ -47,3 +47,12 @@ export type ExchangeRatePairHistoryInput = z.infer<
 export type ExchangeRateOverviewInput = z.infer<
 	typeof exchangeRateOverviewSchema
 >;
+
+/** `/exchange-rates` URL params; invalid values fall back to the page defaults. */
+export const exchangeRatesSearchSchema = z.object({
+	base: currencySchema.optional().catch(undefined),
+	quote: currencySchema.optional().catch(undefined),
+	range: rangeSchema.default("1M").catch("1M"),
+});
+
+export type ExchangeRatesSearch = z.infer<typeof exchangeRatesSearchSchema>;

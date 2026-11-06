@@ -20,6 +20,7 @@ export const id = {
 		recurring: "Berulang",
 		budgets: "Anggaran",
 		goals: "Target Tabungan",
+		exchangeRates: "Kurs Mata Uang",
 		trash: "Sampah",
 		settings: "Pengaturan",
 	},
@@ -734,6 +735,41 @@ export const id = {
 			timeout:
 				"Perangkat lain terlalu lama merespons. Pastikan perangkat tersebut berada di jaringan yang sama dan aplikasinya terbuka, lalu coba lagi.",
 			internal: "Terjadi kesalahan saat sinkronisasi. Silakan coba lagi.",
+		},
+	},
+	exchangeRates: {
+		title: "Kurs Mata Uang",
+		description: "Kurs terhadap mata uang tampilan Anda ({{currency}})",
+		updated: "Diperbarui {{time}}",
+		notUpdated: "Belum pernah diperbarui",
+		outdated: "Kedaluwarsa",
+		refresh: "Perbarui",
+		historyFailed:
+			"Riwayat kurs terbaru tidak dapat dimuat. Menampilkan kurs yang tersimpan di perangkat ini.",
+		toast: {
+			refreshed: "Kurs mata uang diperbarui",
+			refreshFailed: "Gagal memperbarui kurs mata uang: {{message}}",
+		},
+		ranges: {
+			"1W": "1Mg",
+			"1M": "1B",
+			"3M": "3B",
+			"6M": "6B",
+			"1Y": "1T",
+			"5Y": "5T",
+		},
+		table: {
+			title: "Semua mata uang terhadap {{currency}}",
+			currency: "Mata Uang",
+			rate: "Kurs",
+			change: "Perubahan ({{range}})",
+			trend: "Tren",
+		},
+		empty: {
+			title: "Belum ada kurs mata uang",
+			description:
+				"Kurs tidak dapat dimuat. Periksa koneksi internet Anda, lalu coba lagi.",
+			retry: "Coba lagi",
 		},
 	},
 } satisfies Dictionary;
