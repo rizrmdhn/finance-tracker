@@ -765,6 +765,21 @@ export const id = {
 			change: "Perubahan ({{range}})",
 			trend: "Tren",
 		},
+		chart: {
+			base: "Mata uang dasar",
+			quote: "Mata uang kuotasi",
+			rate: "Kurs",
+			noHistory: "Belum ada riwayat kurs untuk rentang ini.",
+		},
+		converter: {
+			title: "Konverter",
+			amount: "Jumlah",
+			from: "Dari",
+			to: "Ke",
+			swap: "Tukar mata uang",
+			inverse: "1 {{currency}} = {{rate}}",
+			noRate: "Belum ada kurs untuk pasangan ini.",
+		},
 		empty: {
 			title: "Belum ada kurs mata uang",
 			description:
