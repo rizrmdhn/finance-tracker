@@ -20,6 +20,13 @@ on:
 permissions:
   contents: write
 
+# Several merges in a row only need the newest cache build, so a new main push
+# cancels the one still running. Each tag has its own ref, so releases never
+# cancel each other.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref == 'refs/heads/main' }}
+
 jobs:
   prepare:
     name: Prepare Release
