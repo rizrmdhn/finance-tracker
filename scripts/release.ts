@@ -1,23 +1,32 @@
 #!/usr/bin/env bun
 // Usage:
-//   bun run release [desktop|mobile] <version|major|minor|patch> [--dry-run] [--any-branch]
+//   bun run release [desktop|mobile] <version|bump [pre]|pre|stable> [--dry-run] [--any-branch]
 //
 //   Bumps the version files, commits + pushes the bump, then creates and pushes
 //   the tags through scripts/tag.ts.
 //
 //   platform : desktop | mobile  (omit to release both with the same version)
-//   version  : x.y.z, x.y.z-beta.N, or major | minor | patch
+//   version  : an explicit x.y.z or x.y.z-beta.N
+//   bump     : major | minor | patch — needs a stable current version
+//   pre      : alpha | beta | rc — after a bump, starts that prerelease at .1;
+//              alone, continues the current prerelease (beta.1 -> beta.2, or
+//              beta.2 -> rc.1). Going back (beta -> alpha) is refused.
+//   stable   : finalizes the current prerelease (2.0.0-rc.1 -> 2.0.0)
 //
 //   A prerelease (e.g. 2.0.0-beta.1) is written to the files as-is, so an
 //   installed beta can tell it is older than the final 2.0.0 and update to it.
-//   major/minor/patch bump from the higher of the current versions (desktop and
-//   mobile stay aligned) and need a non-prerelease current version.
+//   Keywords work from the higher of the current versions, so desktop and
+//   mobile stay aligned.
 //
 // Examples:
 //   bun run release 2.0.0               -> both to 2.0.0, tags desktop/v2.0.0 + mobile/v2.0.0
 //   bun run release 2.0.0-beta.1        -> both to 2.0.0-beta.1, tags desktop/v2.0.0-beta.1 + mobile/v2.0.0-beta.1
 //   bun run release minor               -> both to the next minor version
 //   bun run release mobile patch        -> mobile only
+//   bun run release desktop minor beta  -> 2.3.2 -> 2.4.0-beta.1
+//   bun run release desktop beta        -> 2.4.0-beta.1 -> 2.4.0-beta.2
+//   bun run release desktop rc          -> 2.4.0-beta.2 -> 2.4.0-rc.1
+//   bun run release desktop stable      -> 2.4.0-rc.1 -> 2.4.0
 //   bun run release 2.0.0 --dry-run     -> print the plan, change nothing
 
 import { spawnSync } from "node:child_process";
@@ -34,6 +43,10 @@ const FILES = {
 
 const PLATFORMS = ["desktop", "mobile"] as const;
 type Platform = (typeof PLATFORMS)[number];
+const BUMPS = ["major", "minor", "patch"];
+const PRE_IDS = ["alpha", "beta", "rc"];
+const USAGE =
+	"Usage: bun run release [desktop|mobile] <version|major|minor|patch [alpha|beta|rc]|alpha|beta|rc|stable> [--dry-run] [--any-branch]";
 type Semver = [number, number, number];
 /** `pre` is the prerelease suffix without its dash ("beta.1"), "" for a release. */
 type Version = { base: Semver; pre: string };
@@ -126,12 +139,14 @@ const platformArg = PLATFORMS.includes(positional[0] as Platform)
 	? (positional.shift() as Platform)
 	: undefined;
 const platforms: Platform[] = platformArg ? [platformArg] : [...PLATFORMS];
-const versionArg = positional[0];
+const [versionArg, preArg, ...extra] = positional;
 
-if (!versionArg) {
-	fail(
-		"Usage: bun run release [desktop|mobile] <version|major|minor|patch> [--dry-run] [--any-branch]",
-	);
+if (!versionArg || extra.length > 0) fail(USAGE);
+if (
+	preArg !== undefined &&
+	!(BUMPS.includes(versionArg) && PRE_IDS.includes(preArg))
+) {
+	fail(USAGE);
 }
 
 // ── Current state ────────────────────────────────────────────────────────────
@@ -143,17 +158,38 @@ const current: Record<Platform, Version> = {
 const currentVersionCode: number = JSON.parse(read(FILES.nativeAppJson)).expo
 	.android.versionCode;
 
+const from = platforms
+	.map((p) => current[p])
+	.reduce((a, b) => (compare(a, b) >= 0 ? a : b));
+
 let next: Version;
-if (["major", "minor", "patch"].includes(versionArg)) {
-	const from = platforms
-		.map((p) => current[p])
-		.reduce((a, b) => (compare(a, b) >= 0 ? a : b));
+if (BUMPS.includes(versionArg)) {
 	if (from.pre) {
 		fail(
-			`Current version is the prerelease ${format(from)} — pass an explicit version (e.g. ${from.base.join(".")}).`,
+			`Current version is the prerelease ${format(from)} — continue it with alpha|beta|rc, or finish it with 'stable'.`,
 		);
 	}
-	next = { base: bump(from.base, versionArg), pre: "" };
+	next = {
+		base: bump(from.base, versionArg),
+		pre: preArg ? `${preArg}.1` : "",
+	};
+} else if (PRE_IDS.includes(versionArg)) {
+	if (!from.pre) {
+		fail(
+			`Current version ${format(from)} is stable — pick the base first, e.g. 'minor ${versionArg}'.`,
+		);
+	}
+	const [id, num] = from.pre.split(".");
+	next = {
+		base: from.base,
+		pre:
+			id === versionArg && /^\d+$/.test(num ?? "")
+				? `${id}.${Number(num) + 1}`
+				: `${versionArg}.1`,
+	};
+} else if (versionArg === "stable") {
+	if (!from.pre) fail(`Current version ${format(from)} is already stable.`);
+	next = { base: from.base, pre: "" };
 } else {
 	next = parseVersion(versionArg);
 }
