@@ -50,6 +50,14 @@ type SyncIpDialogState =
 	| { open: false }
 	| { open: true; deviceId: string; deviceName: string };
 
+const SYNC_PORT = 47821;
+
+/** `ip` or `ip:port` (IPv4 or hostname) → host and port, defaulting to the sync port. */
+function parseHost(input: string): { host: string; port: number } {
+	const [host = "", port] = input.trim().split(":");
+	return { host, port: port ? Number.parseInt(port, 10) : SYNC_PORT };
+}
+
 function RouteComponent() {
 	const { t } = useTranslation();
 	const queryClient = useQueryClient();
@@ -70,6 +78,8 @@ function RouteComponent() {
 		open: false,
 	});
 	const [syncIpInput, setSyncIpInput] = useState("");
+	const [pairHostInput, setPairHostInput] = useState("");
+	const [pairingByIp, setPairingByIp] = useState(false);
 
 	const { data: trustedPeers = [], isLoading } = useQuery(
 		trpc.peer.list.queryOptions(),
@@ -110,6 +120,7 @@ function RouteComponent() {
 		});
 
 		platform.sync.onPairChallenge(({ deviceId, deviceName, sasCode }) => {
+			setPairingByIp(false);
 			setPairingDeviceId(deviceId);
 			setPairingDialog({
 				open: true,
@@ -138,6 +149,7 @@ function RouteComponent() {
 		platform.sync.onPairConfirmed(async ({ deviceId: _deviceId }) => {
 			setPairingDialog({ open: false });
 			setPairingDeviceId(null);
+			setPairHostInput("");
 			await queryClient.invalidateQueries(trpc.peer.list.queryOptions());
 			globalSuccessToast(t("sync.toast.paired"));
 		});
@@ -145,6 +157,7 @@ function RouteComponent() {
 		platform.sync.onPairRejected(async () => {
 			setPairingDialog({ open: false });
 			setPairingDeviceId(null);
+			setPairingByIp(false);
 			globalErrorToast(t("sync.toast.pairRejected"));
 			// A reject after we accepted revokes the device we just trusted
 			await queryClient.invalidateQueries(trpc.peer.list.queryOptions());
@@ -153,6 +166,7 @@ function RouteComponent() {
 		platform.sync.onPairFailed(() => {
 			setPairingDialog({ open: false });
 			setPairingDeviceId(null);
+			setPairingByIp(false);
 			globalErrorToast(t("sync.toast.pairFailed"));
 		});
 
@@ -180,7 +194,25 @@ function RouteComponent() {
 
 	async function handlePair(peer: DiscoveredPeer) {
 		setPairingDeviceId(peer.deviceId);
-		await platform.sync.initiatePair({ host: peer.host, port: peer.port });
+		try {
+			await platform.sync.initiatePair({ host: peer.host, port: peer.port });
+		} catch {
+			setPairingDeviceId(null);
+			globalErrorToast(t("sync.toast.pairFailed"));
+		}
+	}
+
+	// For devices mDNS can't see: other subnets, blocked multicast, Android emulators (via `adb forward`)
+	async function handlePairByIp() {
+		const { host, port } = parseHost(pairHostInput);
+		if (!host) return;
+		setPairingByIp(true);
+		try {
+			await platform.sync.initiatePair({ host, port });
+		} catch {
+			setPairingByIp(false);
+			globalErrorToast(t("sync.toast.pairFailed"));
+		}
 	}
 
 	async function handleConfirmPair() {
@@ -242,23 +274,18 @@ function RouteComponent() {
 			return;
 		}
 
-		const [ip, portStr] = host.split(":");
-		const port = portStr ? Number.parseInt(portStr, 10) : 47821;
+		const { host: ip, port } = parseHost(host);
 		await syncWith(peer.deviceId, ip, port);
 	}
 
 	async function handleSyncWithIp() {
 		if (!syncIpDialog.open || !syncIpInput.trim()) return;
-		const hostInput = syncIpInput.trim();
-		const [ip, portStr] = hostInput.includes(":")
-			? hostInput.split(":")
-			: [hostInput, "47821"];
-		const port = Number.parseInt(portStr, 10);
+		const { host, port } = parseHost(syncIpInput);
 		const { deviceId } = syncIpDialog;
 
 		setSyncIpDialog({ open: false });
 		setSyncIpInput("");
-		await syncWith(deviceId, ip, port);
+		await syncWith(deviceId, host, port);
 	}
 
 	const trustedDeviceIds = new Set(trustedPeers.map((p) => p.deviceId));
@@ -461,6 +488,40 @@ function RouteComponent() {
 								))}
 							</div>
 						)}
+					</section>
+
+					<Separator />
+
+					<section className="flex flex-col gap-3">
+						<div className="flex flex-col gap-0.5">
+							<h2 className="font-medium text-sm">
+								{t("sync.connectToDevice")}
+							</h2>
+							<p className="text-muted-foreground text-sm">
+								{t("sync.connectToDeviceDescription")}
+							</p>
+						</div>
+						<form
+							className="flex gap-2"
+							onSubmit={(e) => {
+								e.preventDefault();
+								void handlePairByIp();
+							}}
+						>
+							<Input
+								placeholder="192.168.1.x:47821"
+								value={pairHostInput}
+								onChange={(e) => setPairHostInput(e.target.value)}
+								disabled={pairingByIp}
+							/>
+							<Button
+								type="submit"
+								disabled={!pairHostInput.trim() || pairingByIp}
+							>
+								{pairingByIp && <Loader2 className="size-4 animate-spin" />}
+								{t("sync.connect")}
+							</Button>
+						</form>
 					</section>
 				</>
 			)}
