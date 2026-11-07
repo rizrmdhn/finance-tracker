@@ -1,3 +1,4 @@
+export * from "./amount-input";
 export * from "./currency";
 export * from "./data-table";
 export * from "./date";

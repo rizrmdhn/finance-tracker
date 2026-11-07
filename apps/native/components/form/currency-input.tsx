@@ -1,24 +1,15 @@
+import type { SupportedCurrency } from "@finance-tracker/constants";
 import {
-	CURRENCY_LOCALE_MAP,
-	type SupportedCurrency,
-} from "@finance-tracker/constants";
+	formatAmountInput,
+	getAmountDecimalSeparator,
+	parseAmountInput,
+} from "@finance-tracker/utils";
 import { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 import { Text } from "@/components/ui/text";
 import { useThemeColor } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 import { Input } from "../ui/input";
-
-const NO_DECIMAL_CURRENCIES: SupportedCurrency[] = ["IDR", "JPY"];
-
-function format(n: number, currency: SupportedCurrency): string {
-	const locale = CURRENCY_LOCALE_MAP[currency] ?? "en-US";
-	const decimals = NO_DECIMAL_CURRENCIES.includes(currency) ? 0 : 2;
-	return new Intl.NumberFormat(locale, {
-		minimumFractionDigits: 0,
-		maximumFractionDigits: decimals,
-	}).format(n);
-}
 
 interface CurrencyInputProps {
 	value?: number;
@@ -37,38 +28,35 @@ export function CurrencyInput({
 }: CurrencyInputProps) {
 	const mutedForeground = useThemeColor("mutedForeground");
 
-	const hasDecimals = !NO_DECIMAL_CURRENCIES.includes(currency);
+	const hasDecimals = getAmountDecimalSeparator(currency) !== null;
 
-	const [display, setDisplay] = useState(
-		value !== undefined ? format(value, currency) : "",
+	const [display, setDisplay] = useState(() =>
+		formatAmountInput(value, currency),
 	);
 	const [focused, setFocused] = useState(false);
 	const isFocused = useRef(false);
 
 	useEffect(() => {
 		if (!isFocused.current) {
-			setDisplay(value !== undefined ? format(value, currency) : "");
+			setDisplay(formatAmountInput(value, currency));
 		}
 	}, [value, currency]);
 
 	function handleChangeText(text: string) {
-		const raw = hasDecimals
-			? text.replace(/[^\d.]/g, "")
-			: text.replace(/\D/g, "");
-		setDisplay(raw);
-		onChange(raw === "" ? undefined : Number(raw));
+		const parsed = parseAmountInput(text, currency);
+		setDisplay(parsed.display);
+		onChange(parsed.value);
 	}
 
 	function handleFocus() {
 		isFocused.current = true;
 		setFocused(true);
-		setDisplay(value !== undefined ? String(value) : "");
 	}
 
 	function handleBlur() {
 		isFocused.current = false;
 		setFocused(false);
-		setDisplay(value !== undefined ? format(value, currency) : "");
+		setDisplay(formatAmountInput(value, currency));
 	}
 
 	return (
