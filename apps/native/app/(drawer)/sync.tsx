@@ -30,7 +30,7 @@ import {
 } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, ScrollView, Switch, View } from "react-native";
+import { ActivityIndicator, Switch, View } from "react-native";
 import Zeroconf from "react-native-zeroconf";
 import { Button } from "@/components/ui/button";
 import {
@@ -42,6 +42,7 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { KeyboardAwareScrollView } from "@/components/ui/keyboard-aware-scroll-view";
 import { Separator } from "@/components/ui/separator";
 import { Text } from "@/components/ui/text";
 import { type DeviceIdentity, getDeviceIdentity } from "@/lib/device-identity";
@@ -654,7 +655,11 @@ export default function SyncScreen() {
 			: null;
 
 	return (
-		<ScrollView className="flex-1 bg-background">
+		<KeyboardAwareScrollView
+			className="flex-1 bg-background"
+			keyboardShouldPersistTaps="handled"
+			bottomOffset={16}
+		>
 			<View className="flex flex-col gap-6 p-4">
 				{/* This Device */}
 				{deviceInfo && (
@@ -1072,6 +1077,6 @@ export default function SyncScreen() {
 					</DialogFooter>
 				</DialogContent>
 			</Dialog>
-		</ScrollView>
+		</KeyboardAwareScrollView>
 	);
 }
