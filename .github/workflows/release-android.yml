@@ -76,9 +76,11 @@ jobs:
         run: bunx install-skia
         working-directory: apps/native
 
+      # --no-clean: since SDK 57, prebuild wipes android/ by default, which would
+      # drop the hand-written release signingConfig and ABI splits in build.gradle.
       - name: Prebuild Android
         working-directory: apps/native
-        run: bunx expo prebuild --platform android
+        run: bunx expo prebuild --platform android --no-clean
 
       - name: Decode keystore
         run: |
