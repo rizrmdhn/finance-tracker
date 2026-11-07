@@ -92,6 +92,11 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      # Electron 42+ no longer downloads its binary on install; electron-builder
+      # packages from node_modules/electron/dist (ELECTRON_OVERRIDE_DIST_PATH below).
+      - name: Install Electron binary
+        run: bunx install-electron --no
+
       - name: Download release notes
         uses: actions/download-artifact@v4
         with:

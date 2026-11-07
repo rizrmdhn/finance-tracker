@@ -5,11 +5,9 @@
 	"scripts": {
 		"dev": "electron-vite dev",
 		"build": "(cd ../web && bun run build --base ./) && electron-vite build && rm -rf out/renderer && cp -R ../web/dist out/renderer",
-		"rebuild": "electron-rebuild -f -w better-sqlite3 -m ../..",
 		"package": "bun run build && electron-builder --win",
 		"package:dir": "bun run build && electron-builder --win --dir",
-		"check-types": "tsc --noEmit",
-		"postinstall": "electron-builder install-app-deps"
+		"check-types": "tsc --noEmit"
 	},
 	"build": {
 		"appId": "com.finance-tracker.desktop",
@@ -80,7 +78,7 @@
 			"icon": "src/resources/icon.png",
 			"artifactName": "Finance-Tracker-${version}.${ext}"
 		},
-		"npmRebuild": true,
+		"npmRebuild": false,
 		"nativeRebuilder": "sequential",
 		"extraMetadata": {
 			"main": "out/main/index.js"
@@ -102,10 +100,9 @@
 	},
 	"devDependencies": {
 		"@finance-tracker/constants": "workspace:*",
-		"@electron/rebuild": "^3.7.2",
 		"@types/better-sqlite3": "catalog:",
 		"@types/ws": "^8.18.2",
-		"electron": "39.2.6",
+		"electron": "45.2.3",
 		"electron-builder": "^26.18.0",
 		"electron-vite": "^5.0.0",
 		"typescript": "catalog:",
