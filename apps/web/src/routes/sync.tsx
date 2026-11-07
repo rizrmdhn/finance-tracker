@@ -180,7 +180,12 @@ function RouteComponent() {
 
 	async function handlePair(peer: DiscoveredPeer) {
 		setPairingDeviceId(peer.deviceId);
-		await platform.sync.initiatePair({ host: peer.host, port: peer.port });
+		try {
+			await platform.sync.initiatePair({ host: peer.host, port: peer.port });
+		} catch {
+			setPairingDeviceId(null);
+			globalErrorToast(t("sync.toast.pairFailed"));
+		}
 	}
 
 	async function handleConfirmPair() {

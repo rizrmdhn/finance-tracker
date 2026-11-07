@@ -68,6 +68,9 @@ interface DiscoveredService {
 
 const zeroconf = new Zeroconf();
 
+/** An outgoing pairing fails unless the host answers with `pair-challenge` by then. */
+const PAIR_RESPONSE_TIMEOUT_MS = 15_000;
+
 // ── Pairing state ─────────────────────────────────────────────────────────────
 
 type PairingState =
@@ -286,6 +289,13 @@ export default function SyncScreen() {
 		};
 		outgoingRef.current = outgoing;
 
+		// A host that never answers would otherwise leave us stuck on "connecting"
+		setTimeout(() => {
+			if (!outgoing.peer && !outgoing.settled) {
+				failOutgoing(outgoing, t("sync.toast.pairFailed"));
+			}
+		}, PAIR_RESPONSE_TIMEOUT_MS);
+
 		ws.onopen = () => {
 			ws.send(
 				JSON.stringify({
@@ -397,6 +407,8 @@ export default function SyncScreen() {
 			} catch (err) {
 				console.error("[sync] invalid pair-request:", err);
 				incomingRef.current = null;
+				// Closing fails the initiator's pairing instead of leaving it waiting
+				conn.close();
 			}
 			return;
 		}

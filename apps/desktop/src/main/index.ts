@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import { createServer } from "node:http";
+import { isIPv4 } from "node:net";
 import os from "node:os";
 import path from "node:path";
 import { appRouter, createTRPCContext } from "@finance-tracker/api";
@@ -54,6 +55,8 @@ const SYNC_PORT = 47821;
 const MDNS_SERVICE_TYPE = "financetracker";
 /** Incoming sync sessions that have not completed by then are dropped. */
 const SYNC_SERVER_TIMEOUT_MS = 60_000;
+/** An outgoing pairing fails unless the host answers with `pair-challenge` by then. */
+const PAIR_RESPONSE_TIMEOUT_MS = 15_000;
 
 type SyncWithPeerResult =
 	| ({ ok: true } & SyncResult)
@@ -255,6 +258,8 @@ function setupSyncServer(
 				});
 			} catch (err) {
 				console.error("[sync] invalid pair-request:", err);
+				// Closing fails the initiator's pairing instead of leaving it waiting
+				ws.close();
 			}
 		});
 	});
@@ -290,7 +295,8 @@ function setupSyncServer(
 				deviceId: txt.deviceId,
 				deviceName: txt.deviceName,
 				platform: txt.platform,
-				host: service.addresses?.[0] ?? service.host,
+				// `ws://` needs brackets around IPv6, and link-local IPv6 is not reachable without a zone
+				host: service.addresses?.find(isIPv4) ?? service.host,
 				port: service.port,
 			});
 		});
@@ -316,6 +322,11 @@ function setupSyncServer(
 			const ourKeypair = generateEphemeralKeypair();
 			let pairing: OutgoingPairing | undefined;
 			let settled = false;
+			// Unreachable hosts and hosts that never answer would otherwise leave the pairing spinning
+			const responseTimer = setTimeout(() => {
+				console.error("[sync] pairing timed out waiting for", `${host}:${port}`);
+				ws.terminate();
+			}, PAIR_RESPONSE_TIMEOUT_MS);
 			const settle = () => {
 				settled = true;
 				if (pairing) outgoingPairings.delete(pairing.theirDeviceId);
@@ -339,6 +350,7 @@ function setupSyncServer(
 			});
 
 			ws.on("close", () => {
+				clearTimeout(responseTimer);
 				if (settled) return;
 				settled = true;
 				if (pairing) outgoingPairings.delete(pairing.theirDeviceId);
@@ -354,6 +366,7 @@ function setupSyncServer(
 					const msg = JSON.parse(raw.toString()) as PairingMessage;
 
 					if (msg.type === "pair-challenge" && !pairing) {
+						clearTimeout(responseTimer);
 						const theirPublicKey = base64ToPubKey(msg.publicKey);
 						const sharedSecret = deriveSharedSecret(
 							ourKeypair.privateKey,
