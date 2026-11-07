@@ -1,55 +1,100 @@
-import { Ionicons } from "@expo/vector-icons";
 import {
 	Drawer,
 	type DrawerContentComponentProps,
 	DrawerContentScrollView,
-	DrawerItemList,
 } from "expo-router/drawer";
+import {
+	ArrowLeftRight,
+	Coins,
+	Home,
+	type LucideIcon,
+	PiggyBank,
+	Repeat2,
+	Settings,
+	Tag,
+	Target,
+	Trash,
+	Wallet,
+	Wifi,
+} from "lucide-react-native";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 
 import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useAutoSync } from "@/hooks/use-auto-sync";
 import { useThemeColor } from "@/lib/theme";
+import { cn } from "@/lib/utils";
 
-type IoniconsName = React.ComponentProps<typeof Ionicons>["name"];
+// Same icons as the desktop sidebar (apps/web/src/components/app-sidebar.tsx)
+const NAV_ICONS: Record<string, LucideIcon> = {
+	index: Home,
+	accounts: Wallet,
+	transactions: ArrowLeftRight,
+	recurring: Repeat2,
+	categories: Tag,
+	budgets: Target,
+	goals: PiggyBank,
+	trash: Trash,
+	sync: Wifi,
+	"exchange-rates": Coins,
+	settings: Settings,
+};
 
-function CustomDrawerContent(props: DrawerContentComponentProps) {
+// Styled like the desktop sidebar: neutral active background, rounded-md, 16px icons
+function CustomDrawerContent({
+	state,
+	descriptors,
+	navigation,
+	...props
+}: DrawerContentComponentProps) {
+	const { t } = useTranslation();
 	const themeColorForeground = useThemeColor("foreground");
-	const themeColorBorder = useThemeColor("border");
 
 	return (
 		<DrawerContentScrollView {...props}>
-			<View
-				style={{
-					paddingHorizontal: 16,
-					paddingVertical: 12,
-					borderBottomWidth: 1,
-					borderBottomColor: themeColorBorder,
-					marginBottom: 8,
-					flexDirection: "row",
-					alignItems: "center",
-					gap: 8,
-				}}
-			>
-				<Ionicons
-					name="wallet-outline"
-					size={20}
-					color={themeColorForeground}
-				/>
-				<Text
-					style={{
-						color: themeColorForeground,
-						fontSize: 16,
-						fontWeight: "600",
-					}}
-				>
-					Finance Tracker
+			<View className="border-border mb-2 flex-row items-center gap-2 border-b px-2 pb-3">
+				<Wallet size={16} color={themeColorForeground} />
+				<Text className="text-foreground text-base font-semibold">
+					{t("app.title")}
 				</Text>
 			</View>
-			<DrawerItemList {...props} />
+			<View className="gap-1">
+				{state.routes.map((route, index) => {
+					const focused = index === state.index;
+					const Icon = NAV_ICONS[route.name];
+					const title = descriptors[route.key].options.title ?? route.name;
+					return (
+						<Pressable
+							key={route.key}
+							role="button"
+							aria-selected={focused}
+							// Same as expo-router's DrawerItemList: navigating closes the drawer
+							onPress={() =>
+								focused
+									? navigation.closeDrawer()
+									: navigation.navigate(route.name, route.params)
+							}
+							className={cn(
+								"active:bg-secondary flex-row items-center gap-2 rounded-md px-2 py-3",
+								focused && "bg-secondary",
+							)}
+						>
+							{Icon && <Icon size={16} color={themeColorForeground} />}
+							<Text
+								numberOfLines={1}
+								className={cn(
+									"text-foreground text-sm",
+									focused && "font-medium",
+								)}
+							>
+								{title}
+							</Text>
+						</Pressable>
+					);
+				})}
+			</View>
 		</DrawerContentScrollView>
 	);
 }
@@ -75,42 +120,18 @@ function DrawerLayout() {
 		[],
 	);
 
-	const navItems: {
-		name: string;
-		title: string;
-		icon: IoniconsName;
-	}[] = [
-		{ name: "index", title: t("sidebar.dashboard"), icon: "home-outline" },
-		{ name: "accounts", title: t("sidebar.accounts"), icon: "wallet-outline" },
-		{
-			name: "transactions",
-			title: t("sidebar.transactions"),
-			icon: "swap-horizontal-outline",
-		},
-		{
-			name: "recurring",
-			title: t("sidebar.recurring"),
-			icon: "repeat-outline",
-		},
-		{
-			name: "categories",
-			title: t("sidebar.categories"),
-			icon: "pricetag-outline",
-		},
-		{ name: "budgets", title: t("sidebar.budgets"), icon: "flag-outline" },
-		{ name: "goals", title: t("sidebar.goals"), icon: "gift-outline" },
-		{ name: "trash", title: t("sidebar.trash"), icon: "trash-outline" },
-		{ name: "sync", title: t("sync.title"), icon: "wifi-outline" },
-		{
-			name: "exchange-rates",
-			title: t("sidebar.exchangeRates"),
-			icon: "cash-outline",
-		},
-		{
-			name: "settings",
-			title: t("sidebar.settings"),
-			icon: "settings-outline",
-		},
+	const navItems: { name: string; title: string }[] = [
+		{ name: "index", title: t("sidebar.dashboard") },
+		{ name: "accounts", title: t("sidebar.accounts") },
+		{ name: "transactions", title: t("sidebar.transactions") },
+		{ name: "recurring", title: t("sidebar.recurring") },
+		{ name: "categories", title: t("sidebar.categories") },
+		{ name: "budgets", title: t("sidebar.budgets") },
+		{ name: "goals", title: t("sidebar.goals") },
+		{ name: "trash", title: t("sidebar.trash") },
+		{ name: "sync", title: t("sync.title") },
+		{ name: "exchange-rates", title: t("sidebar.exchangeRates") },
+		{ name: "settings", title: t("sidebar.settings") },
 	];
 
 	return (
@@ -127,27 +148,8 @@ function DrawerLayout() {
 				drawerStyle: { backgroundColor: themeColorBackground },
 			}}
 		>
-			{navItems.map(({ name, title, icon }) => (
-				<Drawer.Screen
-					key={name}
-					name={name}
-					options={{
-						headerTitle: title,
-						drawerLabel: ({ color, focused }) => (
-							<Text style={{ color: focused ? color : themeColorForeground }}>
-								{title}
-							</Text>
-						),
-						drawerIcon: ({ size, color, focused }) => (
-							<Ionicons
-								name={icon}
-								size={size}
-								// @expo/vector-icons still types `color` with the pre-0.88 ColorValue
-								color={focused ? (color as string) : themeColorForeground}
-							/>
-						),
-					}}
-				/>
+			{navItems.map(({ name, title }) => (
+				<Drawer.Screen key={name} name={name} options={{ title }} />
 			))}
 		</Drawer>
 	);
