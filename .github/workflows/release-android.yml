@@ -78,9 +78,9 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Install Skia binaries
-        run: bunx install-skia
-        working-directory: apps/native
+      # No Skia install step: since react-native-skia 2.14 the prebuilt binaries
+      # ship as npm dependencies (react-native-skia-android) and the
+      # install-skia CLI no longer exists.
 
       # --no-clean: since SDK 57, prebuild wipes android/ by default, which would
       # drop the hand-written release signingConfig and ABI splits in build.gradle.
