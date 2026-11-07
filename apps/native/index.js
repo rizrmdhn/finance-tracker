@@ -1,3 +1,8 @@
+// Hermes has no Web Crypto; @noble/* (device pairing/sync) needs crypto.getRandomValues
+const { getRandomValues } = require("expo-crypto");
+globalThis.crypto ??= {};
+globalThis.crypto.getRandomValues ??= getRandomValues;
+
 const { registerWidgetTaskHandler } = require("react-native-android-widget");
 const {
 	budgetWidgetTaskHandler,
