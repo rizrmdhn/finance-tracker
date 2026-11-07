@@ -5,6 +5,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@finance-tracker/ui/components/card";
+import { cn } from "@finance-tracker/ui/lib/utils";
 import { useFormatCurrency } from "@/hooks/use-format-currency";
 
 export function SummaryCard({
@@ -13,7 +14,9 @@ export function SummaryCard({
 	icon,
 	highlight,
 	sourceCurrency,
+	className,
 }: {
+	className?: string;
 	title: string;
 	value: number;
 	icon: React.ReactNode;
@@ -28,8 +31,10 @@ export function SummaryCard({
 				? "text-red-500"
 				: "text-foreground";
 
+	const formatted = format(value, sourceCurrency);
+
 	return (
-		<Card>
+		<Card className={cn("min-w-0", className)}>
 			<CardHeader>
 				<div className="flex items-center justify-between">
 					<CardTitle>{title}</CardTitle>
@@ -37,8 +42,12 @@ export function SummaryCard({
 				</div>
 			</CardHeader>
 			<CardContent>
-				<p className={`font-bold text-2xl tabular-nums ${valueColor}`}>
-					{format(value, sourceCurrency)}
+				{/* The grid keeps cards wide enough for typical amounts; truncate is the last resort */}
+				<p
+					className={cn("truncate font-bold text-2xl tabular-nums", valueColor)}
+					title={formatted}
+				>
+					{formatted}
 				</p>
 			</CardContent>
 		</Card>

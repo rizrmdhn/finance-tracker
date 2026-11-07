@@ -1,4 +1,12 @@
-import "../index.css";
+import { AppSidebar } from "@/components/app-sidebar";
+import { ErrorComponent } from "@/components/error";
+import { GlobalSearch, SearchTrigger } from "@/components/global-search";
+import { NotFoundComponent } from "@/components/not-found";
+import { OnboardingScreen } from "@/components/onboarding-screen";
+import { SplashScreen } from "@/components/splash-screen";
+import { SyncListener } from "@/components/sync-listener";
+import { ThemeProvider } from "@/components/theme-provider";
+import { UpdateNotifier } from "@/components/update-notifier";
 import "@/lib/i18n";
 import { Separator } from "@finance-tracker/ui/components/separator";
 import {
@@ -19,15 +27,7 @@ import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Toaster } from "sonner";
-import { AppSidebar } from "@/components/app-sidebar";
-import { ErrorComponent } from "@/components/error";
-import { GlobalSearch, SearchTrigger } from "@/components/global-search";
-import { NotFoundComponent } from "@/components/not-found";
-import { OnboardingScreen } from "@/components/onboarding-screen";
-import { SplashScreen } from "@/components/splash-screen";
-import { SyncListener } from "@/components/sync-listener";
-import { ThemeProvider } from "@/components/theme-provider";
-import { UpdateNotifier } from "@/components/update-notifier";
+import "../index.css";
 import { pageHead } from "../lib/page-head";
 import { trpc } from "../lib/trpc";
 
@@ -127,18 +127,19 @@ function RootComponent() {
 					style={
 						{
 							"--sidebar-width": "calc(var(--spacing) * 72)",
-							"--header-height": "calc(var(--spacing) * 12)",
+							// Shared by the page header and the sidebar header so their bottom borders line up
+							"--header-height": "calc(var(--spacing) * 16)",
 						} as React.CSSProperties
 					}
 				>
 					<AppSidebar />
 					<SidebarInset className="overflow-hidden contain-inline-size">
-						<header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+						<header className="flex h-(--header-height) shrink-0 items-center gap-2 border-b px-4">
 							<div className="flex w-full items-center gap-1">
 								<SidebarTrigger className="-ml-1" />
 								<Separator
 									orientation="vertical"
-									className="mx-2 data-[orientation=vertical]:h-4"
+									className="mx-2 data-[orientation=vertical]:h-7"
 								/>
 								<SearchTrigger />
 							</div>
