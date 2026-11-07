@@ -142,7 +142,8 @@ function DrawerLayout() {
 							<Ionicons
 								name={icon}
 								size={size}
-								color={focused ? color : themeColorForeground}
+								// @expo/vector-icons still types `color` with the pre-0.88 ColorValue
+								color={focused ? (color as string) : themeColorForeground}
 							/>
 						),
 					}}

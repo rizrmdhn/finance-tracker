@@ -218,7 +218,7 @@ export function OnboardingScreen() {
 
 						<Button
 							disabled={isPending}
-							onPress={form.handleSubmit(onSubmit)}
+							onPress={() => form.handleSubmit(onSubmit)()}
 							className="w-full"
 						>
 							{isPending && <Spinner />}

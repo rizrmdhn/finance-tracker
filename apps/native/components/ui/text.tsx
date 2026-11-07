@@ -1,6 +1,7 @@
 import * as Slot from "@rn-primitives/slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
+import type { TextInstance } from "react-native";
 import { Platform, Text as RNText, type Role } from "react-native";
 import { cn } from "@/lib/utils";
 
@@ -77,7 +78,7 @@ function Text({
 	...props
 }: React.ComponentProps<typeof RNText> &
 	TextVariantProps &
-	React.RefAttributes<RNText> & {
+	React.RefAttributes<TextInstance> & {
 		asChild?: boolean;
 	}) {
 	const textClass = React.useContext(TextClassContext);

@@ -155,7 +155,7 @@ export default function Settings() {
 				`VACUUM INTO '${decodeURI(snapshot.uri.replace("file://", ""))}'`,
 			);
 			const stamp = new Date().toISOString().slice(0, 19).replace(/[T:]/g, "-");
-			directory
+			await directory
 				.createFile(`finance-backup-${stamp}.db`, "application/octet-stream")
 				.write(await snapshot.bytes());
 			snapshot.delete();
@@ -178,7 +178,7 @@ export default function Settings() {
 			}
 			const dbFile = new File(`file://${sqlite.getDbPath()}`);
 			sqlite.close();
-			dbFile.write(bytes);
+			await dbFile.write(bytes);
 			for (const suffix of ["-wal", "-shm", "-journal"]) {
 				const sidecar = new File(`${dbFile.uri}${suffix}`);
 				if (sidecar.exists) sidecar.delete();

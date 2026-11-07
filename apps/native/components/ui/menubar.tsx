@@ -7,6 +7,7 @@ import {
 	ChevronUp,
 } from "lucide-react-native";
 import * as React from "react";
+import type { TextInstance } from "react-native";
 import {
 	Platform,
 	Pressable,
@@ -365,7 +366,7 @@ function MenubarSeparator({
 function MenubarShortcut({
 	className,
 	...props
-}: TextProps & React.RefAttributes<Text>) {
+}: TextProps & React.RefAttributes<TextInstance>) {
 	return (
 		<Text
 			className={cn(

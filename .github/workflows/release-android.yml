@@ -66,6 +66,12 @@ jobs:
           java-version: "17"
           distribution: "temurin"
 
+      # Expo SDK 58 needs Node 22.13+; the Gradle build runs Metro through `node`.
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
       - name: Setup bun
         uses: oven-sh/setup-bun@v2
 
