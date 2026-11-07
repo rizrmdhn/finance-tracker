@@ -62,6 +62,7 @@ export function ErrorComponent({ error, reset, fullScreen }: Props) {
 
 		// Check if it's a TanStack Router error with Zod validation in cause
 		if (
+			error instanceof Error &&
 			"cause" in error &&
 			error.cause &&
 			typeof error.cause === "object" &&
@@ -86,7 +87,7 @@ export function ErrorComponent({ error, reset, fullScreen }: Props) {
 				<p className="text-muted-foreground">
 					{t("errors.unexpectedDescription")}
 				</p>
-				{error.message && (
+				{error instanceof Error && error.message && (
 					<details className="w-full rounded-lg border bg-muted/50 px-4 py-2 text-left">
 						<summary className="cursor-pointer text-muted-foreground text-sm">
 							{t("errors.showDetails")}
