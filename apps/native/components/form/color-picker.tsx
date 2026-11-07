@@ -2,6 +2,7 @@ import { SUPPORTED_COLORS } from "@finance-tracker/constants";
 import { FlashList } from "@shopify/flash-list";
 import { Palette, X } from "lucide-react-native";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Modal, Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Icon } from "@/components/ui/icon";
@@ -14,6 +15,7 @@ interface ColorPickerProps {
 }
 
 export function ColorPicker({ value, onChange }: ColorPickerProps) {
+	const { t } = useTranslation();
 	const insets = useSafeAreaInsets();
 	const [modalVisible, setModalVisible] = useState(false);
 
@@ -27,7 +29,7 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
 			<Pressable
 				onPress={() => setModalVisible(true)}
 				className="h-10 w-full items-center justify-center rounded-md border border-input bg-background shadow-black/5 shadow-sm dark:bg-input/30"
-				accessibilityLabel="Pick color"
+				accessibilityLabel={t("common.selectColor")}
 			>
 				{value ? (
 					<View
@@ -52,7 +54,7 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
 					{/* Header */}
 					<View className="flex-row items-center justify-between border-border border-b px-4 py-3">
 						<Text className="font-semibold text-base text-foreground">
-							Pick a color
+							{t("common.selectColor")}
 						</Text>
 						<Pressable onPress={() => setModalVisible(false)} hitSlop={8}>
 							<Icon as={X} className="size-5 text-foreground" />

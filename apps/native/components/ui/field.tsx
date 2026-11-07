@@ -1,5 +1,7 @@
 import { createId } from "@paralleldrive/cuid2";
+import type { ParseKeys } from "i18next";
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { View } from "react-native";
 import { Label } from "@/components/ui/label";
 import { Text } from "@/components/ui/text";
@@ -43,7 +45,13 @@ function FieldError({
 	children?: React.ReactNode;
 	errors?: Array<{ message?: string } | undefined>;
 }) {
+	const { t, i18n } = useTranslation();
+
 	const content = useMemo(() => {
+		// Schema messages are dictionary keys (validation.*); anything else is shown as-is
+		const translate = (message?: string) =>
+			message && i18n.exists(message) ? t(message as ParseKeys) : message;
+
 		if (children) {
 			return children;
 		}
@@ -59,7 +67,7 @@ function FieldError({
 		if (uniqueErrors.length === 1) {
 			return (
 				<Text className={cn("font-normal text-destructive text-xs", className)}>
-					{uniqueErrors[0]?.message}
+					{translate(uniqueErrors[0]?.message)}
 				</Text>
 			);
 		}
@@ -77,13 +85,13 @@ function FieldError({
 								)}
 							>
 								{"• "}
-								{error.message}
+								{translate(error.message)}
 							</Text>
 						),
 				)}
 			</View>
 		);
-	}, [children, errors, className]);
+	}, [children, errors, className, t, i18n]);
 
 	if (!content) {
 		return null;

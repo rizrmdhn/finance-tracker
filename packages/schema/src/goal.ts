@@ -7,32 +7,34 @@ import { z } from "zod";
 
 export const goalSchema = z.object({
 	name: z
-		.string({ error: "Please enter a valid goal name" })
-		.min(1, { error: "Please enter a valid goal name" }),
-	icon: z.enum(ICON_NAMES, { error: "Please select an icon" }),
-	color: z.enum(COLOR_VALUES, { error: "Please select a color" }),
+		.string({ error: "validation.enterGoalName" })
+		.min(1, { error: "validation.enterGoalName" }),
+	icon: z.enum(ICON_NAMES, { error: "validation.selectIcon" }),
+	color: z.enum(COLOR_VALUES, { error: "validation.selectColor" }),
 	imageUri: z.string().nullish(),
-	productUrl: z.url({ error: "Please enter a valid URL" }).nullish(),
+	productUrl: z.url({ error: "validation.enterUrl" }).nullish(),
 	targetAmount: z
-		.number({ error: "Target amount is required" })
-		.positive({ error: "Target amount must be greater than 0" }),
-	currency: z.enum(SUPPORTED_CURRENCIES, { error: "Please select a currency" }),
-	targetDate: z.number({ error: "Please provide a valid date" }).nullish(),
+		.number({ error: "validation.targetAmountRequired" })
+		.positive({ error: "validation.targetAmountPositive" }),
+	currency: z.enum(SUPPORTED_CURRENCIES, {
+		error: "validation.selectCurrency",
+	}),
+	targetDate: z.number({ error: "validation.enterDate" }).nullish(),
 	linkedAccountId: z.string().nullish(),
 	allocationPercent: z
-		.number({ error: "Allocation is required" })
-		.min(0, { error: "Allocation must be between 0 and 100" })
-		.max(100, { error: "Allocation must be between 0 and 100" }),
+		.number({ error: "validation.allocationRequired" })
+		.min(0, { error: "validation.allocationRange" })
+		.max(100, { error: "validation.allocationRange" }),
 	priority: z
-		.number({ error: "Priority is required" })
-		.int({ error: "Priority must be a whole number" })
-		.nonnegative({ error: "Priority must be a whole number" }),
+		.number({ error: "validation.priorityRequired" })
+		.int({ error: "validation.priorityWholeNumber" })
+		.nonnegative({ error: "validation.priorityWholeNumber" }),
 	initialFund: z
 		.object({
 			amount: z
-				.number({ error: "Amount is required" })
-				.positive({ error: "Amount must be greater than 0" }),
-			accountId: z.string({ error: "Account is required" }),
+				.number({ error: "validation.amountRequired" })
+				.positive({ error: "validation.amountPositive" }),
+			accountId: z.string({ error: "validation.accountRequired" }),
 		})
 		.optional(),
 });
@@ -43,29 +45,29 @@ export const goalUpdateSchema = goalSchema
 	.extend({ id: z.string() });
 
 export const goalContributionSchema = z.object({
-	goalId: z.string({ error: "Goal is required" }),
-	accountId: z.string({ error: "Account is required" }),
+	goalId: z.string({ error: "validation.goalRequired" }),
+	accountId: z.string({ error: "validation.accountRequired" }),
 	amount: z
-		.number({ error: "Amount is required" })
-		.refine((amount) => amount !== 0, { error: "Amount cannot be 0" }),
+		.number({ error: "validation.amountRequired" })
+		.refine((amount) => amount !== 0, { error: "validation.amountNotZero" }),
 	note: z.string().optional(),
-	date: z.number({ error: "Date is required" }),
+	date: z.number({ error: "validation.dateRequired" }),
 });
 
 export const goalPurchaseSchema = z.object({
-	goalId: z.string({ error: "Goal is required" }),
+	goalId: z.string({ error: "validation.goalRequired" }),
 	payments: z
 		.array(
 			z.object({
-				accountId: z.string({ error: "Account is required" }),
+				accountId: z.string({ error: "validation.accountRequired" }),
 				amount: z
-					.number({ error: "Amount is required" })
-					.positive({ error: "Amount must be greater than 0" }),
+					.number({ error: "validation.amountRequired" })
+					.positive({ error: "validation.amountPositive" }),
 			}),
 		)
-		.min(1, { error: "Please add at least one payment" }),
-	date: z.number({ error: "Date is required" }),
-	categoryId: z.string({ error: "Category is required" }),
+		.min(1, { error: "validation.addPayment" }),
+	date: z.number({ error: "validation.dateRequired" }),
+	categoryId: z.string({ error: "validation.categoryRequired" }),
 });
 
 export type GoalInput = z.infer<typeof goalSchema>;

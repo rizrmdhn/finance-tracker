@@ -75,6 +75,37 @@ export interface Dictionary {
 		more: string;
 		moreCount: string;
 	};
+	validation: {
+		enterAccountName: string;
+		selectIcon: string;
+		selectColor: string;
+		selectAccountType: string;
+		enterInitialBalance: string;
+		selectCurrency: string;
+		selectCategoryType: string;
+		enterGoalName: string;
+		enterUrl: string;
+		targetAmountRequired: string;
+		targetAmountPositive: string;
+		enterDate: string;
+		allocationRequired: string;
+		allocationRange: string;
+		priorityRequired: string;
+		priorityWholeNumber: string;
+		amountRequired: string;
+		amountPositive: string;
+		amountNotZero: string;
+		accountRequired: string;
+		destinationAccountRequired: string;
+		categoryRequired: string;
+		goalRequired: string;
+		dateRequired: string;
+		addPayment: string;
+		selectFrequency: string;
+		enterStartDate: string;
+		enterEndDate: string;
+		enterAccountId: string;
+	};
 	errors: {
 		noData: string;
 		somethingWentWrong: string;
