@@ -111,7 +111,7 @@
 		"tailwindcss": "catalog:",
 		"tailwindcss-animate": "^1.0.7",
 		"uniwind": "^1.13.2",
-		"victory-native": "^41.26.0",
+		"victory-native": "^42.0.1",
 		"zod": "catalog:"
 	},
 	"op-sqlite": {
