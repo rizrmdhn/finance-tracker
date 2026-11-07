@@ -24,7 +24,7 @@ jobs:
       - name: Generate changelog
         uses: orhun/git-cliff-action@v4
         with:
-          args: --latest --strip header --tag-pattern "desktop/v.*"
+          args: --latest --strip header --tag-pattern "desktop/v.*" --include-path "apps/desktop/**" --include-path "packages/**"
         env:
           OUTPUT: RELEASE_NOTES.md
 
