@@ -26,24 +26,4 @@ const uniwindConfig = withUniwindConfig(wrapWithReanimatedMetroConfig(config), {
 
 uniwindConfig.resolver.sourceExts.push("sql");
 
-// lucide-react-native 1.0.1 has broken exports pointing to non-existent files.
-// Use resolveRequest (highest priority) instead of extraNodeModules so it isn't
-// bypassed by the Reanimated metro wrapper.
-const _resolveRequest = uniwindConfig.resolver.resolveRequest;
-uniwindConfig.resolver.resolveRequest = (context, moduleName, platform) => {
-	if (moduleName === "lucide-react-native") {
-		return {
-			filePath: path.resolve(
-				monorepoRoot,
-				"node_modules/lucide-react-native/dist/cjs/lucide-react-native/src/lucide-react-native.js",
-			),
-			type: "sourceFile",
-		};
-	}
-	if (_resolveRequest) {
-		return _resolveRequest(context, moduleName, platform);
-	}
-	return context.resolveRequest(context, moduleName, platform);
-};
-
 module.exports = uniwindConfig;
