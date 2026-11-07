@@ -5,7 +5,7 @@
 	"scripts": {
 		"dev": "electron-vite dev",
 		"build": "(cd ../web && bun run build --base ./) && electron-vite build && rm -rf out/renderer && cp -R ../web/dist out/renderer",
-		"rebuild": "electron-rebuild -f -w better-sqlite3",
+		"rebuild": "electron-rebuild -f -w better-sqlite3 -m ../..",
 		"package": "bun run build && electron-builder --win",
 		"package:dir": "bun run build && electron-builder --win --dir",
 		"check-types": "tsc --noEmit",
