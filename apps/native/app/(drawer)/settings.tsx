@@ -4,7 +4,9 @@ import {
 	SUPPORTED_CURRENCIES,
 	SUPPORTED_LANGUAGES,
 } from "@finance-tracker/constants";
+import * as schema from "@finance-tracker/db";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { eq } from "drizzle-orm";
 import Constants from "expo-constants";
 import { Directory, File, Paths } from "expo-file-system";
 import { createDownloadResumable } from "expo-file-system/legacy";
@@ -13,13 +15,18 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
 	ActivityIndicator,
+	Alert,
+	BackHandler,
 	Platform,
 	Switch,
 	TouchableOpacity,
 	View,
 } from "react-native";
 import Markdown from "react-native-markdown-display";
+import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { Container } from "@/components/container";
+import { THEME_OPTIONS } from "@/components/theme-toggle";
+import { Button } from "@/components/ui/button";
 import {
 	Select,
 	SelectContent,
@@ -29,8 +36,17 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Text } from "@/components/ui/text";
-import { useAppTheme } from "@/contexts/app-theme-context";
+import {
+	ToggleGroup,
+	ToggleGroupIcon,
+	ToggleGroupItem,
+} from "@/components/ui/toggle-group";
+import {
+	type ThemePreference,
+	useAppTheme,
+} from "@/contexts/app-theme-context";
 import { useGithubRelease } from "@/hooks/use-github-release";
+import { db, sqlite } from "@/lib/db";
 import i18n from "@/lib/i18n";
 import { useThemeColor } from "@/lib/theme";
 import { globalErrorToast, globalSuccessToast } from "@/lib/toast";
@@ -40,7 +56,7 @@ const GITHUB_REPO = "rizrmdhn/finance-tracker-mobile";
 
 export default function Settings() {
 	const { t } = useTranslation();
-	const { isDark, setTheme } = useAppTheme();
+	const { theme, setTheme } = useAppTheme();
 	const foreground = useThemeColor("foreground");
 	const mutedForeground = useThemeColor("mutedForeground");
 	const { data: currency } = useQuery(
@@ -118,19 +134,143 @@ export default function Settings() {
 		},
 	});
 
+	const resetOnboardingMutation = useMutation(
+		trpc.appSetting.set.mutationOptions({
+			onSuccess: () => globalSuccessToast(t("settings.toast.onboardingReset")),
+			onError: (error) => {
+				globalErrorToast(
+					t("settings.toast.onboardingResetFailed", { message: error.message }),
+				);
+			},
+		}),
+	);
+
+	const backupMutation = useMutation({
+		mutationFn: async () => {
+			const directory = await Directory.pickDirectoryAsync();
+			const snapshot = new File(Paths.cache, "finance-backup.db");
+			if (snapshot.exists) snapshot.delete();
+			// VACUUM INTO writes a consistent copy while the database stays open
+			await sqlite.execute(
+				`VACUUM INTO '${decodeURI(snapshot.uri.replace("file://", ""))}'`,
+			);
+			const stamp = new Date().toISOString().slice(0, 19).replace(/[T:]/g, "-");
+			directory
+				.createFile(`finance-backup-${stamp}.db`, "application/octet-stream")
+				.write(await snapshot.bytes());
+			snapshot.delete();
+		},
+		onSuccess: () => globalSuccessToast(t("settings.toast.backupSuccess")),
+		onError: (error) => {
+			if (isPickerCancelled(error)) return;
+			globalErrorToast(
+				t("settings.toast.backupFailed", { message: error.message }),
+			);
+		},
+	});
+
+	const restoreMutation = useMutation({
+		mutationFn: async () => {
+			const picked = await File.pickFileAsync();
+			const bytes = await (Array.isArray(picked) ? picked[0] : picked).bytes();
+			if (String.fromCharCode(...bytes.subarray(0, 15)) !== "SQLite format 3") {
+				throw new Error(t("settings.dataManagement.invalidBackup"));
+			}
+			const dbFile = new File(`file://${sqlite.getDbPath()}`);
+			sqlite.close();
+			dbFile.write(bytes);
+			for (const suffix of ["-wal", "-shm", "-journal"]) {
+				const sidecar = new File(`${dbFile.uri}${suffix}`);
+				if (sidecar.exists) sidecar.delete();
+			}
+		},
+		onSuccess: () => {
+			// The connection is closed — the app has to start fresh to load the restored file
+			Alert.alert(
+				t("settings.dataManagement.restoreDoneTitle"),
+				t("settings.dataManagement.restoreDoneDescription"),
+				[
+					{
+						text: t("settings.dataManagement.closeApp"),
+						onPress: () => BackHandler.exitApp(),
+					},
+				],
+				{ cancelable: false },
+			);
+		},
+		onError: (error) => {
+			if (isPickerCancelled(error)) return;
+			globalErrorToast(
+				t("settings.toast.restoreFailed", { message: error.message }),
+			);
+		},
+	});
+
+	const wipeMutation = useMutation({
+		mutationFn: async () => {
+			await db.delete(schema.transactions);
+			await db.delete(schema.categories);
+			await db.delete(schema.accounts);
+			await db
+				.update(schema.appSettings)
+				.set({ value: "pending" })
+				.where(eq(schema.appSettings.key, "onboarding"));
+		},
+		onSuccess: async () => {
+			await queryClient.invalidateQueries();
+			globalSuccessToast(t("settings.toast.wipeSuccess"));
+		},
+		onError: (error) => {
+			globalErrorToast(
+				t("settings.toast.wipeFailed", { message: error.message }),
+			);
+		},
+	});
+
+	const [pendingConfirm, setPendingConfirm] = useState<
+		"restore" | "wipe" | null
+	>(null);
+
+	const dataOpPending =
+		backupMutation.isPending ||
+		restoreMutation.isPending ||
+		wipeMutation.isPending;
+
 	return (
 		<Container contentContainerClassName="gap-6 p-4 pb-8">
 			{/* Appearance */}
 			<Section title={t("settings.appearance.title")}>
-				<SettingRow
-					label={t("settings.appearance.theme")}
-					description={t("settings.appearance.themeDescription")}
-				>
-					<Switch
-						value={isDark}
-						onValueChange={(v) => setTheme(v ? "dark" : "light")}
-					/>
-				</SettingRow>
+				<View className="gap-3">
+					<View className="gap-0.5">
+						<Text className="text-foreground text-sm">
+							{t("settings.appearance.theme")}
+						</Text>
+						<Text className="text-muted-foreground text-xs">
+							{t("settings.appearance.themeDescription")}
+						</Text>
+					</View>
+					<ToggleGroup
+						type="single"
+						variant="outline"
+						value={theme}
+						onValueChange={(value) =>
+							value && setTheme(value as ThemePreference)
+						}
+					>
+						{THEME_OPTIONS.map(({ value, icon, labelKey }, index) => (
+							<ToggleGroupItem
+								key={value}
+								value={value}
+								isFirst={index === 0}
+								isLast={index === THEME_OPTIONS.length - 1}
+								className="flex-1"
+							>
+								<ToggleGroupIcon as={icon} />
+								<Text>{t(labelKey)}</Text>
+							</ToggleGroupItem>
+						))}
+					</ToggleGroup>
+				</View>
 			</Section>
 
 			<Separator />
@@ -298,8 +438,98 @@ export default function Settings() {
 					<Switch
 						value={preReleaseSetting?.value === "true"}
 						onValueChange={(val) => {
-							setSettingMutation.mutate({ key: "pre_release", value: val ? "true" : "false" });
+							setSettingMutation.mutate({
+								key: "pre_release",
+								value: val ? "true" : "false",
+							});
 						}}
+					/>
+				</SettingRow>
+
+				<SettingRow
+					label={t("settings.advanced.resetOnboarding")}
+					description={t("settings.advanced.resetOnboardingDescription")}
+				>
+					<Button
+						variant="outline"
+						size="sm"
+						disabled={resetOnboardingMutation.isPending}
+						onPress={() =>
+							resetOnboardingMutation.mutate({
+								key: "onboarding",
+								value: "pending",
+							})
+						}
+					>
+						<Text>{t("common.reset")}</Text>
+					</Button>
+				</SettingRow>
+			</Section>
+
+			<Separator />
+
+			{/* Data Management */}
+			<Section title={t("settings.dataManagement.title")}>
+				<SettingRow
+					label={t("settings.dataManagement.backup")}
+					description={t("settings.dataManagement.backupDescription")}
+				>
+					<Button
+						variant="outline"
+						size="sm"
+						disabled={dataOpPending}
+						onPress={() => backupMutation.mutate()}
+					>
+						{backupMutation.isPending && <ActivityIndicator size="small" />}
+						<Text>{t("settings.dataManagement.backup")}</Text>
+					</Button>
+				</SettingRow>
+
+				<SettingRow
+					label={t("settings.dataManagement.restore")}
+					description={t("settings.dataManagement.restoreDescription")}
+				>
+					<Button
+						variant="outline"
+						size="sm"
+						disabled={dataOpPending}
+						onPress={() => setPendingConfirm("restore")}
+					>
+						<Text>{t("settings.dataManagement.restore")}</Text>
+					</Button>
+					<ConfirmationDialog
+						open={pendingConfirm === "restore"}
+						onOpenChange={(open) => !open && setPendingConfirm(null)}
+						title={t("settings.dataManagement.restoreConfirmTitle")}
+						description={t("settings.dataManagement.restoreConfirmDescription")}
+						confirmText={t("settings.dataManagement.restore")}
+						variant="destructive"
+						isLoading={restoreMutation.isPending}
+						onConfirm={() => restoreMutation.mutate()}
+					/>
+				</SettingRow>
+
+				<SettingRow
+					label={t("settings.dataManagement.wipe")}
+					description={t("settings.dataManagement.wipeDescription")}
+				>
+					<Button
+						variant="destructive"
+						size="sm"
+						disabled={dataOpPending}
+						onPress={() => setPendingConfirm("wipe")}
+					>
+						<Text>{t("settings.dataManagement.wipe")}</Text>
+					</Button>
+					<ConfirmationDialog
+						open={pendingConfirm === "wipe"}
+						onOpenChange={(open) => !open && setPendingConfirm(null)}
+						title={t("settings.dataManagement.wipeConfirmTitle")}
+						description={t("settings.dataManagement.wipeConfirmDescription")}
+						confirmText={t("settings.dataManagement.wipeConfirmAction")}
+						variant="destructive"
+						isLoading={wipeMutation.isPending}
+						onConfirm={() => wipeMutation.mutate()}
 					/>
 				</SettingRow>
 			</Section>
@@ -313,6 +543,17 @@ export default function Settings() {
 				</>
 			)}
 		</Container>
+	);
+}
+
+/** Pickers reject with ERR_PICKER_CANCELLED (Android) / ERR_FILE_PICKING_CANCELLED (iOS) */
+function isPickerCancelled(error: unknown) {
+	return (
+		typeof error === "object" &&
+		error !== null &&
+		"code" in error &&
+		typeof error.code === "string" &&
+		error.code.endsWith("_CANCELLED")
 	);
 }
 

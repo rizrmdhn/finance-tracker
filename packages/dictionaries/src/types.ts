@@ -245,6 +245,12 @@ export interface Dictionary {
 			wipeConfirmTitle: string;
 			wipeConfirmDescription: string;
 			wipeConfirmAction: string;
+			restoreConfirmTitle: string;
+			restoreConfirmDescription: string;
+			restoreDoneTitle: string;
+			restoreDoneDescription: string;
+			closeApp: string;
+			invalidBackup: string;
 		};
 		toast: {
 			saved: string;

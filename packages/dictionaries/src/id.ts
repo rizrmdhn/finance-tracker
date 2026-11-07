@@ -264,6 +264,14 @@ export const id = {
 			wipeConfirmDescription:
 				"Ini akan menghapus permanen semua transaksi, akun, dan kategori. Tindakan ini tidak dapat dibatalkan.",
 			wipeConfirmAction: "Hapus Semua Data",
+			restoreConfirmTitle: "Pulihkan dari cadangan?",
+			restoreConfirmDescription:
+				"Data saat ini akan diganti dengan file cadangan yang Anda pilih. Tindakan ini tidak dapat dibatalkan.",
+			restoreDoneTitle: "Data dipulihkan",
+			restoreDoneDescription:
+				"Aplikasi akan ditutup. Buka kembali untuk memuat data yang dipulihkan.",
+			closeApp: "Tutup Aplikasi",
+			invalidBackup: "File yang dipilih bukan cadangan database yang valid",
 		},
 		toast: {
 			saved: "Pengaturan berhasil disimpan",
