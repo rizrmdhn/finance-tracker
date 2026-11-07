@@ -1,5 +1,5 @@
 import * as React from "react";
-import type { View } from "react-native";
+import type { View, ViewInstance } from "react-native";
 import Animated, {
 	useAnimatedStyle,
 	useSharedValue,
@@ -13,7 +13,7 @@ const duration = 1000;
 function Skeleton({
 	className,
 	...props
-}: React.ComponentProps<typeof View> & React.RefAttributes<View>) {
+}: React.ComponentProps<typeof View> & React.RefAttributes<ViewInstance>) {
 	const sv = useSharedValue(1);
 
 	React.useEffect(() => {
