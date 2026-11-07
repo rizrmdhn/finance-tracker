@@ -3,6 +3,7 @@ import {
 	type DrawerContentComponentProps,
 	DrawerContentScrollView,
 } from "expo-router/drawer";
+import { getDefaultHeaderHeight } from "expo-router/react-navigation";
 import {
 	ArrowLeftRight,
 	Coins,
@@ -20,6 +21,10 @@ import {
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, Text, View } from "react-native";
+import {
+	useSafeAreaFrame,
+	useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -51,51 +56,64 @@ function CustomDrawerContent({
 }: DrawerContentComponentProps) {
 	const { t } = useTranslation();
 	const themeColorForeground = useThemeColor("foreground");
+	const insets = useSafeAreaInsets();
+	const frame = useSafeAreaFrame();
+	// Same height as the screen header, so both bottom edges line up
+	const headerHeight = getDefaultHeaderHeight(frame, false, insets.top);
 
 	return (
-		<DrawerContentScrollView {...props}>
-			<View className="border-border mb-2 flex-row items-center gap-2 border-b px-2 pb-3">
+		<View className="flex-1">
+			<View
+				style={{ height: headerHeight, paddingTop: insets.top }}
+				className="border-border flex-row items-center gap-2 border-b px-5"
+			>
 				<Wallet size={16} color={themeColorForeground} />
 				<Text className="text-foreground text-base font-semibold">
 					{t("app.title")}
 				</Text>
 			</View>
-			<View className="gap-1">
-				{state.routes.map((route, index) => {
-					const focused = index === state.index;
-					const Icon = NAV_ICONS[route.name];
-					const title = descriptors[route.key].options.title ?? route.name;
-					return (
-						<Pressable
-							key={route.key}
-							role="button"
-							aria-selected={focused}
-							// Same as expo-router's DrawerItemList: navigating closes the drawer
-							onPress={() =>
-								focused
-									? navigation.closeDrawer()
-									: navigation.navigate(route.name, route.params)
-							}
-							className={cn(
-								"active:bg-secondary flex-row items-center gap-2 rounded-md px-2 py-3",
-								focused && "bg-secondary",
-							)}
-						>
-							{Icon && <Icon size={16} color={themeColorForeground} />}
-							<Text
-								numberOfLines={1}
+			<DrawerContentScrollView
+				{...props}
+				// The header above already clears the status bar
+				contentContainerStyle={{ paddingTop: 8 }}
+			>
+				<View className="gap-1">
+					{state.routes.map((route, index) => {
+						const focused = index === state.index;
+						const Icon = NAV_ICONS[route.name];
+						const title = descriptors[route.key].options.title ?? route.name;
+						return (
+							<Pressable
+								key={route.key}
+								role="button"
+								aria-selected={focused}
+								// Same as expo-router's DrawerItemList: navigating closes the drawer
+								onPress={() =>
+									focused
+										? navigation.closeDrawer()
+										: navigation.navigate(route.name, route.params)
+								}
 								className={cn(
-									"text-foreground text-sm",
-									focused && "font-medium",
+									"active:bg-secondary flex-row items-center gap-2 rounded-md px-2 py-3",
+									focused && "bg-secondary",
 								)}
 							>
-								{title}
-							</Text>
-						</Pressable>
-					);
-				})}
-			</View>
-		</DrawerContentScrollView>
+								{Icon && <Icon size={16} color={themeColorForeground} />}
+								<Text
+									numberOfLines={1}
+									className={cn(
+										"text-foreground text-sm",
+										focused && "font-medium",
+									)}
+								>
+									{title}
+								</Text>
+							</Pressable>
+						);
+					})}
+				</View>
+			</DrawerContentScrollView>
+		</View>
 	);
 }
 
