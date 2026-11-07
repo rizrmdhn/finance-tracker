@@ -195,10 +195,11 @@ function RouteComponent() {
 					description={t("settings.appearance.themeDescription")}
 				>
 					<Select
+						items={THEME_OPTIONS}
 						value={theme}
 						onValueChange={(v) => setTheme(v as typeof theme)}
 					>
-						<SelectTrigger className="w-48">
+						<SelectTrigger className="w-56">
 							<SelectValue />
 						</SelectTrigger>
 						<SelectContent>
@@ -224,12 +225,13 @@ function RouteComponent() {
 					description={t("settings.localization.currencyDescription")}
 				>
 					<Select
+						items={CURRENCY_LABELS}
 						value={currency?.value ?? "IDR"}
 						onValueChange={(v) =>
 							v && setSettingMutation.mutate({ key: "currency", value: v })
 						}
 					>
-						<SelectTrigger className="w-48">
+						<SelectTrigger className="w-56">
 							<SelectValue />
 						</SelectTrigger>
 						<SelectContent>
@@ -247,6 +249,7 @@ function RouteComponent() {
 					description={t("settings.localization.languageDescription")}
 				>
 					<Select
+						items={LANGUAGE_LABELS}
 						value={language?.value ?? "id"}
 						onValueChange={(v) => {
 							if (v) {
@@ -255,7 +258,7 @@ function RouteComponent() {
 							}
 						}}
 					>
-						<SelectTrigger className="w-48">
+						<SelectTrigger className="w-56">
 							<SelectValue />
 						</SelectTrigger>
 						<SelectContent>

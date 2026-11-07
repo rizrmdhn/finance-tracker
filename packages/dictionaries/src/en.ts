@@ -264,6 +264,14 @@ export const en = {
 			wipeConfirmDescription:
 				"This will permanently delete all transactions, accounts, and categories. This action cannot be undone.",
 			wipeConfirmAction: "Wipe All Data",
+			restoreConfirmTitle: "Restore from backup?",
+			restoreConfirmDescription:
+				"Your current data will be replaced by the backup file you pick. This action cannot be undone.",
+			restoreDoneTitle: "Data restored",
+			restoreDoneDescription:
+				"The app will now close. Open it again to load the restored data.",
+			closeApp: "Close App",
+			invalidBackup: "The selected file is not a valid database backup",
 		},
 		toast: {
 			saved: "Settings saved successfully",
