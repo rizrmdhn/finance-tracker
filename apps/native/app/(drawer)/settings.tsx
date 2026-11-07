@@ -237,312 +237,324 @@ export default function Settings() {
 		wipeMutation.isPending;
 
 	return (
-		<Container contentContainerClassName="gap-6 p-4 pb-8">
-			{/* Appearance */}
-			<Section title={t("settings.appearance.title")}>
-				<View className="gap-3">
-					<View className="gap-0.5">
-						<Text className="text-foreground text-sm">
-							{t("settings.appearance.theme")}
-						</Text>
-						<Text className="text-muted-foreground text-xs">
-							{t("settings.appearance.themeDescription")}
-						</Text>
-					</View>
-					<ToggleGroup
-						type="single"
-						variant="outline"
-						value={theme}
-						onValueChange={(value) =>
-							value && setTheme(value as ThemePreference)
-						}
-					>
-						{THEME_OPTIONS.map(({ value, icon, labelKey }, index) => (
-							<ToggleGroupItem
-								key={value}
-								value={value}
-								isFirst={index === 0}
-								isLast={index === THEME_OPTIONS.length - 1}
-								className="flex-1"
-							>
-								<ToggleGroupIcon as={icon} />
-								<Text>{t(labelKey)}</Text>
-							</ToggleGroupItem>
-						))}
-					</ToggleGroup>
-				</View>
-			</Section>
-
-			<Separator />
-
-			{/* Localization */}
-			<Section title={t("settings.localization.title")}>
-				<SettingRow
-					label={t("settings.localization.currency")}
-					description={t("settings.localization.currencyDescription")}
-				>
-					<Select
-						value={
-							currency?.value
-								? {
-										value: currency.value,
-										label:
-											CURRENCY_LABELS[
-												currency.value as keyof typeof CURRENCY_LABELS
-											] ?? currency.value,
-									}
-								: undefined
-						}
-						onValueChange={(opt) =>
-							opt &&
-							setSettingMutation.mutate({ key: "currency", value: opt.value })
-						}
-					>
-						<SelectTrigger className="w-36">
-							<SelectValue placeholder="IDR" />
-						</SelectTrigger>
-						<SelectContent>
-							{SUPPORTED_CURRENCIES.map((c) => (
-								<SelectItem key={c} value={c} label={CURRENCY_LABELS[c]} />
-							))}
-						</SelectContent>
-					</Select>
-				</SettingRow>
-
-				<SettingRow
-					label={t("settings.localization.language")}
-					description={t("settings.localization.languageDescription")}
-				>
-					<Select
-						value={
-							language?.value
-								? {
-										value: language.value,
-										label:
-											LANGUAGE_LABELS[
-												language.value as keyof typeof LANGUAGE_LABELS
-											] ?? language.value,
-									}
-								: undefined
-						}
-						onValueChange={(opt) => {
-							if (opt) {
-								setSettingMutation.mutate({
-									key: "language",
-									value: opt.value,
-								});
-								i18n.changeLanguage(opt.value);
-							}
-						}}
-					>
-						<SelectTrigger className="w-36">
-							<SelectValue placeholder="Bahasa Indonesia" />
-						</SelectTrigger>
-						<SelectContent>
-							{SUPPORTED_LANGUAGES.map((lang) => (
-								<SelectItem
-									key={lang}
-									value={lang}
-									label={LANGUAGE_LABELS[lang]}
-								/>
-							))}
-						</SelectContent>
-					</Select>
-				</SettingRow>
-			</Section>
-
-			<Separator />
-
-			{/* Updates */}
-			<Section title={t("settings.advanced.title")}>
-				<SettingRow
-					label={t("settings.advanced.updates")}
-					description={t("settings.advanced.updatesDescription")}
-				>
-					<TouchableOpacity
-						onPress={() => checkForUpdates()}
-						disabled={isCheckingUpdate}
-						className="rounded-lg border border-border px-3 py-2"
-					>
-						{isCheckingUpdate ? (
-							<ActivityIndicator size="small" />
-						) : (
-							<Text className="text-sm">
-								{t("settings.advanced.checkUpdates")}
+		<>
+			<Container contentContainerClassName="w-full max-w-2xl self-center gap-6 p-4 pb-8">
+				{/* Appearance */}
+				<Section title={t("settings.appearance.title")}>
+					<View className="gap-3">
+						<View className="gap-0.5">
+							<Text className="text-foreground text-sm">
+								{t("settings.appearance.theme")}
 							</Text>
-						)}
-					</TouchableOpacity>
-				</SettingRow>
+							<Text className="text-muted-foreground text-xs">
+								{t("settings.appearance.themeDescription")}
+							</Text>
+						</View>
+						<ToggleGroup
+							type="single"
+							variant="outline"
+							value={theme}
+							onValueChange={(value) =>
+								value && setTheme(value as ThemePreference)
+							}
+						>
+							{THEME_OPTIONS.map(({ value, icon, labelKey }, index) => (
+								<ToggleGroupItem
+									key={value}
+									value={value}
+									isFirst={index === 0}
+									isLast={index === THEME_OPTIONS.length - 1}
+									className="flex-1"
+								>
+									<ToggleGroupIcon as={icon} />
+									<Text>{t(labelKey)}</Text>
+								</ToggleGroupItem>
+							))}
+						</ToggleGroup>
+					</View>
+				</Section>
 
-				{release?.isUpToDate && (
-					<Text className="text-muted-foreground text-xs">
-						{t("settings.advanced.upToDate")}
-					</Text>
-				)}
+				<Separator />
 
-				{isUpdateError && (
-					<Text className="text-destructive text-xs">
-						{t("settings.advanced.failedToCheck", {
-							message: updateError?.message,
-						})}
-					</Text>
-				)}
+				{/* Localization */}
+				<Section title={t("settings.localization.title")}>
+					<SettingRow
+						stacked
+						label={t("settings.localization.currency")}
+						description={t("settings.localization.currencyDescription")}
+					>
+						<Select
+							value={
+								currency?.value
+									? {
+											value: currency.value,
+											label:
+												CURRENCY_LABELS[
+													currency.value as keyof typeof CURRENCY_LABELS
+												] ?? currency.value,
+										}
+									: undefined
+							}
+							onValueChange={(opt) =>
+								opt &&
+								setSettingMutation.mutate({ key: "currency", value: opt.value })
+							}
+						>
+							<SelectTrigger className="w-full sm:w-56">
+								<SelectValue placeholder="IDR" />
+							</SelectTrigger>
+							<SelectContent>
+								{SUPPORTED_CURRENCIES.map((c) => (
+									<SelectItem key={c} value={c} label={CURRENCY_LABELS[c]} />
+								))}
+							</SelectContent>
+						</Select>
+					</SettingRow>
 
-				{release && !release.isUpToDate && (
-					<View className="gap-3 rounded-lg border border-border p-3">
-						<Text className="font-medium text-sm">
-							{t("settings.advanced.versionAvailable", {
-								version: release.version,
+					<SettingRow
+						stacked
+						label={t("settings.localization.language")}
+						description={t("settings.localization.languageDescription")}
+					>
+						<Select
+							value={
+								language?.value
+									? {
+											value: language.value,
+											label:
+												LANGUAGE_LABELS[
+													language.value as keyof typeof LANGUAGE_LABELS
+												] ?? language.value,
+										}
+									: undefined
+							}
+							onValueChange={(opt) => {
+								if (opt) {
+									setSettingMutation.mutate({
+										key: "language",
+										value: opt.value,
+									});
+									i18n.changeLanguage(opt.value);
+								}
+							}}
+						>
+							<SelectTrigger className="w-full sm:w-56">
+								<SelectValue placeholder="Bahasa Indonesia" />
+							</SelectTrigger>
+							<SelectContent>
+								{SUPPORTED_LANGUAGES.map((lang) => (
+									<SelectItem
+										key={lang}
+										value={lang}
+										label={LANGUAGE_LABELS[lang]}
+									/>
+								))}
+							</SelectContent>
+						</Select>
+					</SettingRow>
+				</Section>
+
+				<Separator />
+
+				{/* Updates */}
+				<Section title={t("settings.advanced.title")}>
+					<SettingRow
+						label={t("settings.advanced.updates")}
+						description={t("settings.advanced.updatesDescription")}
+					>
+						<TouchableOpacity
+							onPress={() => checkForUpdates()}
+							disabled={isCheckingUpdate}
+							className="rounded-lg border border-border px-3 py-2"
+						>
+							{isCheckingUpdate ? (
+								<ActivityIndicator size="small" />
+							) : (
+								<Text className="text-sm">
+									{t("settings.advanced.checkUpdates")}
+								</Text>
+							)}
+						</TouchableOpacity>
+					</SettingRow>
+
+					{release?.isUpToDate && (
+						<Text className="text-muted-foreground text-xs">
+							{t("settings.advanced.upToDate")}
+						</Text>
+					)}
+
+					{isUpdateError && (
+						<Text className="text-destructive text-xs">
+							{t("settings.advanced.failedToCheck", {
+								message: updateError?.message,
 							})}
 						</Text>
-						{release.body && (
-							<Markdown
-								style={{
-									body: { color: mutedForeground, fontSize: 12 },
-									heading1: { color: foreground, fontSize: 14 },
-									heading2: { color: foreground, fontSize: 13 },
-									heading3: { color: foreground, fontSize: 12 },
-									code_inline: { color: foreground },
-									fence: { color: foreground },
-								}}
-							>
-								{release.body}
-							</Markdown>
-						)}
-						<TouchableOpacity
-							onPress={() => downloadMutation.mutate(release.downloadUrl)}
-							disabled={downloadProgress !== null}
-							className="overflow-hidden rounded-lg bg-foreground"
-						>
-							{downloadProgress !== null && (
-								<View
-									className="absolute inset-0 bg-muted-foreground/30"
-									style={{ width: `${Math.round(downloadProgress * 100)}%` }}
-								/>
+					)}
+
+					{release && !release.isUpToDate && (
+						<View className="gap-3 rounded-lg border border-border p-3">
+							<Text className="font-medium text-sm">
+								{t("settings.advanced.versionAvailable", {
+									version: release.version,
+								})}
+							</Text>
+							{release.body && (
+								<Markdown
+									style={{
+										body: { color: mutedForeground, fontSize: 12 },
+										heading1: { color: foreground, fontSize: 14 },
+										heading2: { color: foreground, fontSize: 13 },
+										heading3: { color: foreground, fontSize: 12 },
+										code_inline: { color: foreground },
+										fence: { color: foreground },
+									}}
+								>
+									{release.body}
+								</Markdown>
 							)}
-							<View className="items-center px-3 py-2">
-								<Text className="font-medium text-background text-sm">
-									{downloadProgress !== null
-										? `${t("settings.advanced.downloading")} ${Math.round(downloadProgress * 100)}%`
-										: t("settings.advanced.downloadApk")}
-								</Text>
-							</View>
-						</TouchableOpacity>
-					</View>
+							<TouchableOpacity
+								onPress={() => downloadMutation.mutate(release.downloadUrl)}
+								disabled={downloadProgress !== null}
+								className="overflow-hidden rounded-lg bg-foreground"
+							>
+								{downloadProgress !== null && (
+									<View
+										className="absolute inset-0 bg-muted-foreground/30"
+										style={{ width: `${Math.round(downloadProgress * 100)}%` }}
+									/>
+								)}
+								<View className="items-center px-3 py-2">
+									<Text className="font-medium text-background text-sm">
+										{downloadProgress !== null
+											? `${t("settings.advanced.downloading")} ${Math.round(downloadProgress * 100)}%`
+											: t("settings.advanced.downloadApk")}
+									</Text>
+								</View>
+							</TouchableOpacity>
+						</View>
+					)}
+
+					<SettingRow
+						label={t("settings.advanced.preRelease")}
+						description={t("settings.advanced.preReleaseDescription")}
+					>
+						<Switch
+							value={preReleaseSetting?.value === "true"}
+							onValueChange={(val) => {
+								setSettingMutation.mutate({
+									key: "pre_release",
+									value: val ? "true" : "false",
+								});
+							}}
+						/>
+					</SettingRow>
+
+					<SettingRow
+						label={t("settings.advanced.resetOnboarding")}
+						description={t("settings.advanced.resetOnboardingDescription")}
+					>
+						<Button
+							variant="outline"
+							size="sm"
+							disabled={resetOnboardingMutation.isPending}
+							onPress={() =>
+								resetOnboardingMutation.mutate({
+									key: "onboarding",
+									value: "pending",
+								})
+							}
+						>
+							<Text>{t("common.reset")}</Text>
+						</Button>
+					</SettingRow>
+				</Section>
+
+				<Separator />
+
+				{/* Data Management */}
+				<Section title={t("settings.dataManagement.title")}>
+					<SettingRow
+						stacked
+						label={t("settings.dataManagement.backup")}
+						description={t("settings.dataManagement.backupDescription")}
+					>
+						<Button
+							variant="outline"
+							size="sm"
+							className="self-start sm:self-auto"
+							disabled={dataOpPending}
+							onPress={() => backupMutation.mutate()}
+						>
+							{backupMutation.isPending && <ActivityIndicator size="small" />}
+							<Text>{t("settings.dataManagement.backup")}</Text>
+						</Button>
+					</SettingRow>
+
+					<SettingRow
+						stacked
+						label={t("settings.dataManagement.restore")}
+						description={t("settings.dataManagement.restoreDescription")}
+					>
+						<Button
+							variant="outline"
+							size="sm"
+							className="self-start sm:self-auto"
+							disabled={dataOpPending}
+							onPress={() => setPendingConfirm("restore")}
+						>
+							<Text>{t("settings.dataManagement.restore")}</Text>
+						</Button>
+					</SettingRow>
+
+					<SettingRow
+						stacked
+						label={t("settings.dataManagement.wipe")}
+						description={t("settings.dataManagement.wipeDescription")}
+					>
+						<Button
+							variant="destructive"
+							size="sm"
+							className="self-start sm:self-auto"
+							disabled={dataOpPending}
+							onPress={() => setPendingConfirm("wipe")}
+						>
+							<Text>{t("settings.dataManagement.wipe")}</Text>
+						</Button>
+					</SettingRow>
+				</Section>
+
+				{Constants.expoConfig?.version && (
+					<>
+						<Separator />
+						<Text className="text-muted-foreground text-xs">
+							Finance Tracker v{Constants.expoConfig.version}
+						</Text>
+					</>
 				)}
+			</Container>
 
-				<SettingRow
-					label={t("settings.advanced.preRelease")}
-					description={t("settings.advanced.preReleaseDescription")}
-				>
-					<Switch
-						value={preReleaseSetting?.value === "true"}
-						onValueChange={(val) => {
-							setSettingMutation.mutate({
-								key: "pre_release",
-								value: val ? "true" : "false",
-							});
-						}}
-					/>
-				</SettingRow>
-
-				<SettingRow
-					label={t("settings.advanced.resetOnboarding")}
-					description={t("settings.advanced.resetOnboardingDescription")}
-				>
-					<Button
-						variant="outline"
-						size="sm"
-						disabled={resetOnboardingMutation.isPending}
-						onPress={() =>
-							resetOnboardingMutation.mutate({
-								key: "onboarding",
-								value: "pending",
-							})
-						}
-					>
-						<Text>{t("common.reset")}</Text>
-					</Button>
-				</SettingRow>
-			</Section>
-
-			<Separator />
-
-			{/* Data Management */}
-			<Section title={t("settings.dataManagement.title")}>
-				<SettingRow
-					label={t("settings.dataManagement.backup")}
-					description={t("settings.dataManagement.backupDescription")}
-				>
-					<Button
-						variant="outline"
-						size="sm"
-						disabled={dataOpPending}
-						onPress={() => backupMutation.mutate()}
-					>
-						{backupMutation.isPending && <ActivityIndicator size="small" />}
-						<Text>{t("settings.dataManagement.backup")}</Text>
-					</Button>
-				</SettingRow>
-
-				<SettingRow
-					label={t("settings.dataManagement.restore")}
-					description={t("settings.dataManagement.restoreDescription")}
-				>
-					<Button
-						variant="outline"
-						size="sm"
-						disabled={dataOpPending}
-						onPress={() => setPendingConfirm("restore")}
-					>
-						<Text>{t("settings.dataManagement.restore")}</Text>
-					</Button>
-					<ConfirmationDialog
-						open={pendingConfirm === "restore"}
-						onOpenChange={(open) => !open && setPendingConfirm(null)}
-						title={t("settings.dataManagement.restoreConfirmTitle")}
-						description={t("settings.dataManagement.restoreConfirmDescription")}
-						confirmText={t("settings.dataManagement.restore")}
-						variant="destructive"
-						isLoading={restoreMutation.isPending}
-						onConfirm={() => restoreMutation.mutate()}
-					/>
-				</SettingRow>
-
-				<SettingRow
-					label={t("settings.dataManagement.wipe")}
-					description={t("settings.dataManagement.wipeDescription")}
-				>
-					<Button
-						variant="destructive"
-						size="sm"
-						disabled={dataOpPending}
-						onPress={() => setPendingConfirm("wipe")}
-					>
-						<Text>{t("settings.dataManagement.wipe")}</Text>
-					</Button>
-					<ConfirmationDialog
-						open={pendingConfirm === "wipe"}
-						onOpenChange={(open) => !open && setPendingConfirm(null)}
-						title={t("settings.dataManagement.wipeConfirmTitle")}
-						description={t("settings.dataManagement.wipeConfirmDescription")}
-						confirmText={t("settings.dataManagement.wipeConfirmAction")}
-						variant="destructive"
-						isLoading={wipeMutation.isPending}
-						onConfirm={() => wipeMutation.mutate()}
-					/>
-				</SettingRow>
-			</Section>
-
-			{Constants.expoConfig?.version && (
-				<>
-					<Separator />
-					<Text className="text-muted-foreground text-xs">
-						Finance Tracker v{Constants.expoConfig.version}
-					</Text>
-				</>
-			)}
-		</Container>
+			{/* Outside the layout: the dialog root renders a View that would take up a gap slot */}
+			<ConfirmationDialog
+				open={pendingConfirm === "restore"}
+				onOpenChange={(open) => !open && setPendingConfirm(null)}
+				title={t("settings.dataManagement.restoreConfirmTitle")}
+				description={t("settings.dataManagement.restoreConfirmDescription")}
+				confirmText={t("settings.dataManagement.restore")}
+				variant="destructive"
+				isLoading={restoreMutation.isPending}
+				onConfirm={() => restoreMutation.mutate()}
+			/>
+			<ConfirmationDialog
+				open={pendingConfirm === "wipe"}
+				onOpenChange={(open) => !open && setPendingConfirm(null)}
+				title={t("settings.dataManagement.wipeConfirmTitle")}
+				description={t("settings.dataManagement.wipeConfirmDescription")}
+				confirmText={t("settings.dataManagement.wipeConfirmAction")}
+				variant="destructive"
+				isLoading={wipeMutation.isPending}
+				onConfirm={() => wipeMutation.mutate()}
+			/>
+		</>
 	);
 }
 
@@ -575,15 +587,25 @@ function Section({
 function SettingRow({
 	label,
 	description,
+	stacked = false,
 	children,
 }: {
 	label: string;
 	description: string;
+	/** Put the control below the text on phone widths, for controls too wide to sit beside it */
+	stacked?: boolean;
 	children: React.ReactNode;
 }) {
 	return (
-		<View className="flex-row items-center justify-between gap-4">
-			<View className="flex-1 gap-0.5">
+		<View
+			className={
+				stacked
+					? "gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+					: "flex-row items-center justify-between gap-4"
+			}
+		>
+			{/* No flex-1 while stacked: flex-basis 0 collapses the text in an auto-height column */}
+			<View className={stacked ? "gap-0.5 sm:flex-1" : "flex-1 gap-0.5"}>
 				<Text className="text-foreground text-sm">{label}</Text>
 				<Text className="text-muted-foreground text-xs">{description}</Text>
 			</View>
