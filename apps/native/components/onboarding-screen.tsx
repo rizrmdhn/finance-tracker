@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { ScrollView, View } from "react-native";
+import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { globalErrorToast } from "@/lib/toast";
 import { queryClient, trpc } from "@/lib/trpc";
@@ -23,6 +23,7 @@ import {
 } from "./ui/card";
 import { Field, FieldError, FieldLabel } from "./ui/field";
 import { Input } from "./ui/input";
+import { KeyboardAwareScrollView } from "./ui/keyboard-aware-scroll-view";
 import { Spinner } from "./ui/spinner";
 import { Text } from "./ui/text";
 
@@ -86,7 +87,9 @@ export function OnboardingScreen() {
 	}
 
 	return (
-		<ScrollView
+		<KeyboardAwareScrollView
+			keyboardShouldPersistTaps="handled"
+			bottomOffset={16}
 			contentContainerClassName="flex-1 items-center justify-center p-4"
 			contentContainerStyle={{
 				paddingTop: insets.top,
@@ -222,6 +225,6 @@ export function OnboardingScreen() {
 					</View>
 				</CardContent>
 			</Card>
-		</ScrollView>
+		</KeyboardAwareScrollView>
 	);
 }

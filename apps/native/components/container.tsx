@@ -1,13 +1,13 @@
 import type { PropsWithChildren } from "react";
 import {
 	RefreshControl,
-	ScrollView,
 	type ScrollViewProps,
 	View,
 	type ViewProps,
 } from "react-native";
 import Animated, { type AnimatedProps } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { KeyboardAwareScrollView } from "@/components/ui/keyboard-aware-scroll-view";
 import { cn } from "@/lib/utils";
 
 const AnimatedView = Animated.createAnimatedComponent(View);
@@ -42,7 +42,8 @@ export function Container({
 			{...props}
 		>
 			{isScrollable ? (
-				<ScrollView
+				<KeyboardAwareScrollView
+					bottomOffset={16}
 					contentContainerStyle={{ flexGrow: 1 }}
 					keyboardShouldPersistTaps="handled"
 					contentInsetAdjustmentBehavior="automatic"
@@ -56,7 +57,7 @@ export function Container({
 					<View className={cn("flex-1", contentContainerClassName)}>
 						{children}
 					</View>
-				</ScrollView>
+				</KeyboardAwareScrollView>
 			) : (
 				<View className={cn("flex-1", contentContainerClassName)}>
 					{children}

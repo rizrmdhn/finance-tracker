@@ -1,16 +1,10 @@
 import { PortalHost } from "@rn-primitives/portal";
 import { X } from "lucide-react-native";
 import type React from "react";
-import {
-	KeyboardAvoidingView,
-	Modal,
-	Platform,
-	Pressable,
-	ScrollView,
-	View,
-} from "react-native";
+import { Modal, Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Icon } from "./icon";
+import { KeyboardAwareScrollView } from "./keyboard-aware-scroll-view";
 import { Text } from "./text";
 
 interface ModalSheetProps {
@@ -39,27 +33,24 @@ export function ModalSheet({
 				className="flex-1 bg-background"
 				style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
 			>
-				<KeyboardAvoidingView
-					behavior={Platform.OS === "ios" ? "padding" : "height"}
-					className="flex-1"
-				>
-					<View className="flex-row items-center justify-between border-border border-b px-4 py-3">
-						<Text className="font-semibold text-base text-foreground">
-							{title}
-						</Text>
-						<Pressable onPress={onClose} hitSlop={8}>
-							<Icon as={X} className="size-5 text-foreground" />
-						</Pressable>
-					</View>
+				<View className="flex-row items-center justify-between border-border border-b px-4 py-3">
+					<Text className="font-semibold text-base text-foreground">
+						{title}
+					</Text>
+					<Pressable onPress={onClose} hitSlop={8}>
+						<Icon as={X} className="size-5 text-foreground" />
+					</Pressable>
+				</View>
 
-					<ScrollView
-						contentContainerClassName="gap-4 px-4 py-4"
-						showsVerticalScrollIndicator={false}
-						keyboardShouldPersistTaps="handled"
-					>
-						{children}
-					</ScrollView>
-				</KeyboardAvoidingView>
+				<KeyboardAwareScrollView
+					className="flex-1"
+					contentContainerClassName="gap-4 px-4 py-4"
+					showsVerticalScrollIndicator={false}
+					keyboardShouldPersistTaps="handled"
+					bottomOffset={16}
+				>
+					{children}
+				</KeyboardAwareScrollView>
 				<PortalHost name="modal-select" />
 			</View>
 		</Modal>
