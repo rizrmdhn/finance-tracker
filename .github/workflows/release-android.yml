@@ -1,10 +1,28 @@
 name: Release Android
+run-name: ${{ startsWith(github.ref, 'refs/tags/') && format('Release Android {0}', github.ref_name) || format('Warm Android ccache ({0})', github.ref_name) }}
 
 on:
   push:
     tags:
       - "mobile/v*"
+    # A cache saved by a tag run is scoped to that tag, so the next tag can't
+    # restore it. main saves the ccache instead, and only when something that
+    # changes the native (C++) compile output changes; JS-only merges skip it.
+    branches:
+      - main
+    paths:
+      - "bun.lock"
+      - "apps/native/package.json"
+      - "apps/native/app.json"
+      - "apps/native/plugins/**"
+      - ".github/workflows/release-android.yml"
   workflow_dispatch:
+
+# Back-to-back merges only need the newest cache build. Each tag has its own
+# ref, so releases never cancel each other.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref == 'refs/heads/main' }}
 
 permissions:
   contents: write
@@ -50,9 +68,16 @@ jobs:
   build-android:
     name: Build Android
     needs: prepare
-    # Run even when prepare is skipped (manual runs off a branch build without releasing).
-    if: ${{ !cancelled() && !failure() }}
+    # Run even when prepare is skipped (main cache builds and manual runs build
+    # without releasing). Skip the cache build for the release script's version
+    # bump commit: it touches app.json/package.json but not the native compile.
+    if: >-
+      ${{ !cancelled() && !failure() &&
+      !(github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+      startsWith(github.event.head_commit.message, 'build: bump')) }}
     runs-on: ubuntu-latest
+    env:
+      SAVE_CACHE: ${{ github.ref == 'refs/heads/main' }}
 
     steps:
       - name: Checkout
@@ -74,6 +99,16 @@ jobs:
 
       - name: Setup bun
         uses: oven-sh/setup-bun@v2
+
+      # The per-ABI C++ (CMake) compile is the bulk of the Gradle build.
+      # Tag runs only restore the cache that main saved.
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: android-ccache
+          max-size: 1G
+          save: ${{ env.SAVE_CACHE == 'true' }}
+          verbose: 1
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -102,6 +137,14 @@ jobs:
           ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          # CMake (>= 3.17) reads these from the environment, so every native
+          # module compiles through ccache without touching its build.gradle.
+          CMAKE_C_COMPILER_LAUNCHER: ccache
+          CMAKE_CXX_COMPILER_LAUNCHER: ccache
+          CCACHE_BASEDIR: ${{ github.workspace }}
+          CCACHE_NOHASHDIR: "true"
+          CCACHE_COMPILERCHECK: content
+          CCACHE_SLOPPINESS: include_file_ctime,include_file_mtime,time_macros
 
       - name: Rename APKs
         if: startsWith(github.ref, 'refs/tags/')
