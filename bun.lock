@@ -46,7 +46,7 @@
     },
     "apps/native": {
       "name": "@finance-tracker/native",
-      "version": "2.3.3",
+      "version": "2.4.0",
       "dependencies": {
         "@dev-plugins/react-query": "^0.4.0",
         "@expo/metro-runtime": "~58.0.17",
@@ -351,6 +351,7 @@
         "cmdk": "^1.1.1",
         "date-fns": "catalog:",
         "embla-carousel-react": "^8.6.0",
+        "i18next": "catalog:",
         "input-otp": "^1.5.0",
         "lucide-react": "catalog:",
         "next-themes": "catalog:",

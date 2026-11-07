@@ -5,19 +5,19 @@ import {
 import { z } from "zod";
 
 export const exchangeRateFetchSchema = z.object({
-	base: z.enum(SUPPORTED_CURRENCIES, { error: "Please select a currency" }),
+	base: z.enum(SUPPORTED_CURRENCIES, { error: "validation.selectCurrency" }),
 });
 
 export const exchangeRateGetSchema = z.object({
-	base: z.enum(SUPPORTED_CURRENCIES, { error: "Please select a currency" }),
-	target: z.enum(SUPPORTED_CURRENCIES, { error: "Please select a currency" }),
+	base: z.enum(SUPPORTED_CURRENCIES, { error: "validation.selectCurrency" }),
+	target: z.enum(SUPPORTED_CURRENCIES, { error: "validation.selectCurrency" }),
 });
 
 export type ExchangeRateFetchInput = z.infer<typeof exchangeRateFetchSchema>;
 export type ExchangeRateGetInput = z.infer<typeof exchangeRateGetSchema>;
 
 const currencySchema = z.enum(SUPPORTED_CURRENCIES, {
-	error: "Please select a currency",
+	error: "validation.selectCurrency",
 });
 const rangeSchema = z.enum(EXCHANGE_RATE_RANGES);
 

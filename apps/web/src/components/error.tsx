@@ -1,6 +1,7 @@
 import { Button } from "@finance-tracker/ui/components/button";
 import { cn } from "@finance-tracker/ui/lib/utils";
 import { type ErrorComponentProps, useRouter } from "@tanstack/react-router";
+import type { ParseKeys } from "i18next";
 import { AlertTriangle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
@@ -8,7 +9,7 @@ import { z } from "zod";
 type Props = ErrorComponentProps & { fullScreen?: boolean };
 
 export function ErrorComponent({ error, reset, fullScreen }: Props) {
-	const { t } = useTranslation();
+	const { t, i18n } = useTranslation();
 
 	const router = useRouter();
 
@@ -24,7 +25,9 @@ export function ErrorComponent({ error, reset, fullScreen }: Props) {
 			for (let i = 0; i < lines.length; i++) {
 				const line = lines[i]?.trim();
 				if (line?.startsWith("✖")) {
-					const message = line.replace("✖ ", "");
+					const raw = line.replace("✖ ", "");
+					// Schema messages are dictionary keys (validation.*)
+					const message = i18n.exists(raw) ? t(raw as ParseKeys) : raw;
 					const nextLine = lines[i + 1]?.trim();
 					if (nextLine?.startsWith("→ at")) {
 						const path = nextLine.replace("→ at ", "");

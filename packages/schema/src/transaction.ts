@@ -19,20 +19,20 @@ export const paginatedTransactionsSchema =
 
 export const transactionSchema = z.object({
 	amount: z
-		.number({ error: "Amount is required" })
-		.positive({ error: "Amount must be greater than 0" }),
+		.number({ error: "validation.amountRequired" })
+		.positive({ error: "validation.amountPositive" }),
 	note: z.string().optional(),
-	categoryId: z.string({ error: "Category is required" }),
-	accountId: z.string({ error: "Account is required" }),
+	categoryId: z.string({ error: "validation.categoryRequired" }),
+	accountId: z.string({ error: "validation.accountRequired" }),
 	toAccountId: z
-		.string({ error: "Destination account is required" })
+		.string({ error: "validation.destinationAccountRequired" })
 		.optional(),
 	tags: z.array(z.string()).optional(),
-	date: z.number({ error: "Date is required" }),
+	date: z.number({ error: "validation.dateRequired" }),
 	recurrence: z
 		.object({
 			frequency: z.enum(RECURRENCE_FREQUENCIES, {
-				error: "Please select a frequency",
+				error: "validation.selectFrequency",
 			}),
 			endDate: z.number().optional(),
 		})
@@ -45,18 +45,16 @@ export const updateTransactionSchema = transactionSchema.partial().extend({
 
 export const transactionFiltersSchema = z
 	.object({
-		from: z.number({ error: "Please provide a valid start date" }).optional(),
-		to: z.number({ error: "Please provide a valid end date" }).optional(),
-		accountId: z
-			.string({ error: "Please provide a valid account ID" })
-			.optional(),
+		from: z.number({ error: "validation.enterStartDate" }).optional(),
+		to: z.number({ error: "validation.enterEndDate" }).optional(),
+		accountId: z.string({ error: "validation.enterAccountId" }).optional(),
 	})
 	.optional();
 
 export const summaryFiltersSchema = z.object({
 	accountId: z.string().optional(),
-	from: z.number({ error: "Please provide a valid start date" }),
-	to: z.number({ error: "Please provide a valid end date" }),
+	from: z.number({ error: "validation.enterStartDate" }),
+	to: z.number({ error: "validation.enterEndDate" }),
 	displayCurrency: z.enum(SUPPORTED_CURRENCIES).optional(),
 });
 

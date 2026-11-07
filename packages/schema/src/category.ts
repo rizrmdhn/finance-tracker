@@ -9,9 +9,9 @@ import { createPaginationSchema } from "./pagination";
 
 export const categorySchema = z.object({
 	name: z.string().min(1),
-	icon: z.enum(ICON_NAMES, { error: "Please select an icon" }),
-	color: z.enum(COLOR_VALUES, { error: "Please select a color" }),
-	type: z.enum(CATEGORY_TYPES, { error: "Please select a category type" }),
+	icon: z.enum(ICON_NAMES, { error: "validation.selectIcon" }),
+	color: z.enum(COLOR_VALUES, { error: "validation.selectColor" }),
+	type: z.enum(CATEGORY_TYPES, { error: "validation.selectCategoryType" }),
 });
 
 export const categoryUpdateSchema = categorySchema.partial().extend({
