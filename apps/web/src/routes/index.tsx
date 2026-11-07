@@ -30,6 +30,19 @@ import { RecentTransactions } from "./-components/recent-transactions";
 import { SummaryCard } from "./-components/summary-card";
 import { getCurrentMonthRange } from "./-components/utils";
 
+/**
+ * Column spans for balance, income, expense, transfer, savings.
+ * Narrow: 2 columns, balance full width. Medium: 6 columns, rows of 3 then 2.
+ * Wide: all 5 in one row. Based on the content width, not the window, since the sidebar can collapse.
+ */
+const SUMMARY_CARD_SPANS = [
+	"col-span-2 @6xl:col-span-1",
+	"@3xl:col-span-2 @6xl:col-span-1",
+	"@3xl:col-span-2 @6xl:col-span-1",
+	"@3xl:col-span-3 @6xl:col-span-1",
+	"@3xl:col-span-3 @6xl:col-span-1",
+];
+
 export const Route = createFileRoute("/")({
 	component: HomeComponent,
 });
@@ -79,10 +92,10 @@ function HomeComponent() {
 	const savings = summary?.savings ?? 0;
 
 	return (
-		<div className="flex flex-col gap-6 p-6">
-			<div className="flex items-center justify-between">
+		<div className="@container flex flex-col gap-6 p-6">
+			<div className="flex flex-wrap items-center justify-between gap-4">
 				<h1 className="font-semibold text-xl">{t("app.title")}</h1>
-				<div className="flex items-center gap-2">
+				<div className="flex flex-wrap items-center gap-2">
 					<AccountCombobox
 						value={selectedAccountId}
 						onChange={setSelectedAccountId}
@@ -100,10 +113,10 @@ function HomeComponent() {
 				</div>
 			</div>
 
-			<div className="grid grid-cols-5 gap-4">
+			<div className="grid @3xl:grid-cols-6 @6xl:grid-cols-5 grid-cols-2 gap-4">
 				{isSummaryPending ? (
-					Array.from({ length: 5 }).map((_, i) => (
-						<Card key={i}>
+					SUMMARY_CARD_SPANS.map((span, i) => (
+						<Card key={i} className={span}>
 							<CardHeader>
 								<div className="flex items-center justify-between">
 									<Skeleton className="h-4 w-20" />
@@ -118,6 +131,7 @@ function HomeComponent() {
 				) : (
 					<>
 						<SummaryCard
+							className={SUMMARY_CARD_SPANS[0]}
 							title={t("dashboard.balance")}
 							value={balance}
 							icon={<Wallet className="size-4 text-muted-foreground" />}
@@ -125,6 +139,7 @@ function HomeComponent() {
 							sourceCurrency={displayCurrency}
 						/>
 						<SummaryCard
+							className={SUMMARY_CARD_SPANS[1]}
 							title={t("dashboard.income")}
 							value={income}
 							icon={<TrendingUp className="size-4 text-muted-foreground" />}
@@ -132,6 +147,7 @@ function HomeComponent() {
 							sourceCurrency={displayCurrency}
 						/>
 						<SummaryCard
+							className={SUMMARY_CARD_SPANS[2]}
 							title={t("dashboard.expense")}
 							value={expense}
 							icon={<TrendingDown className="size-4 text-muted-foreground" />}
@@ -139,6 +155,7 @@ function HomeComponent() {
 							sourceCurrency={displayCurrency}
 						/>
 						<SummaryCard
+							className={SUMMARY_CARD_SPANS[3]}
 							title={t("dashboard.transfer")}
 							value={transfer}
 							icon={<ArrowLeftRight className="size-4 text-muted-foreground" />}
@@ -146,6 +163,7 @@ function HomeComponent() {
 							sourceCurrency={displayCurrency}
 						/>
 						<SummaryCard
+							className={SUMMARY_CARD_SPANS[4]}
 							title={t("dashboard.savings")}
 							value={savings}
 							icon={<PiggyBank className="size-4 text-muted-foreground" />}

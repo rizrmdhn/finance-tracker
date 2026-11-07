@@ -35,16 +35,6 @@ import {
 import { useFormatCurrency } from "@/hooks/use-format-currency";
 import { getMonthsInRange } from "./utils";
 
-const barChartConfig = {
-	income: { label: "Pemasukan", color: "#22c55e" },
-	expense: { label: "Pengeluaran", color: "#ef4444" },
-	savings: { label: "Tabungan", color: "#a855f7" },
-} satisfies ChartConfig;
-
-const balanceChartConfig = {
-	balance: { label: "Saldo", color: "#3b82f6" },
-} satisfies ChartConfig;
-
 interface AnalyticsCardProps {
 	transactions: Transaction[];
 	categories: Category[];
@@ -62,6 +52,16 @@ export function AnalyticsCard({
 }: AnalyticsCardProps) {
 	const { t } = useTranslation();
 	const { format } = useFormatCurrency();
+
+	const barChartConfig = {
+		income: { label: t("dashboard.income"), color: "#22c55e" },
+		expense: { label: t("dashboard.expense"), color: "#ef4444" },
+		savings: { label: t("dashboard.savings"), color: "#a855f7" },
+	} satisfies ChartConfig;
+
+	const balanceChartConfig = {
+		balance: { label: t("dashboard.balance"), color: "#3b82f6" },
+	} satisfies ChartConfig;
 
 	function currencyFormatter(value: unknown, name: unknown) {
 		return (
@@ -123,12 +123,12 @@ export function AnalyticsCard({
 	);
 
 	const categoryChartConfig = useMemo(() => {
-		const config: ChartConfig = { amount: { label: "Jumlah" } };
+		const config: ChartConfig = { amount: { label: t("common.amount") } };
 		for (const item of categoryData) {
 			config[item.category] = { label: item.category, color: item.fill };
 		}
 		return config;
-	}, [categoryData]);
+	}, [categoryData, t]);
 
 	const balanceData = useMemo(
 		() =>

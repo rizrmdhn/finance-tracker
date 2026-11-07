@@ -721,6 +721,9 @@ function createWindow() {
 	win = new BrowserWindow({
 		width: 1200,
 		height: 800,
+		// Below this, settings rows (label + fixed-width select) overflow and get clipped
+		minWidth: 800,
+		minHeight: 600,
 		show: false, // hide until ready-to-show to avoid white flash
 		backgroundColor: "#09090b", // match app background so no flash on show
 		icon: path.join(__dirname, "../../src/resources/icon.ico"),
