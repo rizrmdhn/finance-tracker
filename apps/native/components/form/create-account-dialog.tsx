@@ -73,7 +73,10 @@ export default function CreateAccountDialog({
 						<FieldLabel>{t("common.name")}</FieldLabel>
 						<Input
 							placeholder={t("accounts.create.namePlaceholder")}
-							{...field}
+							value={field.value}
+							onChangeText={field.onChange}
+							onBlur={field.onBlur}
+							ref={field.ref}
 						/>
 						{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
 					</Field>
