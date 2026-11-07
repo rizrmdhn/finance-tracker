@@ -65,7 +65,8 @@
 					}
 				}
 			],
-			"expo-status-bar"
+			"expo-status-bar",
+			"./plugins/with-android-release"
 		],
 		"experiments": {
 			"typedRoutes": true,
