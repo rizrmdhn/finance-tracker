@@ -1,10 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
-import type { DrawerContentComponentProps } from "@react-navigation/drawer";
 import {
+	Drawer,
+	type DrawerContentComponentProps,
 	DrawerContentScrollView,
 	DrawerItemList,
-} from "@react-navigation/drawer";
-import { Drawer } from "expo-router/drawer";
+} from "expo-router/drawer";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";

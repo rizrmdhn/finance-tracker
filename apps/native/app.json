@@ -64,7 +64,8 @@
 						"image": "./assets/images/splash-icon-dark.png"
 					}
 				}
-			]
+			],
+			"expo-status-bar"
 		],
 		"experiments": {
 			"typedRoutes": true,
