@@ -21,7 +21,7 @@
     "@hookform/resolvers": "catalog:",
     "@tanstack/react-hotkeys": "0.7.0",
     "@tanstack/react-query": "catalog:",
-    "@tanstack/react-query-devtools": "^5.91.3",
+    "@tanstack/react-query-devtools": "^5.107.1",
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-router-devtools": "catalog:",
     "@tanstack/react-table": "catalog:",
@@ -47,12 +47,12 @@
   "devDependencies": {
     "@tailwindcss/vite": "catalog:",
     "@tanstack/router-plugin": "catalog:",
-    "@types/node": "^22.10.2",
+    "@types/node": "^22.20.5",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "^5.1.4",
     "typescript": "catalog:",
-    "vite": "^7.3.1",
+    "vite": "^7.3.7",
     "vite-tsconfig-paths": "^5.1.4"
   }
 }
