@@ -76,6 +76,7 @@
 					]
 				}
 			],
+			"executableName": "finance-tracker",
 			"icon": "src/resources/icon.png",
 			"artifactName": "Finance-Tracker-${version}.${ext}"
 		},
