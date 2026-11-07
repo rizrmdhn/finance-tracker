@@ -38,7 +38,6 @@ const FILES = {
 	desktopPkg: "apps/desktop/package.json",
 	nativePkg: "apps/native/package.json",
 	nativeAppJson: "apps/native/app.json",
-	nativeGradle: "apps/native/android/app/build.gradle",
 };
 
 const PLATFORMS = ["desktop", "mobile"] as const;
@@ -281,18 +280,6 @@ if (mobileChanges) {
 				),
 				/"versionCode":\s*\d+/,
 				`"versionCode": ${nextVersionCode}`,
-			),
-		},
-		{
-			file: FILES.nativeGradle,
-			content: replaceOnce(
-				replaceOnce(
-					read(FILES.nativeGradle),
-					/versionCode \d+/,
-					`versionCode ${nextVersionCode}`,
-				),
-				/versionName "[^"]+"/,
-				`versionName "${tagVersion}"`,
 			),
 		},
 	);

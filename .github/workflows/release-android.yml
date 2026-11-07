@@ -82,11 +82,11 @@ jobs:
       # ship as npm dependencies (react-native-skia-android) and the
       # install-skia CLI no longer exists.
 
-      # --no-clean: since SDK 57, prebuild wipes android/ by default, which would
-      # drop the hand-written release signingConfig and ABI splits in build.gradle.
+      # android/ is generated, not committed: release signing, ABI splits and the
+      # ABI list come from apps/native/plugins/with-android-release.js.
       - name: Prebuild Android
         working-directory: apps/native
-        run: bunx expo prebuild --platform android --no-clean
+        run: bunx expo prebuild --platform android
 
       - name: Decode keystore
         run: |
@@ -110,7 +110,6 @@ jobs:
           OUT=apps/native/android/app/build/outputs/apk/release
           mv "$OUT/app-arm64-v8a-release.apk"   "$OUT/Finance-Tracker-${TAG}-arm64-v8a.apk"
           mv "$OUT/app-armeabi-v7a-release.apk"  "$OUT/Finance-Tracker-${TAG}-armeabi-v7a.apk"
-          mv "$OUT/app-x86_64-release.apk"       "$OUT/Finance-Tracker-${TAG}-x86_64.apk"
           mv "$OUT/app-universal-release.apk"    "$OUT/Finance-Tracker-${TAG}-universal.apk"
 
       - name: Upload APK artifact
